@@ -9,7 +9,7 @@ import com.mayreh.intellij.plugin.tlaplus.TLAplusTokenType;
 
 %unicode
 %public
-%class TLAplusLexer
+%class _TLAplusLexer
 %extends TLAplusLexerBase
 %function advance
 %type IElementType

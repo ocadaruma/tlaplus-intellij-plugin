@@ -7,13 +7,12 @@ import java.util.List;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 
-import com.intellij.lexer.FlexAdapter;
 import com.intellij.psi.tree.IElementType;
 
 class TLAplusLexerTest {
     @Test
     void testTokenize() throws Exception {
-        FlexAdapter lexer = new FlexAdapter(new TLAplusLexer(null));
+        TLAplusLexer lexer = new TLAplusLexer();
         lexer.start(IOUtils.resourceToString("/lexer/example.tla", StandardCharsets.UTF_8));
         List<IElementType> tokens = new ArrayList<>();
         IElementType token;

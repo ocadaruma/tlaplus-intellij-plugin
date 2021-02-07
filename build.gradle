@@ -52,7 +52,7 @@ sourceSets {
 task generateTLAplusLexer(type: GenerateLexer) {
     source = "src/main/grammer/tlaplus.flex"
     targetDir = "src/gen/com/mayreh/intellij.plugin.tlaplus/lexer"
-    targetClass = "TLAplusLexer"
+    targetClass = "_TLAplusLexer"
     purgeOldFiles = true
 }
 
