@@ -1,0 +1,57 @@
+import org.jetbrains.grammarkit.tasks.*
+
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+
+    dependencies {
+        classpath "org.jetbrains.intellij.plugins:gradle-intellij-plugin:0.6.5"
+        classpath "gradle.plugin.org.jetbrains.intellij.plugins:gradle-grammarkit-plugin:2020.3.2"
+    }
+}
+
+apply plugin: "java"
+apply plugin: "org.jetbrains.grammarkit"
+apply plugin: "org.jetbrains.intellij"
+
+group = "com.mayreh.intellij.plugins"
+version = "${version}" + (snapshot.toBoolean() ? "-SNAPSHOT" : "")
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation "org.junit.jupiter:junit-jupiter-api:5.6.0"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine"
+}
+
+intellij {
+    version "201.6668.113"
+    plugins = ["com.intellij.java", "org.intellij.intelliLang"]
+    updateSinceUntilBuild = false
+}
+
+patchPluginXml {
+    version = project.version
+}
+
+test {
+    useJUnitPlatform()
+}
+
+sourceSets {
+    main {
+        java.srcDirs("src/gen")
+    }
+}
+
+task generateTLAplusLexer(type: GenerateLexer) {
+    source = "src/main/grammer/tlaplus.flex"
+    targetDir = "src/gen/com/mayreh/intellij.plugin.tlaplus/lexer"
+    targetClass = "TLAplusLexer"
+    purgeOldFiles = true
+}
