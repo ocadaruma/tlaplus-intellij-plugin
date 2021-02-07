@@ -55,3 +55,5 @@ task generateTLAplusLexer(type: GenerateLexer) {
     targetClass = "TLAplusLexer"
     purgeOldFiles = true
 }
+
+compileJava.dependsOn(generateTLAplusLexer)

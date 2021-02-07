@@ -55,6 +55,7 @@ public interface TLAplusTokenType {
     IElementType RSQBRACKET = new TLAplusElementType("]");
     IElementType RSQBRACKETUNDER = new TLAplusElementType("]_");
     IElementType DOT = new TLAplusElementType(".");
+    IElementType COLON = new TLAplusElementType(":");
 
     IElementType DEFINE = new TLAplusElementType("==");
 
@@ -100,8 +101,8 @@ public interface TLAplusTokenType {
     IElementType OP_SUPSET = new TLAplusElementType("\\supset");
     IElementType OP_SQSUPSET = new TLAplusElementType("\\sqsupset");
     IElementType OP_SQSUPSETEQ = new TLAplusElementType("\\sqsupseteq");
-    IElementType OP_DASHVBAR = new TLAplusElementType("\\-|");
-    IElementType OP_EQVBAR = new TLAplusElementType("\\=|");
+    IElementType OP_DASHVBAR = new TLAplusElementType("-|");
+    IElementType OP_EQVBAR = new TLAplusElementType("=|");
     IElementType OP_LTDASH = new TLAplusElementType("<-");
     IElementType OP_CUP = new TLAplusElementType("\\cup");
     IElementType OP_SQCUP = new TLAplusElementType("\\sqcup");
