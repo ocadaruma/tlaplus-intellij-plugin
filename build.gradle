@@ -9,7 +9,7 @@ buildscript {
 
     dependencies {
         classpath "org.jetbrains.intellij.plugins:gradle-intellij-plugin:0.6.5"
-        classpath "gradle.plugin.org.jetbrains.intellij.plugins:gradle-grammarkit-plugin:2020.3.2"
+        classpath "gradle.plugin.org.jetbrains.intellij.plugins:gradle-grammarkit-plugin:2020.1.4"
     }
 }
 
@@ -51,9 +51,17 @@ sourceSets {
 
 task generateTLAplusLexer(type: GenerateLexer) {
     source = "src/main/grammer/tlaplus.flex"
-    targetDir = "src/gen/com/mayreh/intellij.plugin.tlaplus/lexer"
+    targetDir = "src/gen/com/mayreh/intellij/plugin/tlaplus/lexer"
     targetClass = "_TLAplusLexer"
     purgeOldFiles = true
 }
 
-compileJava.dependsOn(generateTLAplusLexer)
+task generateTLAplusParser(type: GenerateParser) {
+    source = "src/main/grammer/tlaplus.bnf"
+    targetRoot = "src/gen"
+    pathToParser = "/com/mayreh/intellij/plugin/tlaplus/parser/TLAplusParser.java"
+    pathToPsiRoot = "/com/mayreh/intellij/plugin/tlaplus/psi"
+    purgeOldFiles = true
+}
+
+compileJava.dependsOn(generateTLAplusLexer, generateTLAplusParser)

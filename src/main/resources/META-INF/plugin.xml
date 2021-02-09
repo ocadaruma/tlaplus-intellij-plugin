@@ -4,11 +4,10 @@
     <vendor url="https://github.com/ocadaruma">Haruki Okada</vendor>
 
     <description><![CDATA[
-    Plugin that adds supports for JSR-310 (Date and Time API).<br>
+    Unofficial language plagin for TLA+ formal specification language.<br>
     <em>Features:</em>
     <ul>
-    <li>Validate DateTimeFormatter pattern literal.</li>
-    <li>Parse text as date-time classes using specified pattern literal on-the-fly.</li>
+    <li>Syntax highlighting</li>
     </ul>
     ]]></description>
 
@@ -16,10 +15,7 @@
     <depends>org.intellij.intelliLang</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <!-- Add your extensions here -->
+        <fileType name="TLA+" implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusFileType"
+                  fieldName="INSTANCE" language="TLA+" extensions="tla"/>
     </extensions>
-
-    <actions>
-        <!-- Add your actions here -->
-    </actions>
 </idea-plugin>
