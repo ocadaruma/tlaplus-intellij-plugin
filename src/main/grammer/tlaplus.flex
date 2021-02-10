@@ -207,8 +207,8 @@ MODULE_BEGIN = {SEPARATOR} {WHITE_SPACE}* "MODULE"
   [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]* { return TLAplusElementTypes.IDENTIFIER; }
 
   // comments
-  "/""/"[^\r\n]* { return TLAplusElementTypes.COMMENT_LINE; }
-  "(*"           { yybegin(IN_BLOCK_COMMENT); yypushback(2); }
+  \\"*"[^\r\n]* { return TLAplusElementTypes.COMMENT_LINE; }
+  "(*"          { yybegin(IN_BLOCK_COMMENT); yypushback(2); }
 
   {WHITE_SPACE}+ { return TokenType.WHITE_SPACE; }
   {SEPARATOR}    { return TLAplusElementTypes.SEPARATOR; }
