@@ -62,8 +62,8 @@
         COMMA              = ','
         SEPARATOR          = '----'
         MODULE_END         = '===='
-        LPARENTHESIS       = '('
-        RPARENTHESIS       = ')'
+        LPAREN             = '('
+        RPAREN             = ')'
         LBRACKET           = '{'
         RBRACKET           = '}'
         LSQBRACKET         = '['
@@ -322,7 +322,7 @@ private postfix_op ::= OP_CARETPLUS
 op_period ::= DOT
 
 op_decl ::= IDENTIFIER
-          | IDENTIFIER LPARENTHESIS <<comma_list UNDER>> RPARENTHESIS
+          | IDENTIFIER LPAREN <<comma_list UNDER>> RPAREN
           | prefix_op UNDER
           | UNDER infix_op UNDER
           | UNDER postfix_op
@@ -332,7 +332,7 @@ variable_decl ::= (KEYWORD_VARIABLE | KEYWORD_VARIABLES) <<comma_list IDENTIFIER
 constant_decl ::= (KEYWORD_CONSTANT | KEYWORD_CONSTANTS) <<comma_list op_decl>>
 
 nonfix_lhs ::= IDENTIFIER
-             | IDENTIFIER LPARENTHESIS <<comma_list (IDENTIFIER | op_decl)>> RPARENTHESIS
+             | IDENTIFIER LPAREN <<comma_list (IDENTIFIER | op_decl)>> RPAREN
 
 op_definition ::= (nonfix_lhs |
                    prefix_op IDENTIFIER |
@@ -353,7 +353,7 @@ argument ::= expr
            | general_infix_op
            | general_postfix_op
 
-instance_prefix ::= (IDENTIFIER LPARENTHESIS <<comma_list expr>> RPARENTHESIS BANG | IDENTIFIER BANG)*
+instance_prefix ::= (IDENTIFIER LPAREN <<comma_list expr>> RPAREN BANG | IDENTIFIER BANG)*
 
 general_identifier ::= instance_prefix IDENTIFIER
 
@@ -369,12 +369,14 @@ assumption ::= (KEYWORD_ASSUME | KEYWORD_ASSUMPTION | KEYWORD_AXIOM) expr
 
 theorem ::= KEYWORD_THEOREM expr
 
+private case_arm ::= expr OP_DASHGT expr
+
 expr ::= general_identifier
-       | general_identifier LPARENTHESIS <<comma_list argument>> RPARENTHESIS
+       | general_identifier LPAREN <<comma_list argument>> RPAREN
        | general_prefix_op expr
 //       | expr general_infix_op expr
 //       | expr general_postfix_op
-       | LPARENTHESIS expr RPARENTHESIS
+       | LPAREN expr RPAREN
        | (QUANTIFIER_A | QUANTIFIER_E) <<comma_list quantifier_bound>> COLON expr
        | (QUANTIFIER_A | QUANTIFIER_E | QUANTIFIER_AA | QUANTIFIER_EE) <<comma_list IDENTIFIER>> COLON expr
        | KEYWORD_CHOOSE identifier_or_tuple OP_IN expr COLON expr
@@ -388,14 +390,19 @@ expr ::= general_identifier
        | LSQBRACKET expr OP_DASHGT expr RSQBRACKET
        | LSQBRACKET <<comma_list (IDENTIFIER OP_VBARDASHGT expr)>> RSQBRACKET
        | LSQBRACKET <<comma_list (IDENTIFIER COLON expr)>> RSQBRACKET
-//       | LSQBRACKET expr KEYWORD_EXCEPT <<comma_list (BANG)>> RSQBRACKETssoiojojoijoijoij
+       | LSQBRACKET expr
+         KEYWORD_EXCEPT <<comma_list (BANG (DOT IDENTIFIER |
+                                            LSQBRACKET <<comma_list expr>> RSQBRACKET)+ OP_EQ expr)>>
+         RSQBRACKET
        | LTUPLE <<comma_list expr>> RTUPLE
 //       | expr (OP_X expr)+
        | LSQBRACKET expr RSQBRACKETUNDER expr
        | LTUPLE expr RTUPLEUNDER expr
-       | (KEYWORD_WF_ | KEYWORD_SF_) expr LPARENTHESIS expr RPARENTHESIS
+       | (KEYWORD_WF_ | KEYWORD_SF_) expr LPAREN expr RPAREN
        | KEYWORD_IF expr KEYWORD_THEN expr KEYWORD_ELSE expr
-//       | KEYWORD_CASE
+       | KEYWORD_CASE case_arm (OP_SQUARE case_arm)*
+       | KEYWORD_CASE case_arm (OP_SQUARE case_arm)* OP_SQUARE KEYWORD_OTHER OP_DASHGT expr
+       | KEYWORD_LET (op_definition | func_definition | module_definition)+ KEYWORD_IN expr
        | (OP_LAND expr)+
        | (OP_LOR expr)+
        | LITERAL_NUMBER

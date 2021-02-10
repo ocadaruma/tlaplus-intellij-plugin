@@ -83,8 +83,8 @@ MODULE_BEGIN = {SEPARATOR} {WHITE_SPACE}* "MODULE"
   ">>"  { return TLAplusElementTypes.RTUPLE; }
   ">>_" { return TLAplusElementTypes.RTUPLEUNDER; }
   ","   { return TLAplusElementTypes.COMMA; }
-  "("   { return TLAplusElementTypes.LPARENTHESIS; }
-  ")"   { return TLAplusElementTypes.RPARENTHESIS; }
+  "("   { return TLAplusElementTypes.LPAREN; }
+  ")"   { return TLAplusElementTypes.RPAREN; }
   "{"   { return TLAplusElementTypes.LBRACKET; }
   "}"   { return TLAplusElementTypes.RBRACKET; }
   "["   { return TLAplusElementTypes.LSQBRACKET; }
