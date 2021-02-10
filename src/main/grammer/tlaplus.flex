@@ -10,28 +10,33 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 %unicode
 %public
 %class _TLAplusLexer
-%extends TLAplusLexerBase
+%implements FlexLexer
 %function advance
 %type IElementType
+%{
+  private int zzNestedModuleLevel = 0;
+  private int zzInitialSkip = 0;
+%}
 
 %state IN_MODULE
 %state IN_BLOCK_COMMENT
 %state TERMINATED
 
-WHITE_SPACE = " " | \t | \f
-ONE_NL = \R
-NLS = {ONE_NL} ({ONE_NL} | {WHITE_SPACE})*
+WHITE_SPACE = " " | \t | \f | \R
 SEPARATOR = ---- -*
-MODULE_BEGIN = {SEPARATOR} ({WHITE_SPACE} | {NLS})* "MODULE"
+MODULE_BEGIN = {SEPARATOR} {WHITE_SPACE}* "MODULE"
 
 %%
 <YYINITIAL> {
-  {MODULE_BEGIN} { yypushback(yylength()); yybegin(IN_MODULE); }
-  [^]+ {MODULE_BEGIN} {
-    pushbackModuleBegin();
+  {MODULE_BEGIN} {
     yybegin(IN_MODULE);
-    return TLAplusElementTypes.IGNORED;
+    zzNestedModuleLevel++;
+    yypushback(yylength());
+    if (zzInitialSkip > 0) {
+        return TLAplusElementTypes.IGNORED;
+    }
   }
+  [^] { zzInitialSkip++; }
 }
 
 <IN_MODULE> {
@@ -73,9 +78,6 @@ MODULE_BEGIN = {SEPARATOR} ({WHITE_SPACE} | {NLS})* "MODULE"
   }
   \" ([^\\\"\r\n] | \\[^\r\n])* \" { return TLAplusElementTypes.LITERAL_STRING; }
 
-  // identifier
-  [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]* { return TLAplusElementTypes.IDENTIFIER; }
-
   // symbols
   "<<"  { return TLAplusElementTypes.LTUPLE; }
   ">>"  { return TLAplusElementTypes.RTUPLE; }
@@ -90,15 +92,18 @@ MODULE_BEGIN = {SEPARATOR} ({WHITE_SPACE} | {NLS})* "MODULE"
   "]_"  { return TLAplusElementTypes.RSQBRACKETUNDER; }
   "."   { return TLAplusElementTypes.DOT; }
   ":"   { return TLAplusElementTypes.COLON; }
+  "_"   { return TLAplusElementTypes.UNDER; }
+  "@"   { return TLAplusElementTypes.AT; }
+  "!"   { return TLAplusElementTypes.BANG; }
 
   // define
   "==" { return TLAplusElementTypes.DEFINE; }
 
   // operators
-  "ENABLED" ({NLS} | {WHITE_SPACE})   { return TLAplusElementTypes.OP_ENABLED; }
-  "UNCHANGED" ({NLS} | {WHITE_SPACE}) { return TLAplusElementTypes.OP_UNCHANGED; }
-  "SUBSET" ({NLS} | {WHITE_SPACE})    { return TLAplusElementTypes.OP_SUBSET; }
-  "DOMAIN" ({NLS} | {WHITE_SPACE})    { return TLAplusElementTypes.OP_ENABLED; }
+  "ENABLED"            { return TLAplusElementTypes.OP_ENABLED; }
+  "UNCHANGED"          { return TLAplusElementTypes.OP_UNCHANGED; }
+  "SUBSET"             { return TLAplusElementTypes.OP_POWERSET; }
+  "DOMAIN"             { return TLAplusElementTypes.OP_DOMAIN; }
   "~" | \\neg | \\lnot { return TLAplusElementTypes.OP_NEG; }
   "[]"                 { return TLAplusElementTypes.OP_SQUARE; }
   "<>"                 { return TLAplusElementTypes.OP_DIAMOND; }
@@ -191,20 +196,31 @@ MODULE_BEGIN = {SEPARATOR} ({WHITE_SPACE} | {NLS})* "MODULE"
   "^^"                 { return TLAplusElementTypes.OP_CARETCARET; }
   "|"                  { return TLAplusElementTypes.OP_VBAR; }
   "||"                 { return TLAplusElementTypes.OP_VBARVBAR; }
+  "~>"                 { return TLAplusElementTypes.OP_TILDEGT; }
   \'                   { return TLAplusElementTypes.OP_PRIME; }
   "^+"                 { return TLAplusElementTypes.OP_CARETPLUS; }
   "^*"                 { return TLAplusElementTypes.OP_CARETASTER; }
   "^#"                 { return TLAplusElementTypes.OP_CARETSHARP; }
+  "-."                 { return TLAplusElementTypes.OP_DASHDOT; }
+
+  // identifier
+  [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]* { return TLAplusElementTypes.IDENTIFIER; }
 
   // comments
   "/""/"[^\r\n]* { return TLAplusElementTypes.COMMENT_LINE; }
   "(*"           { yybegin(IN_BLOCK_COMMENT); yypushback(2); }
 
-  {NLS}         { return TLAplusElementTypes.NL; }
-  {WHITE_SPACE} { return TokenType.WHITE_SPACE; }
-  {SEPARATOR}   { return TLAplusElementTypes.SEPARATOR; }
-  ==== =*       { yybegin(TERMINATED); return TLAplusElementTypes.MODULE_END; }
-  [^]           { return TokenType.BAD_CHARACTER; }
+  {WHITE_SPACE}+ { return TokenType.WHITE_SPACE; }
+  {SEPARATOR}    { return TLAplusElementTypes.SEPARATOR; }
+  ==== =*        {
+    zzNestedModuleLevel--;
+    if (zzNestedModuleLevel == 0) {
+        yybegin(TERMINATED);
+    }
+    return TLAplusElementTypes.MODULE_END;
+  }
+
+  [^] { return TokenType.BAD_CHARACTER; }
 }
 
 <IN_BLOCK_COMMENT> {
@@ -213,5 +229,5 @@ MODULE_BEGIN = {SEPARATOR} ({WHITE_SPACE} | {NLS})* "MODULE"
 }
 
 <TERMINATED> {
-  [^]* { return TLAplusElementTypes.IGNORED; }
+  [^]+ { return TLAplusElementTypes.IGNORED; }
 }

@@ -17,5 +17,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <fileType name="TLA+" implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusFileType"
                   fieldName="INSTANCE" language="TLA+" extensions="tla"/>
+        <lang.parserDefinition language="TLA+"
+                               implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusParserDefinition"/>
     </extensions>
 </idea-plugin>
