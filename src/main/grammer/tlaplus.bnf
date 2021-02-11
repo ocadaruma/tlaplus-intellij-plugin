@@ -194,170 +194,173 @@
 //    generateTokenAccessors=true
 }
 
-module ::= module_begin KEYWORD_EXTENDS <<comma_list IDENTIFIER>> unit* MODULE_END
-         | module_begin unit* MODULE_END
+module ::= module_begin 'EXTENDS' <<comma_list 'identifier'>> unit* '===='
+         | module_begin unit* '===='
+{
+    pin=1
+}
 
 private meta comma_list ::= <<param>>(',' <<param>>)*
 
-private module_begin ::= SEPARATOR KEYWORD_MODULE IDENTIFIER SEPARATOR
+private module_begin ::= '----' 'MODULE' 'identifier' '----'
 
 private unit ::= variable_decl
                | constant_decl
-               | KEYWORD_LOCAL op_definition
+               | 'LOCAL' op_definition
                | op_definition
-               | KEYWORD_LOCAL func_definition
+               | 'LOCAL' func_definition
                | func_definition
-               | KEYWORD_LOCAL instance
+               | 'LOCAL' instance
                | instance
-               | KEYWORD_LOCAL module_definition
+               | 'LOCAL' module_definition
                | module_definition
                | assumption
                | theorem
                | module
-               | SEPARATOR
+               | '----'
 
-private identifier_or_tuple ::= IDENTIFIER
-                              | LTUPLE <<comma_list IDENTIFIER>> RTUPLE
+private identifier_or_tuple ::= 'identifier'
+                              | '<<' <<comma_list 'identifier'>> '>>'
 
-prefix_op ::= OP_DASH
-            | OP_NEG
-            | OP_SQUARE
-            | OP_DIAMOND
-            | OP_DOMAIN
-            | OP_ENABLED
-            | OP_POWERSET
-            | OP_UNCHANGED
-            | OP_UNION
+prefix_op ::= '-'
+            | '~'
+            | '[]'
+            | '<>'
+            | 'DOMAIN'
+            | 'ENABLED'
+            | 'SUBSET'
+            | 'UNCHANGED'
+            | 'UNION'
 
-infix_op ::= OP_BANGBANG
-           | OP_NOTEQ
-           | OP_SHARPSHARP
-           | OP_DOLLAR
-           | OP_DOLLARDOLLAR
-           | OP_PERCENT
-           | OP_PERCENTPERCENT
-           | OP_AMP
-           | OP_AMPAMP
-           | OP_OPLUS
-           | OP_OMINUS
-           | OP_ODOT
-           | OP_OSLASH
-           | OP_OTIMES
-           | OP_ASTER
-           | OP_ASTERASTER
-           | OP_PLUS
-           | OP_PLUSPLUS
-           | OP_DASH
-           | OP_DASHPLUSDASHGT
-           | OP_DASHDASH
-           | OP_DASHVBAR
-           | OP_DOTDOT
-           | OP_DOTDOTDOT
-           | OP_SLASH
-           | OP_SLASHSLASH
-           | OP_LAND
-           | OP_COLONCOLONEQ
-           | OP_COLONEQ
-           | OP_COLONGT
-           | OP_LT
-           | OP_LTCOLON
-           | OP_EQUIV
-           | OP_EQ
-           | OP_LTEQ
-           | OP_EQGT
-           | OP_EQVBAR
-           | OP_GT
-           | OP_GTEQ
-           | OP_QUERY
-           | OP_QUERYQUERY
-           | OP_ATAT
-           | OP_SUBTRACT
-           | OP_LOR
-           | OP_CARET
-           | OP_CARETCARET
-           | OP_VBAR
-           | OP_VBARDASH
-           | OP_VBAREQ
-           | OP_VBARVBAR
-           | OP_TILDEGT
+infix_op ::= '!'
+           | '/='
+           | '##'
+           | '$'
+           | '$$'
+           | '%'
+           | '%%'
+           | '&'
+           | '&&'
+           | '(+)'
+           | '(-)'
+           | '(.)'
+           | '(/)'
+           | '(\X)'
+           | '*'
+           | '**'
+           | '+'
+           | '++'
+           | '-'
+           | '-+->'
+           | '--'
+           | '-|'
+           | '..'
+           | '...'
+           | '/'
+           | '//'
+           | '/\'
+           | '::='
+           | ':='
+           | ':>'
+           | '<'
+           | '<:'
+           | '<=>'
+           | '='
+           | '=<'
+           | '=>'
+           | '=|'
+           | '>'
+           | '>='
+           | '?'
+           | '??'
+           | '@@'
+           | '\'
+           | '\/'
+           | '^'
+           | '^^'
+           | '|'
+           | '|-'
+           | '|='
+           | '||'
+           | '~>'
            | op_period
-           | OP_APPROX
-           | OP_SQSUPSETEQ
-           | OP_ASYMP
-           | OP_GTGT
-           | OP_STAR
-           | OP_BIGCIRC
-           | OP_IN
-           | OP_PREC
-           | OP_SUBSET
-           | OP_BULLET
-           | OP_CAP
-           | OP_PRECEQ
-           | OP_SUBSETEQ
-           | OP_PROPTO
-           | OP_SUCC
-           | OP_CDOT
-           | OP_SIM
-           | OP_SUCCEQ
-           | OP_CIRC
-           | OP_LTLT
-           | OP_SIMEQ
-           | OP_SUPSET
-           | OP_CONG
-           | OP_SQCAP
-           | OP_SUPSETEQ
-           | OP_CUP
-           | OP_SQCUP
-           | OP_DIV
-           | OP_SQSUBSET
-           | OP_UPLUS
-           | OP_DOTEQ
-           | OP_SQSUBSETEQ
-           | OP_WR
-           | OP_SQSUPSET
+           | '\approx'
+           | '\sqsupseteq'
+           | '\asymp'
+           | '\gg'
+           | '\star'
+           | '\bigcirc'
+           | '\in'
+           | '\prec'
+           | '\subset'
+           | '\bullet'
+           | '\cap'
+           | '\preceq'
+           | '\subseteq'
+           | '\propto'
+           | '\succ'
+           | '\cdot'
+           | '\sim'
+           | '\succeq'
+           | '\circ'
+           | '\ll'
+           | '\simeq'
+           | '\supset'
+           | '\cong'
+           | '\sqcap'
+           | '\supseteq'
+           | '\cup'
+           | '\sqcup'
+           | '\div'
+           | '\sqsubset'
+           | '\uplus'
+           | '\doteq'
+           | '\sqsubseteq'
+           | '\wr'
+           | '\sqsupset'
 
-postfix_op ::= OP_CARETPLUS
-             | OP_CARETASTER
-             | OP_CARETSHARP
-             | OP_PRIME
+postfix_op ::= '^+'
+             | '^*'
+             | '^#'
+             | "'"
 
-private op_period ::= DOT
+op_period ::= '.'
 
-private op_decl ::= IDENTIFIER
-                  | IDENTIFIER LPAREN <<comma_list UNDER>> RPAREN
-                  | prefix_op UNDER
-                  | UNDER infix_op UNDER
-                  | UNDER postfix_op
+private op_decl ::= 'identifier'
+                  | 'identifier' '(' <<comma_list '_'>> ')'
+                  | prefix_op '_'
+                  | '_' infix_op '_'
+                  | '_' postfix_op
 
-private variable_decl ::= (KEYWORD_VARIABLE | KEYWORD_VARIABLES) <<comma_list IDENTIFIER>>
+private variable_decl ::= ('VARIABLE' | 'VARIABLES') <<comma_list 'identifier'>>
 
-private constant_decl ::= (KEYWORD_CONSTANT | KEYWORD_CONSTANTS) <<comma_list op_decl>>
+private constant_decl ::= ('CONSTANT' | 'CONSTANTS') <<comma_list op_decl>>
 
-private nonfix_lhs ::= IDENTIFIER
-             | IDENTIFIER LPAREN <<comma_list (IDENTIFIER | op_decl)>> RPAREN
+private nonfix_lhs ::= 'identifier'
+                     | 'identifier' '(' <<comma_list ('identifier' | op_decl)>> ')'
 
 private op_definition ::= (nonfix_lhs |
-                   prefix_op IDENTIFIER |
-                   IDENTIFIER infix_op IDENTIFIER |
-                   IDENTIFIER postfix_op) DEFINE expr
+                           prefix_op 'identifier' |
+                           'identifier' infix_op 'identifier' |
+                           'identifier' postfix_op) '==' expr
 
-private func_definition ::= IDENTIFIER LSQBRACKET <<comma_list quantifier_bound>> RSQBRACKET DEFINE expr
+private func_definition ::= 'identifier' '[' <<comma_list quantifier_bound>> ']' '==' expr
 
-private quantifier_bound ::= (identifier_or_tuple | <<comma_list IDENTIFIER>>) OP_IN expr
+private quantifier_bound ::= (identifier_or_tuple | <<comma_list 'identifier'>>) '\in' expr
 
-private instance ::= KEYWORD_INSTANCE IDENTIFIER
-                   | KEYWORD_INSTANCE IDENTIFIER KEYWORD_WITH <<comma_list substitution>>
+private instance ::= 'INSTANCE' 'identifier'
+                   | 'INSTANCE' 'identifier' 'WITH' <<comma_list substitution>>
 
-private substitution ::= (IDENTIFIER | prefix_op | infix_op | postfix_op) OP_LTDASH argument
+private substitution ::= ('identifier' | prefix_op | infix_op | postfix_op) '<-' argument
 
 private argument ::= expr
                    | general_prefix_op
                    | general_infix_op
                    | general_postfix_op
 
-private instance_prefix ::= (IDENTIFIER LPAREN <<comma_list expr>> RPAREN BANG | IDENTIFIER BANG)*
+private instance_prefix ::= ('identifier' '(' <<comma_list expr>> ')' '!' | 'identifier' '!')*
 
-private general_identifier ::= instance_prefix IDENTIFIER
+private general_identifier ::= instance_prefix 'identifier'
 
 private general_prefix_op ::= instance_prefix prefix_op
 
@@ -365,14 +368,14 @@ private general_infix_op ::= instance_prefix infix_op
 
 private general_postfix_op ::= instance_prefix postfix_op
 
-private module_definition ::= nonfix_lhs DEFINE instance
+private module_definition ::= nonfix_lhs '==' instance
 
-private assumption ::= (KEYWORD_ASSUME | KEYWORD_ASSUMPTION | KEYWORD_AXIOM) expr
+private assumption ::= ('ASSUME' | 'ASSUMPTION' | 'AXIOM') expr
 
-private theorem ::= KEYWORD_THEOREM expr
+private theorem ::= 'THEOREM' expr
 
 identifier_expr ::= general_identifier
-                  | general_identifier LPAREN <<comma_list argument>> RPAREN
+                  | general_identifier '(' <<comma_list argument>> ')'
 
 prefix_op_expr ::= general_prefix_op expr
 
@@ -380,57 +383,57 @@ infix_op_expr ::= expr general_infix_op expr
 
 postfix_op_expr ::= expr general_postfix_op
 
-paren_expr ::= LPAREN expr RPAREN
+paren_expr ::= '(' expr ')'
 
-quantifier_expr ::= (QUANTIFIER_A | QUANTIFIER_E) <<comma_list quantifier_bound>> COLON expr
-                  | (QUANTIFIER_A | QUANTIFIER_E | QUANTIFIER_AA | QUANTIFIER_EE) <<comma_list IDENTIFIER>> COLON expr
+quantifier_expr ::= ('\A' | '\E') <<comma_list quantifier_bound>> ':' expr
+                  | ('\A' | '\E' | '\AA' | '\EE') <<comma_list 'identifier'>> ':' expr
 
-choose_expr ::= KEYWORD_CHOOSE identifier_or_tuple OP_IN expr COLON expr
-              | KEYWORD_CHOOSE identifier_or_tuple COLON expr
+choose_expr ::= 'CHOOSE' identifier_or_tuple '\in' expr ':' expr
+              | 'CHOOSE' identifier_or_tuple ':' expr
 
-set_expr ::= LBRACKET <<comma_list expr>> RBRACKET
-           | LBRACKET RBRACKET
-           | LBRACKET identifier_or_tuple OP_IN expr COLON expr RBRACKET
-           | LBRACKET expr COLON <<comma_list quantifier_bound>> RBRACKET
+set_expr ::= '{' <<comma_list expr>>? '}'
+           | '{' identifier_or_tuple '\in' expr ':' expr '}'
+           | '{' expr ':' <<comma_list quantifier_bound>> '}'
 
-apply_argument_expr ::= expr LSQBRACKET <<comma_list expr>> RSQBRACKET
+apply_argument_expr ::= expr '[' <<comma_list expr>> ']'
 
-functions_expr ::= LSQBRACKET <<comma_list quantifier_bound>> OP_VBARDASHGT expr RSQBRACKET
-                 | LSQBRACKET expr OP_DASHGT expr RSQBRACKET
-                 | LSQBRACKET expr
-                   KEYWORD_EXCEPT <<comma_list (BANG (LSQBRACKET <<comma_list expr>> RSQBRACKET)+ OP_EQ expr)>>
-                   RSQBRACKET
+functions_expr ::= '[' <<comma_list quantifier_bound>> '|->' expr ']'
+                 | '[' expr '->' expr ']'
+                 | '[' expr
+                   'EXCEPT' <<comma_list ('!' ('[' <<comma_list expr>> ']')+ '=' expr)>>
+                   ']'
 
-records_expr ::= LSQBRACKET <<comma_list (IDENTIFIER OP_VBARDASHGT expr)>> RSQBRACKET
-               | LSQBRACKET <<comma_list (IDENTIFIER COLON expr)>> RSQBRACKET
-               | LSQBRACKET expr
-                 KEYWORD_EXCEPT <<comma_list (BANG (DOT IDENTIFIER)+ OP_EQ expr)>>
-                 RSQBRACKET
+records_expr ::= '[' <<comma_list ('identifier' '|->' expr)>> ']'
+               | '[' <<comma_list ('identifier' ':' expr)>> ']'
+               | '[' expr
+                 'EXCEPT' <<comma_list ('!' ('.' 'identifier')+ '=' expr)>>
+                 ']'
 
-tuple_expr ::= LTUPLE <<comma_list expr>> RTUPLE
+tuple_expr ::= '<<' <<comma_list expr>> '>>'
 
-cartesian_product_expr ::= expr (OP_X expr)+
+cartesian_product_expr ::= expr ('\X' expr)+
 
-action_expr ::= LSQBRACKET expr RSQBRACKETUNDER expr
-              | LTUPLE expr RTUPLEUNDER expr
+action_expr ::= '[' expr ']_' expr
+              | '<<' expr '>>_' expr
 
-fairness_expr ::= (KEYWORD_WF_ | KEYWORD_SF_) expr LPAREN expr RPAREN
+fairness_expr ::= 'WF_' expr '(' expr ')'
+                | 'SF_' expr '(' expr ')'
 
-if_expr ::= KEYWORD_IF expr KEYWORD_THEN expr KEYWORD_ELSE expr
+if_expr ::= 'IF' expr 'THEN' expr 'ELSE' expr
 
-private case_arm ::= expr OP_DASHGT expr
+private case_arm ::= expr '->' expr
 
-case_expr ::= KEYWORD_CASE case_arm (OP_SQUARE case_arm)*
-            | KEYWORD_CASE case_arm (OP_SQUARE case_arm)* OP_SQUARE KEYWORD_OTHER OP_DASHGT expr
+case_expr ::= 'CASE' case_arm ('[]' case_arm)*
+            | 'CASE' case_arm ('[]' case_arm)* '[]' 'OTHER' '->' expr
 
-let_expr ::= KEYWORD_LET (op_definition | func_definition | module_definition)+ KEYWORD_IN expr
+let_expr ::= 'LET' (op_definition | func_definition | module_definition)+ 'IN' expr
 
-junction_list_expr ::= (OP_LAND expr)+
-                     | (OP_LOR expr)+
+junction_list_expr ::= ('/\' expr)+
+                     | ('\/' expr)+
 
-literal_expr ::= (LITERAL_STRING | LITERAL_NUMBER)
+literal_expr ::= ('string' | 'number')
 
-at_expr ::= AT
+at_expr ::= '@'
 
 expr ::= identifier_expr
        | prefix_op_expr
