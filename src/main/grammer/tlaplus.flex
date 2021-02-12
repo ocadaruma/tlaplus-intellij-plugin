@@ -18,6 +18,7 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
   private int zzInitialSkip = 0;
 %}
 
+%state MODULEBEGIN
 %state IN_MODULE
 %state IN_BLOCK_COMMENT
 %state TERMINATED
@@ -29,8 +30,7 @@ MODULE_BEGIN = {SEPARATOR} {WHITE_SPACE}* "MODULE"
 %%
 <YYINITIAL> {
   {MODULE_BEGIN} {
-    yybegin(IN_MODULE);
-    zzNestedModuleLevel++;
+    yybegin(MODULEBEGIN);
     yypushback(yylength());
     if (zzInitialSkip > 0) {
         return TLAplusElementTypes.IGNORED;
@@ -39,7 +39,22 @@ MODULE_BEGIN = {SEPARATOR} {WHITE_SPACE}* "MODULE"
   [^] { zzInitialSkip++; }
 }
 
+<MODULEBEGIN> {
+  "MODULE" {
+      zzNestedModuleLevel++;
+      yybegin(IN_MODULE);
+      return TLAplusElementTypes.KEYWORD_MODULE;
+  }
+  {SEPARATOR}    { return TLAplusElementTypes.SEPARATOR; }
+  {WHITE_SPACE}+ { return TokenType.WHITE_SPACE; }
+}
+
 <IN_MODULE> {
+  {MODULE_BEGIN} {
+    yybegin(MODULEBEGIN);
+    yypushback(yylength());
+  }
+
   // keywords
   "ASSUME"     { return TLAplusElementTypes.KEYWORD_ASSUME; }
   "ELSE"       { return TLAplusElementTypes.KEYWORD_ELSE; }

@@ -187,22 +187,21 @@
         QUANTIFIER_AA      = '\AA'
 
         // only for live preview
-        WHITE_SPACE = 'regexp:(\s|\R)+'
+//        WHITE_SPACE = 'regexp:(\s|\R)+'
     ]
 
     extends('.*_expr') = expr
 //    generateTokenAccessors=true
 }
 
-module ::= module_begin 'EXTENDS' <<comma_list 'identifier'>> unit* '===='
-         | module_begin unit* '===='
+module ::= module_header ('EXTENDS' <<comma_list 'identifier'>>)? unit* '===='
 {
-    pin=1
+  pin=1
 }
 
 private meta comma_list ::= <<param>>(',' <<param>>)*
 
-private module_begin ::= '----' 'MODULE' 'identifier' '----'
+module_header ::= '----' 'MODULE' 'identifier' '----'
 
 private unit ::= variable_decl
                | constant_decl
@@ -265,6 +264,7 @@ infix_op ::= '!'
            | '<'
            | '<:'
            | '<=>'
+           | '\notin'
            | '='
            | '=<'
            | '=>'
@@ -313,7 +313,7 @@ infix_op ::= '!'
            | '\sqcup'
            | '\div'
            | '\sqsubset'
-           | '\uplus'
+           | OP_UPLUS  // we can't use token value here since it causes illegal unicode escape in generated source
            | '\doteq'
            | '\sqsubseteq'
            | '\wr'
@@ -326,30 +326,28 @@ postfix_op ::= '^+'
 
 op_period ::= '.'
 
-private op_decl ::= 'identifier'
-                  | 'identifier' '(' <<comma_list '_'>> ')'
-                  | prefix_op '_'
-                  | '_' infix_op '_'
-                  | '_' postfix_op
+op_decl ::= 'identifier'
+          | 'identifier' '(' <<comma_list '_'>> ')'
+          | prefix_op '_'
+          | '_' infix_op '_'
+          | '_' postfix_op
 
-private variable_decl ::= ('VARIABLE' | 'VARIABLES') <<comma_list 'identifier'>>
+variable_decl ::= ('VARIABLE' | 'VARIABLES') <<comma_list 'identifier'>>
 
-private constant_decl ::= ('CONSTANT' | 'CONSTANTS') <<comma_list op_decl>>
+constant_decl ::= ('CONSTANT' | 'CONSTANTS') <<comma_list op_decl>>
 
-private nonfix_lhs ::= 'identifier'
-                     | 'identifier' '(' <<comma_list ('identifier' | op_decl)>> ')'
+private nonfix_lhs ::= 'identifier' ('(' <<comma_list ('identifier' | op_decl)>> ')')?
 
-private op_definition ::= (nonfix_lhs |
-                           prefix_op 'identifier' |
-                           'identifier' infix_op 'identifier' |
-                           'identifier' postfix_op) '==' expr
+op_definition ::= (nonfix_lhs |
+                   prefix_op 'identifier' |
+                   'identifier' infix_op 'identifier' |
+                   'identifier' postfix_op) '==' expr
 
-private func_definition ::= 'identifier' '[' <<comma_list quantifier_bound>> ']' '==' expr
+func_definition ::= 'identifier' '[' <<comma_list quantifier_bound>> ']' '==' expr
 
-private quantifier_bound ::= (identifier_or_tuple | <<comma_list 'identifier'>>) '\in' expr
+private quantifier_bound ::= ('<<' <<comma_list 'identifier'>> '>>' | <<comma_list 'identifier'>>) '\in' expr
 
-private instance ::= 'INSTANCE' 'identifier'
-                   | 'INSTANCE' 'identifier' 'WITH' <<comma_list substitution>>
+instance ::= 'INSTANCE' 'identifier' ('WITH' <<comma_list substitution>>)? { pin = 1 }
 
 private substitution ::= ('identifier' | prefix_op | infix_op | postfix_op) '<-' argument
 
@@ -358,7 +356,7 @@ private argument ::= expr
                    | general_infix_op
                    | general_postfix_op
 
-private instance_prefix ::= ('identifier' '(' <<comma_list expr>> ')' '!' | 'identifier' '!')*
+private instance_prefix ::= ('identifier' ('(' <<comma_list expr>> ')')? '!')*
 
 private general_identifier ::= instance_prefix 'identifier'
 
@@ -368,14 +366,13 @@ private general_infix_op ::= instance_prefix infix_op
 
 private general_postfix_op ::= instance_prefix postfix_op
 
-private module_definition ::= nonfix_lhs '==' instance
+module_definition ::= nonfix_lhs '==' instance
 
-private assumption ::= ('ASSUME' | 'ASSUMPTION' | 'AXIOM') expr
+assumption ::= ('ASSUME' | 'ASSUMPTION' | 'AXIOM') expr { pin = 1 }
 
-private theorem ::= 'THEOREM' expr
+theorem ::= 'THEOREM' expr { pin = 1 }
 
-identifier_expr ::= general_identifier
-                  | general_identifier '(' <<comma_list argument>> ')'
+identifier_expr ::= general_identifier ('(' <<comma_list argument>> ')')?
 
 prefix_op_expr ::= general_prefix_op expr
 
@@ -383,13 +380,16 @@ infix_op_expr ::= expr general_infix_op expr
 
 postfix_op_expr ::= expr general_postfix_op
 
-paren_expr ::= '(' expr ')'
+paren_expr ::= '(' expr ')' { pin = 1 }
 
-quantifier_expr ::= ('\A' | '\E') <<comma_list quantifier_bound>> ':' expr
-                  | ('\A' | '\E' | '\AA' | '\EE') <<comma_list 'identifier'>> ':' expr
+temporal_quantifier_expr ::= ('\AA' | '\EE') <<comma_list 'identifier'>> ':' expr { pin = 1 }
 
-choose_expr ::= 'CHOOSE' identifier_or_tuple '\in' expr ':' expr
-              | 'CHOOSE' identifier_or_tuple ':' expr
+quantifier_expr ::= ('\A' | '\E') (<<comma_list quantifier_bound>> | <<comma_list 'identifier'>>) ':' expr
+{
+  pin = 1
+}
+
+choose_expr ::= 'CHOOSE' identifier_or_tuple (('\in' expr)? ':' expr) { pin = 1 }
 
 set_expr ::= '{' <<comma_list expr>>? '}'
            | '{' identifier_or_tuple '\in' expr ':' expr '}'
@@ -399,34 +399,28 @@ apply_argument_expr ::= expr '[' <<comma_list expr>> ']'
 
 functions_expr ::= '[' <<comma_list quantifier_bound>> '|->' expr ']'
                  | '[' expr '->' expr ']'
-                 | '[' expr
-                   'EXCEPT' <<comma_list ('!' ('[' <<comma_list expr>> ']')+ '=' expr)>>
-                   ']'
 
 records_expr ::= '[' <<comma_list ('identifier' '|->' expr)>> ']'
                | '[' <<comma_list ('identifier' ':' expr)>> ']'
-               | '[' expr
-                 'EXCEPT' <<comma_list ('!' ('.' 'identifier')+ '=' expr)>>
-                 ']'
 
-tuple_expr ::= '<<' <<comma_list expr>> '>>'
+except_expr ::= '[' expr 'EXCEPT' <<comma_list ('!' (('.' 'identifier') | '[' <<comma_list expr>> ']')+ '=' expr)>> ']'
+
+tuple_expr ::= '<<' <<comma_list expr>> '>>' { pin = 1 }
 
 cartesian_product_expr ::= expr ('\X' expr)+
 
 action_expr ::= '[' expr ']_' expr
               | '<<' expr '>>_' expr
 
-fairness_expr ::= 'WF_' expr '(' expr ')'
-                | 'SF_' expr '(' expr ')'
+fairness_expr ::= ('WF_' | 'SF_') expr '(' expr ')' { pin = 1 }
 
-if_expr ::= 'IF' expr 'THEN' expr 'ELSE' expr
+if_expr ::= 'IF' expr 'THEN' expr 'ELSE' expr { pin = 1 }
 
 private case_arm ::= expr '->' expr
 
-case_expr ::= 'CASE' case_arm ('[]' case_arm)*
-            | 'CASE' case_arm ('[]' case_arm)* '[]' 'OTHER' '->' expr
+case_expr ::= 'CASE' case_arm ('[]' case_arm)* ('[]' 'OTHER' '->' expr)? { pin = 1 }
 
-let_expr ::= 'LET' (op_definition | func_definition | module_definition)+ 'IN' expr
+let_expr ::= 'LET' (op_definition | func_definition | module_definition)+ 'IN' expr { pin = 1 }
 
 junction_list_expr ::= ('/\' expr)+
                      | ('\/' expr)+
@@ -436,23 +430,25 @@ literal_expr ::= ('string' | 'number')
 at_expr ::= '@'
 
 expr ::= identifier_expr
-       | prefix_op_expr
-       | infix_op_expr
-       | postfix_op_expr
        | paren_expr
-       | quantifier_expr
-       | choose_expr
        | set_expr
        | apply_argument_expr
        | functions_expr
        | records_expr
+       | except_expr
        | tuple_expr
        | cartesian_product_expr
        | action_expr
        | fairness_expr
        | if_expr
-       | case_expr
-       | let_expr
        | junction_list_expr
+       | prefix_op_expr
+       | infix_op_expr
+       | postfix_op_expr
+       | case_expr
+       | quantifier_expr
+       | temporal_quantifier_expr
+       | choose_expr
+       | let_expr
        | literal_expr
        | at_expr
