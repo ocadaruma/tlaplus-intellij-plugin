@@ -19,5 +19,7 @@
                   fieldName="INSTANCE" language="TLA+" extensions="tla"/>
         <lang.parserDefinition language="TLA+"
                                implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusParserDefinition"/>
+        <lang.syntaxHighlighterFactory language="TLA+"
+                                       implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusSyntaxHighlighterFactory"/>
     </extensions>
 </idea-plugin>
