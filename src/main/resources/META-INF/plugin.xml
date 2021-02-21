@@ -15,12 +15,20 @@
     <depends>org.intellij.intelliLang</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <fileType name="TLA+" implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusFileType"
-                  fieldName="INSTANCE" language="TLA+" extensions="tla"/>
-        <lang.parserDefinition language="TLA+"
-                               implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusParserDefinition"/>
-        <lang.syntaxHighlighterFactory language="TLA+"
-                                       implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusSyntaxHighlighterFactory"/>
-<!--        <renamePsiElementProcessor implementation="com.mayreh.intellij.plugin.tlaplus.refactoring.TLAplusRenameProcessor"/>-->
+        <fileType
+          name="TLA+"
+          implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusFileType"
+          fieldName="INSTANCE"
+          language="TLA+"
+          extensions="tla"/>
+        <lang.parserDefinition
+          language="TLA+"
+          implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusParserDefinition"/>
+        <lang.syntaxHighlighterFactory
+          language="TLA+"
+          implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusSyntaxHighlighterFactory"/>
+        <lang.commenter
+          language="TLA+"
+          implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusCommenter"/>
     </extensions>
 </idea-plugin>
