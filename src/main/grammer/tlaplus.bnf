@@ -190,7 +190,7 @@
         QUANTIFIER_AA      = '\AA'
 
         // only for live preview
-        WHITE_SPACE = 'regexp:(\s|\R)+'
+//        WHITE_SPACE = 'regexp:(\s|\R)+'
     ]
 
     extends('.*_expr') = expr
