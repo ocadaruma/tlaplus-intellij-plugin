@@ -21,5 +21,6 @@
                                implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusParserDefinition"/>
         <lang.syntaxHighlighterFactory language="TLA+"
                                        implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusSyntaxHighlighterFactory"/>
+<!--        <renamePsiElementProcessor implementation="com.mayreh.intellij.plugin.tlaplus.refactoring.TLAplusRenameProcessor"/>-->
     </extensions>
 </idea-plugin>

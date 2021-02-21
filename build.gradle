@@ -56,6 +56,13 @@ task generateTLAplusLexer(type: GenerateLexer) {
     purgeOldFiles = true
 }
 
+task generateTLAplusModuleBeginLexer(type: GenerateLexer) {
+    source = "src/main/grammer/tlaplus_modulebegin.flex"
+    targetDir = "src/gen/com/mayreh/intellij/plugin/tlaplus/lexer"
+    targetClass = "_TLAplusModuleBeginLexer"
+    purgeOldFiles = true
+}
+
 task generateTLAplusParser(type: GenerateParser) {
     source = "src/main/grammer/tlaplus.bnf"
     targetRoot = "src/gen"
@@ -64,4 +71,4 @@ task generateTLAplusParser(type: GenerateParser) {
     purgeOldFiles = true
 }
 
-compileJava.dependsOn(generateTLAplusLexer, generateTLAplusParser)
+compileJava.dependsOn(generateTLAplusLexer, generateTLAplusModuleBeginLexer, generateTLAplusParser)

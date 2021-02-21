@@ -15,44 +15,30 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 %type IElementType
 %{
   private int zzNestedModuleLevel = 0;
-  private int zzInitialSkip = 0;
 %}
 
-%state MODULEBEGIN
 %state IN_MODULE
 %state IN_BLOCK_COMMENT
 %state TERMINATED
 
 WHITE_SPACE = " " | \t | \f | \R
 SEPARATOR = ---- -*
-MODULE_BEGIN = {SEPARATOR} {WHITE_SPACE}* "MODULE"
+MODULE_BEGIN = {SEPARATOR} " "* "MODULE"
 
 %%
 <YYINITIAL> {
   {MODULE_BEGIN} {
-    yybegin(MODULEBEGIN);
-    yypushback(yylength());
-    if (zzInitialSkip > 0) {
-        return TLAplusElementTypes.IGNORED;
-    }
+    zzNestedModuleLevel = 0;
+    yybegin(IN_MODULE);
+    return TLAplusElementTypes.MODULE_BEGIN;
   }
-  [^] { zzInitialSkip++; }
-}
-
-<MODULEBEGIN> {
-  "MODULE" {
-      zzNestedModuleLevel++;
-      yybegin(IN_MODULE);
-      return TLAplusElementTypes.KEYWORD_MODULE;
-  }
-  {SEPARATOR}    { return TLAplusElementTypes.SEPARATOR; }
-  {WHITE_SPACE}+ { return TokenType.WHITE_SPACE; }
+  [^] { return TLAplusElementTypes.IGNORED; }
 }
 
 <IN_MODULE> {
   {MODULE_BEGIN} {
-    yybegin(MODULEBEGIN);
-    yypushback(yylength());
+    zzNestedModuleLevel++;
+    return TLAplusElementTypes.MODULE_BEGIN;
   }
 
   // keywords
@@ -228,21 +214,25 @@ MODULE_BEGIN = {SEPARATOR} {WHITE_SPACE}* "MODULE"
   {WHITE_SPACE}+ { return TokenType.WHITE_SPACE; }
   {SEPARATOR}    { return TLAplusElementTypes.SEPARATOR; }
   ==== =*        {
-    zzNestedModuleLevel--;
     if (zzNestedModuleLevel == 0) {
         yybegin(TERMINATED);
+    } else {
+        zzNestedModuleLevel--;
     }
     return TLAplusElementTypes.MODULE_END;
   }
-
-  [^] { return TokenType.BAD_CHARACTER; }
 }
 
 <IN_BLOCK_COMMENT> {
-  "*)" { yybegin(IN_MODULE); return TLAplusElementTypes.COMMENT_BLOCK; }
-  [^]  {}
+  "*)"    { yybegin(IN_MODULE); return TLAplusElementTypes.COMMENT_BLOCK; }
+  <<EOF>> { yybegin(YYINITIAL); return TLAplusElementTypes.COMMENT_BLOCK; }
+  [^]     {}
 }
 
 <TERMINATED> {
-  [^]+ { return TLAplusElementTypes.IGNORED; }
+  <<EOF>> { yybegin(YYINITIAL); return TLAplusElementTypes.IGNORED; }
+  [^]     {}
 }
+
+// catch all
+[^] { return TokenType.BAD_CHARACTER; }

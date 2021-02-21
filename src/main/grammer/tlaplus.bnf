@@ -1,6 +1,6 @@
 {
     parserClass='com.mayreh.intellij.plugin.tlaplus.parser.TLAplusParser'
-//    parserUtilClass='com.mayreh.intellij.plugin.tlaplus.parser.TLAplusParserUtil'
+    parserUtilClass='com.mayreh.intellij.plugin.tlaplus.parser.TLAplusParserUtil'
 
 //    implements='com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusElement'
 //    extends='com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusElementImpl'
@@ -14,6 +14,7 @@
     psiImplClassSuffix='Impl'
     psiPackage='com.mayreh.intellij.plugin.tlaplus.psi'
     psiImplPackage='com.mayreh.intellij.plugin.tlaplus.psi.impl'
+    psiImplUtilClass='com.mayreh.intellij.plugin.tlaplus.psi.impl.TLAplusPsiImplUtil'
 
 //    parserImports=[
 //      'static com.mayreh.intellij.plugin.tlaplus.parser.TLAplusParserUtil.*'
@@ -25,6 +26,8 @@
 
         COMMENT_LINE       = 'COMMENT_LINE'
         COMMENT_BLOCK      = 'COMMENT_BLOCK'
+
+        MODULE_BEGIN       = 'MODULE_BEGIN'
 
         KEYWORD_ASSUME     = 'ASSUME'
         KEYWORD_ELSE       = 'ELSE'
@@ -187,7 +190,7 @@
         QUANTIFIER_AA      = '\AA'
 
         // only for live preview
-//        WHITE_SPACE = 'regexp:(\s|\R)+'
+        WHITE_SPACE = 'regexp:(\s|\R)+'
     ]
 
     extends('.*_expr') = expr
@@ -196,12 +199,16 @@
 
 module ::= module_header ('EXTENDS' <<comma_list 'identifier'>>)? unit* '===='
 {
-  pin=1
+  pin = 1
 }
 
 private meta comma_list ::= <<param>>(',' <<param>>)*
 
-module_header ::= '----' 'MODULE' 'identifier' '----'
+module_header ::= 'MODULE_BEGIN' 'identifier' '----'
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.impl.TLAplusNamedElementImpl'
+}
 
 private unit ::= variable_decl
                | constant_decl
@@ -429,7 +436,14 @@ literal_expr ::= ('string' | 'number')
 
 at_expr ::= '@'
 
-expr ::= identifier_expr
+expr ::= action_expr
+       | fairness_expr
+       | if_expr
+       | prefix_op_expr
+       | postfix_op_expr
+       | infix_op_expr
+       | junction_list_expr
+       | cartesian_product_expr
        | paren_expr
        | set_expr
        | apply_argument_expr
@@ -437,18 +451,11 @@ expr ::= identifier_expr
        | records_expr
        | except_expr
        | tuple_expr
-       | cartesian_product_expr
-       | action_expr
-       | fairness_expr
-       | if_expr
-       | junction_list_expr
-       | prefix_op_expr
-       | infix_op_expr
-       | postfix_op_expr
        | case_expr
        | quantifier_expr
        | temporal_quantifier_expr
        | choose_expr
        | let_expr
+       | identifier_expr
        | literal_expr
        | at_expr
