@@ -205,7 +205,20 @@ MODULE_BEGIN = {SEPARATOR} " "* "MODULE"
   "-."                 { return TLAplusElementTypes.OP_DASHDOT; }
 
   // identifier
-  [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]* { return TLAplusElementTypes.IDENTIFIER; }
+  [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]* {
+      // fairness operators should be tokenized even if there's no whitespace
+      if (yylength() > 3) {
+          if ("WF_".equals(yytext().subSequence(0, 3))) {
+              yypushback(yylength() - 3);
+              return TLAplusElementTypes.KEYWORD_WF_;
+          }
+          if ("SF_".equals(yytext().subSequence(0, 3))) {
+              yypushback(yylength() - 3);
+              return TLAplusElementTypes.KEYWORD_SF_;
+          }
+      }
+      return TLAplusElementTypes.IDENTIFIER;
+  }
 
   // comments
   \\"*"[^\r\n]* { return TLAplusElementTypes.COMMENT_LINE; }
