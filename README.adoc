@@ -1,0 +1,13 @@
+Intellij plugin for TLA+
+========================
+
+image:https://github.com/ocadaruma/tlaplus-intellij-plugin/workflows/CI/badge.svg?branch=master[link="https://github.com/ocadaruma/tlaplus-intellij-plugin/actions?query=workflow%3ACI+branch%3Amaster+event%3Apush"]
+
+NOTE: This plugin is still in very early stage.
+
+== Features
+
+* [x] Syntax highlighting
+* [ ] Find usages (Go to declaration)
+* [ ] Run TLC
+* [ ] PlusCal
