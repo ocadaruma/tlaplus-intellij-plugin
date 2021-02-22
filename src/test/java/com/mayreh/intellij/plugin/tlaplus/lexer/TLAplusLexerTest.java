@@ -5,11 +5,6 @@ import com.mayreh.intellij.plugin.tlaplus.TLAplusLexerTestCaseBase;
 
 public class TLAplusLexerTest extends TLAplusLexerTestCaseBase {
     @Override
-    protected String resourcePrefix() {
-        return "lexer/fixtures";
-    }
-
-    @Override
     protected Lexer createLexer() {
         return new TLAplusLexer();
     }

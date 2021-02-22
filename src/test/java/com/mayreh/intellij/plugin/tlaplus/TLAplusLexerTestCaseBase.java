@@ -1,24 +1,28 @@
 package com.mayreh.intellij.plugin.tlaplus;
 
+import org.jetbrains.annotations.NotNull;
+
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.testFramework.LexerTestCase;
 
 public abstract class TLAplusLexerTestCaseBase extends LexerTestCase {
-
-    protected abstract String resourcePrefix();
+    @Override
+    protected @NotNull String getPathToTestDataFile(String extension) {
+        return String.format("src/test/resources/lexer/fixtures/%s%s",
+                             getTestName(false), extension);
+    }
 
     @Override
     protected String getDirPath() {
         throw new UnsupportedOperationException();
     }
 
-    protected void doTest() {
-        String testName = StringUtil.trimStart(getName(), "test_");
+    @Override
+    protected @NotNull String getTestName(boolean lowercaseFirstLetter) {
+        return StringUtil.trimStart(getName(), "test_");
+    }
 
-        String text = TestUtils.resourceToString(
-                resourcePrefix() + '/' + testName + ".tla");
-        String expected = TestUtils.resourceToString(
-                resourcePrefix() + '/' + testName + ".txt");
-        doTest(text, expected, createLexer());
+    protected void doTest() {
+        doFileTest("tla");
     }
 }

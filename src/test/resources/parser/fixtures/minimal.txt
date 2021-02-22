@@ -1,0 +1,9 @@
+FILE
+  TLAplusModuleHeaderImpl(MODULE_HEADER)
+    PsiElement(MODULE_BEGIN)('---- MODULE')
+    PsiWhiteSpace(' ')
+    PsiElement(identifier)('minimal')
+    PsiWhiteSpace(' ')
+    PsiElement(----)('----')
+  PsiWhiteSpace('\n')
+  PsiElement(====)('========================')
