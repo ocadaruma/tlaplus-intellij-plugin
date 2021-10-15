@@ -20,4 +20,8 @@ public class TLAplusLexerTest extends TLAplusLexerTestCaseBase {
     public void test_ABSpec() {
         doTest();
     }
+
+    public void test_Junction() {
+        doTest();
+    }
 }

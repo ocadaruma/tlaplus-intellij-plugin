@@ -18,7 +18,7 @@ public class TestUtils {
                 baos.write(buffer, 0, read);
             }
 
-            return new String(baos.toByteArray(), StandardCharsets.UTF_8);
+            return baos.toString(StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

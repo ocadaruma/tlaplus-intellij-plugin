@@ -1,8 +1,12 @@
 package com.mayreh.intellij.plugin.tlaplus.lexer;
 
 import com.intellij.lexer.FlexLexer;
+import com.intellij.openapi.util.text.LineColumn;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.TokenType;
+import com.intellij.util.containers.Stack;
+import com.mayreh.intellij.plugin.tlaplus.lexer.JunctionIndentation.Type;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 
 %%
@@ -15,9 +19,44 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 %type IElementType
 %{
   private int zzNestedModuleLevel = 0;
+  private final Stack<JunctionIndentation> zzIndentationStack = new Stack<>(1000);
+
+  private IElementType clearIndent(IElementType e, int nextState) {
+      JunctionIndentation i = zzIndentationStack.isEmpty() ? null : zzIndentationStack.peek();
+      if (i == null) {
+          yybegin(nextState);
+          return e;
+      }
+      zzIndentationStack.pop();
+      yypushback(yylength());
+      yybegin(HANDLE_INDENT);
+      return TLAplusElementTypes.DEDENT;
+  }
+
+  private IElementType maybeHandleIndent(IElementType e) {
+      JunctionIndentation i = zzIndentationStack.isEmpty() ? null : zzIndentationStack.peek();
+      if (i == null) {
+          if (yystate() == HANDLE_INDENT) {
+              yybegin(IN_MODULE);
+          }
+          return e;
+      }
+      int column = StringUtil.offsetToLineColumn(zzBuffer, zzCurrentPos).column;
+      if (i.column < column) {
+          if (yystate() == HANDLE_INDENT) {
+              yybegin(IN_MODULE);
+          }
+          return e;
+      }
+      zzIndentationStack.pop();
+      yypushback(yylength());
+      yybegin(HANDLE_INDENT);
+      return TLAplusElementTypes.DEDENT;
+  }
 %}
 
 %state IN_MODULE
+%state HANDLE_INDENT
 %state IN_BLOCK_COMMENT
 %state TERMINATED
 
@@ -35,174 +74,208 @@ MODULE_BEGIN = {SEPARATOR} " "* "MODULE"
   [^] { return TLAplusElementTypes.IGNORED; }
 }
 
-<IN_MODULE> {
+<IN_MODULE, HANDLE_INDENT> {
   {MODULE_BEGIN} {
-    zzNestedModuleLevel++;
-    return TLAplusElementTypes.MODULE_BEGIN;
+    if (yystate() == IN_MODULE) {
+        zzNestedModuleLevel++;
+    }
+    return clearIndent(TLAplusElementTypes.MODULE_BEGIN, IN_MODULE);
   }
 
   // keywords
-  "ASSUME"     { return TLAplusElementTypes.KEYWORD_ASSUME; }
-  "ELSE"       { return TLAplusElementTypes.KEYWORD_ELSE; }
-  "LOCAL"      { return TLAplusElementTypes.KEYWORD_LOCAL; }
-  "ASSUMPTION" { return TLAplusElementTypes.KEYWORD_ASSUMPTION; }
-  "MODULE"     { return TLAplusElementTypes.KEYWORD_MODULE; }
-  "VARIABLE"   { return TLAplusElementTypes.KEYWORD_VARIABLE; }
-  "VARIABLES"  { return TLAplusElementTypes.KEYWORD_VARIABLES; }
-  "AXIOM"      { return TLAplusElementTypes.KEYWORD_AXIOM; }
-  "EXCEPT"     { return TLAplusElementTypes.KEYWORD_EXCEPT; }
-  "OTHER"      { return TLAplusElementTypes.KEYWORD_OTHER; }
-  "CASE"       { return TLAplusElementTypes.KEYWORD_CASE; }
-  "EXTENDS"    { return TLAplusElementTypes.KEYWORD_EXTENDS; }
-  "SF_"        { return TLAplusElementTypes.KEYWORD_SF_; }
-  "WF_"        { return TLAplusElementTypes.KEYWORD_WF_; }
-  "CHOOSE"     { return TLAplusElementTypes.KEYWORD_CHOOSE; }
-  "IF"         { return TLAplusElementTypes.KEYWORD_IF; }
-  "WITH"       { return TLAplusElementTypes.KEYWORD_WITH; }
-  "CONSTANTS"  { return TLAplusElementTypes.KEYWORD_CONSTANTS; }
-  "CONSTANT"   { return TLAplusElementTypes.KEYWORD_CONSTANT; }
-  "IN"         { return TLAplusElementTypes.KEYWORD_IN; }
-  "THEN"       { return TLAplusElementTypes.KEYWORD_THEN; }
-  "INSTANCE"   { return TLAplusElementTypes.KEYWORD_INSTANCE; }
-  "THEOREM"    { return TLAplusElementTypes.KEYWORD_THEOREM; }
-  "LET"        { return TLAplusElementTypes.KEYWORD_LET; }
+  "ASSUME"     { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_ASSUME); }
+  "ELSE"       { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_ELSE); }
+  "LOCAL"      { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_LOCAL); }
+  "ASSUMPTION" { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_ASSUMPTION); }
+  "MODULE"     { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_MODULE); }
+  "VARIABLE"   { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_VARIABLE); }
+  "VARIABLES"  { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_VARIABLES); }
+  "AXIOM"      { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_AXIOM); }
+  "EXCEPT"     { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_EXCEPT); }
+  "OTHER"      { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_OTHER); }
+  "CASE"       { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_CASE); }
+  "EXTENDS"    { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_EXTENDS); }
+  "SF_"        { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_SF_); }
+  "WF_"        { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_WF_); }
+  "CHOOSE"     { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_CHOOSE); }
+  "IF"         { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_IF); }
+  "WITH"       { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_WITH); }
+  "CONSTANTS"  { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_CONSTANTS); }
+  "CONSTANT"   { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_CONSTANT); }
+  "IN"         { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_IN); }
+  "THEN"       { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_THEN); }
+  "INSTANCE"   { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_INSTANCE); }
+  "THEOREM"    { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_THEOREM); }
+  "LET"        { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_LET); }
 
   // quantifier
-  \\EE         { return TLAplusElementTypes.QUANTIFIER_EE; }
-  \\E          { return TLAplusElementTypes.QUANTIFIER_E; }
-  \\AA         { return TLAplusElementTypes.QUANTIFIER_AA; }
-  \\A          { return TLAplusElementTypes.QUANTIFIER_A; }
+  \\EE         { return maybeHandleIndent(TLAplusElementTypes.QUANTIFIER_EE); }
+  \\E          { return maybeHandleIndent(TLAplusElementTypes.QUANTIFIER_E); }
+  \\AA         { return maybeHandleIndent(TLAplusElementTypes.QUANTIFIER_AA); }
+  \\A          { return maybeHandleIndent(TLAplusElementTypes.QUANTIFIER_A); }
 
   // literal
   [0-9]+ | [0-9]+ "." [0-9]+ | \\[bB][01]+ | \\[oO][0-7]+ | \\[hH][0-9a-fA-F]+ {
-    return TLAplusElementTypes.LITERAL_NUMBER;
+    return maybeHandleIndent(TLAplusElementTypes.LITERAL_NUMBER);
   }
-  \" ([^\\\"\r\n] | \\[^\r\n])* \" { return TLAplusElementTypes.LITERAL_STRING; }
+  \" ([^\\\"\r\n] | \\[^\r\n])* \" { return maybeHandleIndent(TLAplusElementTypes.LITERAL_STRING); }
 
   // symbols
-  "<<"  { return TLAplusElementTypes.LTUPLE; }
-  ">>"  { return TLAplusElementTypes.RTUPLE; }
-  ">>_" { return TLAplusElementTypes.RTUPLEUNDER; }
-  ","   { return TLAplusElementTypes.COMMA; }
-  "("   { return TLAplusElementTypes.LPAREN; }
-  ")"   { return TLAplusElementTypes.RPAREN; }
-  "{"   { return TLAplusElementTypes.LBRACKET; }
-  "}"   { return TLAplusElementTypes.RBRACKET; }
-  "["   { return TLAplusElementTypes.LSQBRACKET; }
-  "]"   { return TLAplusElementTypes.RSQBRACKET; }
-  "]_"  { return TLAplusElementTypes.RSQBRACKETUNDER; }
-  "."   { return TLAplusElementTypes.DOT; }
-  ":"   { return TLAplusElementTypes.COLON; }
-  "_"   { return TLAplusElementTypes.UNDER; }
-  "@"   { return TLAplusElementTypes.AT; }
-  "!"   { return TLAplusElementTypes.BANG; }
+  "<<"  { return maybeHandleIndent(TLAplusElementTypes.LTUPLE); }
+  ">>"  { return maybeHandleIndent(TLAplusElementTypes.RTUPLE); }
+  ">>_" { return maybeHandleIndent(TLAplusElementTypes.RTUPLEUNDER); }
+  ","   { return maybeHandleIndent(TLAplusElementTypes.COMMA); }
+  "("   { return maybeHandleIndent(TLAplusElementTypes.LPAREN); }
+  ")"   { return maybeHandleIndent(TLAplusElementTypes.RPAREN); }
+  "{"   { return maybeHandleIndent(TLAplusElementTypes.LBRACKET); }
+  "}"   { return maybeHandleIndent(TLAplusElementTypes.RBRACKET); }
+  "["   { return maybeHandleIndent(TLAplusElementTypes.LSQBRACKET); }
+  "]"   { return maybeHandleIndent(TLAplusElementTypes.RSQBRACKET); }
+  "]_"  { return maybeHandleIndent(TLAplusElementTypes.RSQBRACKETUNDER); }
+  "."   { return maybeHandleIndent(TLAplusElementTypes.DOT); }
+  ":"   { return maybeHandleIndent(TLAplusElementTypes.COLON); }
+  "_"   { return maybeHandleIndent(TLAplusElementTypes.UNDER); }
+  "@"   { return maybeHandleIndent(TLAplusElementTypes.AT); }
+  "!"   { return maybeHandleIndent(TLAplusElementTypes.BANG); }
 
   // define
-  "==" { return TLAplusElementTypes.DEFINE; }
+  "==" { return maybeHandleIndent(TLAplusElementTypes.DEFINE); }
 
   // operators
-  "ENABLED"            { return TLAplusElementTypes.OP_ENABLED; }
-  "UNCHANGED"          { return TLAplusElementTypes.OP_UNCHANGED; }
-  "SUBSET"             { return TLAplusElementTypes.OP_POWERSET; }
-  "DOMAIN"             { return TLAplusElementTypes.OP_DOMAIN; }
-  "~" | \\neg | \\lnot { return TLAplusElementTypes.OP_NEG; }
-  "[]"                 { return TLAplusElementTypes.OP_SQUARE; }
-  "<>"                 { return TLAplusElementTypes.OP_DIAMOND; }
-  -                    { return TLAplusElementTypes.OP_DASH; }
-  "/\\" | \\land       { return TLAplusElementTypes.OP_LAND; }
-  \\in                 { return TLAplusElementTypes.OP_IN; }
-  "<"                  { return TLAplusElementTypes.OP_LT; }
-  "=<" | "<=" | \\leq  { return TLAplusElementTypes.OP_LTEQ; }
-  \\ll                 { return TLAplusElementTypes.OP_LTLT; }
-  \\prec               { return TLAplusElementTypes.OP_PREC; }
-  \\preceq             { return TLAplusElementTypes.OP_PRECEQ; }
-  \\subseteq           { return TLAplusElementTypes.OP_SUBSETEQ; }
-  \\subset             { return TLAplusElementTypes.OP_SUBSET; }
-  \\sqsubset           { return TLAplusElementTypes.OP_SQSUBSET; }
-  \\sqsubseteq         { return TLAplusElementTypes.OP_SQSUBSETEQ; }
-  "|-"                 { return TLAplusElementTypes.OP_VBARDASH; }
-  "|="                 { return TLAplusElementTypes.OP_VBAREQ; }
-  "->"                 { return TLAplusElementTypes.OP_DASHGT; }
-  \\cap | \\intersect  { return TLAplusElementTypes.OP_CAP; }
-  \\sqcap              { return TLAplusElementTypes.OP_SQCAP; }
-  "(+)" | \\oplus      { return TLAplusElementTypes.OP_OPLUS; }
-  "(-)" | \\ominus     { return TLAplusElementTypes.OP_OMINUS; }
-  "(.)" | \\odot       { return TLAplusElementTypes.OP_ODOT; }
-  "(\\X)" | \\otimes   { return TLAplusElementTypes.OP_OTIMES; }
-  "(/)" | \\oslash     { return TLAplusElementTypes.OP_OSLASH; }
-  "\\/" | \\lor        { return TLAplusElementTypes.OP_LOR; }
-  "<=>" | \\equiv      { return TLAplusElementTypes.OP_EQUIV; }
-  \\notin              { return TLAplusElementTypes.OP_NOTIN; }
-  ">"                  { return TLAplusElementTypes.OP_GT; }
-  ">=" | \\geq         { return TLAplusElementTypes.OP_GTEQ; }
-  \\gg                 { return TLAplusElementTypes.OP_GTGT; }
-  \\succ               { return TLAplusElementTypes.OP_SUCC; }
-  \\succeq             { return TLAplusElementTypes.OP_SUCCEQ; }
-  \\supseteq           { return TLAplusElementTypes.OP_SUPSETEQ; }
-  \\supset             { return TLAplusElementTypes.OP_SUPSET; }
-  \\sqsupset           { return TLAplusElementTypes.OP_SQSUPSET; }
-  \\sqsupseteq         { return TLAplusElementTypes.OP_SQSUPSETEQ; }
-  "-|"                 { return TLAplusElementTypes.OP_DASHVBAR; }
-  "=|"                 { return TLAplusElementTypes.OP_EQVBAR; }
-  "<-"                 { return TLAplusElementTypes.OP_LTDASH; }
-  \\cup | \\union      { return TLAplusElementTypes.OP_CUP; }
-  \\sqcup              { return TLAplusElementTypes.OP_SQCUP; }
-  \\uplus              { return TLAplusElementTypes.OP_UPLUS; }
-  \\X | \\times        { return TLAplusElementTypes.OP_X; }
-  \\wr                 { return TLAplusElementTypes.OP_WR; }
-  \\propto             { return TLAplusElementTypes.OP_PROPTO; }
-  "=>"                 { return TLAplusElementTypes.OP_EQGT; }
-  "="                  { return TLAplusElementTypes.OP_EQ; }
-  "/=" | #             { return TLAplusElementTypes.OP_NOTEQ; }
-  "->"                 { return TLAplusElementTypes.OP_DASHGT; }
-  "-+->"               { return TLAplusElementTypes.OP_DASHPLUSDASHGT; }
-  "|->"                { return TLAplusElementTypes.OP_VBARDASHGT; }
-  \\div                { return TLAplusElementTypes.OP_DIV; }
-  \\cdot               { return TLAplusElementTypes.OP_CDOT; }
-  \\circ | \\o         { return TLAplusElementTypes.OP_CIRC; }
-  \\bullet             { return TLAplusElementTypes.OP_BULLET; }
-  \\star               { return TLAplusElementTypes.OP_STAR; }
-  \\bigcirc            { return TLAplusElementTypes.OP_BIGCIRC; }
-  \\sim                { return TLAplusElementTypes.OP_SIM; }
-  \\simeq              { return TLAplusElementTypes.OP_SIMEQ; }
-  \\asymp              { return TLAplusElementTypes.OP_ASYMP; }
-  \\approx             { return TLAplusElementTypes.OP_APPROX; }
-  \\cong               { return TLAplusElementTypes.OP_CONG; }
-  \\doteq              { return TLAplusElementTypes.OP_DOTEQ; }
-  "!!"                 { return TLAplusElementTypes.OP_BANGBANG; }
-  ##                   { return TLAplusElementTypes.OP_SHARPSHARP; }
-  "$"                  { return TLAplusElementTypes.OP_DOLLAR; }
-  "$$"                 { return TLAplusElementTypes.OP_DOLLARDOLLAR; }
-  %                    { return TLAplusElementTypes.OP_PERCENT; }
-  %%                   { return TLAplusElementTypes.OP_PERCENTPERCENT; }
-  &                    { return TLAplusElementTypes.OP_AMP; }
-  &&                   { return TLAplusElementTypes.OP_AMPAMP; }
-  "*"                  { return TLAplusElementTypes.OP_ASTER; }
-  "**"                 { return TLAplusElementTypes.OP_ASTERASTER; }
-  "+"                  { return TLAplusElementTypes.OP_PLUS; }
-  "++"                 { return TLAplusElementTypes.OP_PLUSPLUS; }
-  --                   { return TLAplusElementTypes.OP_DASHDASH; }
-  ".."                 { return TLAplusElementTypes.OP_DOTDOT; }
-  "..."                { return TLAplusElementTypes.OP_DOTDOTDOT; }
-  "/"                  { return TLAplusElementTypes.OP_SLASH; }
-  "//"                 { return TLAplusElementTypes.OP_SLASHSLASH; }
-  ::=                  { return TLAplusElementTypes.OP_COLONCOLONEQ; }
-  :=                   { return TLAplusElementTypes.OP_COLONEQ; }
-  :>                   { return TLAplusElementTypes.OP_COLONGT; }
-  "<:"                 { return TLAplusElementTypes.OP_LTCOLON; }
-  "?"                  { return TLAplusElementTypes.OP_QUERY; }
-  "??"                 { return TLAplusElementTypes.OP_QUERYQUERY; }
-  \\                   { return TLAplusElementTypes.OP_SUBTRACT; }
-  "^"                  { return TLAplusElementTypes.OP_CARET; }
-  "^^"                 { return TLAplusElementTypes.OP_CARETCARET; }
-  "|"                  { return TLAplusElementTypes.OP_VBAR; }
-  "||"                 { return TLAplusElementTypes.OP_VBARVBAR; }
-  "~>"                 { return TLAplusElementTypes.OP_TILDEGT; }
-  \'                   { return TLAplusElementTypes.OP_PRIME; }
-  "^+"                 { return TLAplusElementTypes.OP_CARETPLUS; }
-  "^*"                 { return TLAplusElementTypes.OP_CARETASTER; }
-  "^#"                 { return TLAplusElementTypes.OP_CARETSHARP; }
-  "-."                 { return TLAplusElementTypes.OP_DASHDOT; }
+  "ENABLED"            { return maybeHandleIndent(TLAplusElementTypes.OP_ENABLED); }
+  "UNCHANGED"          { return maybeHandleIndent(TLAplusElementTypes.OP_UNCHANGED); }
+  "SUBSET"             { return maybeHandleIndent(TLAplusElementTypes.OP_POWERSET); }
+  "DOMAIN"             { return maybeHandleIndent(TLAplusElementTypes.OP_DOMAIN); }
+  "~" | \\neg | \\lnot { return maybeHandleIndent(TLAplusElementTypes.OP_NEG); }
+  "[]"                 { return maybeHandleIndent(TLAplusElementTypes.OP_SQUARE); }
+  "<>"                 { return maybeHandleIndent(TLAplusElementTypes.OP_DIAMOND); }
+  -                    { return maybeHandleIndent(TLAplusElementTypes.OP_DASH); }
+  "/\\"                {
+        JunctionIndentation i = zzIndentationStack.isEmpty() ? null : zzIndentationStack.peek();
+        int column = StringUtil.offsetToLineColumn(zzBuffer, zzCurrentPos).column;
+        if (i == null || i.column < column) {
+            zzIndentationStack.push(JunctionIndentation.and(column));
+            yypushback(yylength());
+            return TLAplusElementTypes.INDENT;
+        }
+        if (i.type == Type.And && i.column == column) {
+            return TLAplusElementTypes.OP_LAND;
+        }
+
+        zzIndentationStack.pop();
+        yypushback(yylength());
+        return TLAplusElementTypes.DEDENT;
+    }
+  \\land               { return maybeHandleIndent(TLAplusElementTypes.OP_LAND); }
+  "\\/"                {
+        JunctionIndentation i = zzIndentationStack.isEmpty() ? null : zzIndentationStack.peek();
+        int column = StringUtil.offsetToLineColumn(zzBuffer, zzCurrentPos).column;
+        if (i == null || i.column < column) {
+            zzIndentationStack.push(JunctionIndentation.or(column));
+            yypushback(yylength());
+            return TLAplusElementTypes.INDENT;
+        }
+        if (i.type == Type.Or && i.column == column) {
+            return TLAplusElementTypes.OP_LOR;
+        }
+
+        zzIndentationStack.pop();
+        yypushback(yylength());
+        return TLAplusElementTypes.DEDENT;
+  }
+  \\lor                { return maybeHandleIndent(TLAplusElementTypes.OP_LOR); }
+  \\in                 { return maybeHandleIndent(TLAplusElementTypes.OP_IN); }
+  "<"                  { return maybeHandleIndent(TLAplusElementTypes.OP_LT); }
+  "=<" | "<=" | \\leq  { return maybeHandleIndent(TLAplusElementTypes.OP_LTEQ); }
+  \\ll                 { return maybeHandleIndent(TLAplusElementTypes.OP_LTLT); }
+  \\prec               { return maybeHandleIndent(TLAplusElementTypes.OP_PREC); }
+  \\preceq             { return maybeHandleIndent(TLAplusElementTypes.OP_PRECEQ); }
+  \\subseteq           { return maybeHandleIndent(TLAplusElementTypes.OP_SUBSETEQ); }
+  \\subset             { return maybeHandleIndent(TLAplusElementTypes.OP_SUBSET); }
+  \\sqsubset           { return maybeHandleIndent(TLAplusElementTypes.OP_SQSUBSET); }
+  \\sqsubseteq         { return maybeHandleIndent(TLAplusElementTypes.OP_SQSUBSETEQ); }
+  "|-"                 { return maybeHandleIndent(TLAplusElementTypes.OP_VBARDASH); }
+  "|="                 { return maybeHandleIndent(TLAplusElementTypes.OP_VBAREQ); }
+  "->"                 { return maybeHandleIndent(TLAplusElementTypes.OP_DASHGT); }
+  \\cap | \\intersect  { return maybeHandleIndent(TLAplusElementTypes.OP_CAP); }
+  \\sqcap              { return maybeHandleIndent(TLAplusElementTypes.OP_SQCAP); }
+  "(+)" | \\oplus      { return maybeHandleIndent(TLAplusElementTypes.OP_OPLUS); }
+  "(-)" | \\ominus     { return maybeHandleIndent(TLAplusElementTypes.OP_OMINUS); }
+  "(.)" | \\odot       { return maybeHandleIndent(TLAplusElementTypes.OP_ODOT); }
+  "(\\X)" | \\otimes   { return maybeHandleIndent(TLAplusElementTypes.OP_OTIMES); }
+  "(/)" | \\oslash     { return maybeHandleIndent(TLAplusElementTypes.OP_OSLASH); }
+  "<=>" | \\equiv      { return maybeHandleIndent(TLAplusElementTypes.OP_EQUIV); }
+  \\notin              { return maybeHandleIndent(TLAplusElementTypes.OP_NOTIN); }
+  ">"                  { return maybeHandleIndent(TLAplusElementTypes.OP_GT); }
+  ">=" | \\geq         { return maybeHandleIndent(TLAplusElementTypes.OP_GTEQ); }
+  \\gg                 { return maybeHandleIndent(TLAplusElementTypes.OP_GTGT); }
+  \\succ               { return maybeHandleIndent(TLAplusElementTypes.OP_SUCC); }
+  \\succeq             { return maybeHandleIndent(TLAplusElementTypes.OP_SUCCEQ); }
+  \\supseteq           { return maybeHandleIndent(TLAplusElementTypes.OP_SUPSETEQ); }
+  \\supset             { return maybeHandleIndent(TLAplusElementTypes.OP_SUPSET); }
+  \\sqsupset           { return maybeHandleIndent(TLAplusElementTypes.OP_SQSUPSET); }
+  \\sqsupseteq         { return maybeHandleIndent(TLAplusElementTypes.OP_SQSUPSETEQ); }
+  "-|"                 { return maybeHandleIndent(TLAplusElementTypes.OP_DASHVBAR); }
+  "=|"                 { return maybeHandleIndent(TLAplusElementTypes.OP_EQVBAR); }
+  "<-"                 { return maybeHandleIndent(TLAplusElementTypes.OP_LTDASH); }
+  \\cup | \\union      { return maybeHandleIndent(TLAplusElementTypes.OP_CUP); }
+  \\sqcup              { return maybeHandleIndent(TLAplusElementTypes.OP_SQCUP); }
+  \\uplus              { return maybeHandleIndent(TLAplusElementTypes.OP_UPLUS); }
+  \\X | \\times        { return maybeHandleIndent(TLAplusElementTypes.OP_X); }
+  \\wr                 { return maybeHandleIndent(TLAplusElementTypes.OP_WR); }
+  \\propto             { return maybeHandleIndent(TLAplusElementTypes.OP_PROPTO); }
+  "=>"                 { return maybeHandleIndent(TLAplusElementTypes.OP_EQGT); }
+  "="                  { return maybeHandleIndent(TLAplusElementTypes.OP_EQ); }
+  "/=" | #             { return maybeHandleIndent(TLAplusElementTypes.OP_NOTEQ); }
+  "->"                 { return maybeHandleIndent(TLAplusElementTypes.OP_DASHGT); }
+  "-+->"               { return maybeHandleIndent(TLAplusElementTypes.OP_DASHPLUSDASHGT); }
+  "|->"                { return maybeHandleIndent(TLAplusElementTypes.OP_VBARDASHGT); }
+  \\div                { return maybeHandleIndent(TLAplusElementTypes.OP_DIV); }
+  \\cdot               { return maybeHandleIndent(TLAplusElementTypes.OP_CDOT); }
+  \\circ | \\o         { return maybeHandleIndent(TLAplusElementTypes.OP_CIRC); }
+  \\bullet             { return maybeHandleIndent(TLAplusElementTypes.OP_BULLET); }
+  \\star               { return maybeHandleIndent(TLAplusElementTypes.OP_STAR); }
+  \\bigcirc            { return maybeHandleIndent(TLAplusElementTypes.OP_BIGCIRC); }
+  \\sim                { return maybeHandleIndent(TLAplusElementTypes.OP_SIM); }
+  \\simeq              { return maybeHandleIndent(TLAplusElementTypes.OP_SIMEQ); }
+  \\asymp              { return maybeHandleIndent(TLAplusElementTypes.OP_ASYMP); }
+  \\approx             { return maybeHandleIndent(TLAplusElementTypes.OP_APPROX); }
+  \\cong               { return maybeHandleIndent(TLAplusElementTypes.OP_CONG); }
+  \\doteq              { return maybeHandleIndent(TLAplusElementTypes.OP_DOTEQ); }
+  "!!"                 { return maybeHandleIndent(TLAplusElementTypes.OP_BANGBANG); }
+  ##                   { return maybeHandleIndent(TLAplusElementTypes.OP_SHARPSHARP); }
+  "$"                  { return maybeHandleIndent(TLAplusElementTypes.OP_DOLLAR); }
+  "$$"                 { return maybeHandleIndent(TLAplusElementTypes.OP_DOLLARDOLLAR); }
+  %                    { return maybeHandleIndent(TLAplusElementTypes.OP_PERCENT); }
+  %%                   { return maybeHandleIndent(TLAplusElementTypes.OP_PERCENTPERCENT); }
+  &                    { return maybeHandleIndent(TLAplusElementTypes.OP_AMP); }
+  &&                   { return maybeHandleIndent(TLAplusElementTypes.OP_AMPAMP); }
+  "*"                  { return maybeHandleIndent(TLAplusElementTypes.OP_ASTER); }
+  "**"                 { return maybeHandleIndent(TLAplusElementTypes.OP_ASTERASTER); }
+  "+"                  { return maybeHandleIndent(TLAplusElementTypes.OP_PLUS); }
+  "++"                 { return maybeHandleIndent(TLAplusElementTypes.OP_PLUSPLUS); }
+  --                   { return maybeHandleIndent(TLAplusElementTypes.OP_DASHDASH); }
+  ".."                 { return maybeHandleIndent(TLAplusElementTypes.OP_DOTDOT); }
+  "..."                { return maybeHandleIndent(TLAplusElementTypes.OP_DOTDOTDOT); }
+  "/"                  { return maybeHandleIndent(TLAplusElementTypes.OP_SLASH); }
+  "//"                 { return maybeHandleIndent(TLAplusElementTypes.OP_SLASHSLASH); }
+  ::=                  { return maybeHandleIndent(TLAplusElementTypes.OP_COLONCOLONEQ); }
+  :=                   { return maybeHandleIndent(TLAplusElementTypes.OP_COLONEQ); }
+  :>                   { return maybeHandleIndent(TLAplusElementTypes.OP_COLONGT); }
+  "<:"                 { return maybeHandleIndent(TLAplusElementTypes.OP_LTCOLON); }
+  "?"                  { return maybeHandleIndent(TLAplusElementTypes.OP_QUERY); }
+  "??"                 { return maybeHandleIndent(TLAplusElementTypes.OP_QUERYQUERY); }
+  \\                   { return maybeHandleIndent(TLAplusElementTypes.OP_SUBTRACT); }
+  "^"                  { return maybeHandleIndent(TLAplusElementTypes.OP_CARET); }
+  "^^"                 { return maybeHandleIndent(TLAplusElementTypes.OP_CARETCARET); }
+  "|"                  { return maybeHandleIndent(TLAplusElementTypes.OP_VBAR); }
+  "||"                 { return maybeHandleIndent(TLAplusElementTypes.OP_VBARVBAR); }
+  "~>"                 { return maybeHandleIndent(TLAplusElementTypes.OP_TILDEGT); }
+  \'                   { return maybeHandleIndent(TLAplusElementTypes.OP_PRIME); }
+  "^+"                 { return maybeHandleIndent(TLAplusElementTypes.OP_CARETPLUS); }
+  "^*"                 { return maybeHandleIndent(TLAplusElementTypes.OP_CARETASTER); }
+  "^#"                 { return maybeHandleIndent(TLAplusElementTypes.OP_CARETSHARP); }
+  "-."                 { return maybeHandleIndent(TLAplusElementTypes.OP_DASHDOT); }
 
   // identifier
   [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]* {
@@ -210,14 +283,14 @@ MODULE_BEGIN = {SEPARATOR} " "* "MODULE"
       if (yylength() > 3) {
           if ("WF_".equals(yytext().subSequence(0, 3))) {
               yypushback(yylength() - 3);
-              return TLAplusElementTypes.KEYWORD_WF_;
+              return maybeHandleIndent(TLAplusElementTypes.KEYWORD_WF_);
           }
           if ("SF_".equals(yytext().subSequence(0, 3))) {
               yypushback(yylength() - 3);
-              return TLAplusElementTypes.KEYWORD_SF_;
+              return maybeHandleIndent(TLAplusElementTypes.KEYWORD_SF_);
           }
       }
-      return TLAplusElementTypes.IDENTIFIER;
+      return maybeHandleIndent(TLAplusElementTypes.IDENTIFIER);
   }
 
   // comments
@@ -228,11 +301,13 @@ MODULE_BEGIN = {SEPARATOR} " "* "MODULE"
   {SEPARATOR}    { return TLAplusElementTypes.SEPARATOR; }
   ==== =*        {
     if (zzNestedModuleLevel == 0) {
-        yybegin(TERMINATED);
+        return clearIndent(TLAplusElementTypes.MODULE_END, TERMINATED);
     } else {
-        zzNestedModuleLevel--;
+        if (yystate() == IN_MODULE) {
+            zzNestedModuleLevel--;
+        }
+        return clearIndent(TLAplusElementTypes.MODULE_END, IN_MODULE);
     }
-    return TLAplusElementTypes.MODULE_END;
   }
 }
 
