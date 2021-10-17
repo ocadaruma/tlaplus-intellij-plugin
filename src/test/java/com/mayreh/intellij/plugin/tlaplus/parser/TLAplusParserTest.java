@@ -6,4 +6,12 @@ public class TLAplusParserTest extends TLAplusParserTestCaseBase {
     public void test_minimal() {
         doTest();
     }
+
+    public void test_Junction() {
+        doTest();
+    }
+
+    public void test_ABSpec() {
+        doTest();
+    }
 }

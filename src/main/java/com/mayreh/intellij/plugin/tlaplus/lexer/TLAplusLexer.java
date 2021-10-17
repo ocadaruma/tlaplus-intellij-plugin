@@ -6,8 +6,8 @@ import com.intellij.psi.tree.TokenSet;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 
 public class TLAplusLexer extends MergingLexerAdapter {
-    public TLAplusLexer() {
-        super(new FlexAdapter(new _TLAplusLexer(null)),
+    public TLAplusLexer(boolean forHighlighting) {
+        super(new FlexAdapter(new _TLAplusLexer(forHighlighting)),
               TokenSet.create(TLAplusElementTypes.IGNORED));
     }
 }

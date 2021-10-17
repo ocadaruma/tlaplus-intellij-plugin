@@ -26,7 +26,7 @@ public class TLAplusParserDefinition implements ParserDefinition {
 
     @Override
     public @NotNull Lexer createLexer(Project project) {
-        return new TLAplusLexer();
+        return new TLAplusLexer(false);
     }
 
     @Override

@@ -39,7 +39,7 @@ public class TLAplusSyntaxHighlighter extends SyntaxHighlighterBase {
 
     public static class TLAplusHighlightingLexer extends LayeredLexer {
         public TLAplusHighlightingLexer() {
-            super(new TLAplusLexer());
+            super(new TLAplusLexer(true));
 
             registerLayer(new FlexAdapter(new _TLAplusModuleBeginLexer(null)),
                           TLAplusElementTypes.MODULE_BEGIN);

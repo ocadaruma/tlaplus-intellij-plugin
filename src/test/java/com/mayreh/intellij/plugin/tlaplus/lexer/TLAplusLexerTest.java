@@ -6,7 +6,7 @@ import com.mayreh.intellij.plugin.tlaplus.TLAplusLexerTestCaseBase;
 public class TLAplusLexerTest extends TLAplusLexerTestCaseBase {
     @Override
     protected Lexer createLexer() {
-        return new TLAplusLexer();
+        return new TLAplusLexer(false);
     }
 
     public void test_minimal() {
@@ -22,6 +22,14 @@ public class TLAplusLexerTest extends TLAplusLexerTestCaseBase {
     }
 
     public void test_Junction() {
+        doTest();
+    }
+
+    public void test_Junction2() {
+        doTest();
+    }
+
+    public void test_Junction3() {
         doTest();
     }
 }

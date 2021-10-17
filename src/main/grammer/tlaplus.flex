@@ -20,8 +20,18 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 %{
   private int zzNestedModuleLevel = 0;
   private final Stack<JunctionIndentation> zzIndentationStack = new Stack<>(1000);
+  private boolean forHighlighting = false;
+
+  public _TLAplusLexer(boolean forHighlighting) {
+      this(null);
+      this.forHighlighting = forHighlighting;
+  }
 
   private IElementType clearIndent(IElementType e, int nextState) {
+      if (forHighlighting) {
+          return e;
+      }
+
       JunctionIndentation i = zzIndentationStack.isEmpty() ? null : zzIndentationStack.peek();
       if (i == null) {
           yybegin(nextState);
@@ -30,10 +40,14 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
       zzIndentationStack.pop();
       yypushback(yylength());
       yybegin(HANDLE_INDENT);
-      return TLAplusElementTypes.DEDENT;
+      return TLAplusElementTypes.JUNCTION_BREAK;
   }
 
   private IElementType maybeHandleIndent(IElementType e) {
+      if (forHighlighting) {
+          return e;
+      }
+
       JunctionIndentation i = zzIndentationStack.isEmpty() ? null : zzIndentationStack.peek();
       if (i == null) {
           if (yystate() == HANDLE_INDENT) {
@@ -51,7 +65,7 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
       zzIndentationStack.pop();
       yypushback(yylength());
       yybegin(HANDLE_INDENT);
-      return TLAplusElementTypes.DEDENT;
+      return TLAplusElementTypes.JUNCTION_BREAK;
   }
 %}
 
@@ -151,37 +165,57 @@ MODULE_BEGIN = {SEPARATOR} " "* "MODULE"
   "<>"                 { return maybeHandleIndent(TLAplusElementTypes.OP_DIAMOND); }
   -                    { return maybeHandleIndent(TLAplusElementTypes.OP_DASH); }
   "/\\"                {
+        if (forHighlighting) {
+          return TLAplusElementTypes.OP_LAND2;
+        }
+        if (yystate() == HANDLE_INDENT) {
+            yybegin(IN_MODULE);
+            return TLAplusElementTypes.OP_LAND2;
+        }
         JunctionIndentation i = zzIndentationStack.isEmpty() ? null : zzIndentationStack.peek();
         int column = StringUtil.offsetToLineColumn(zzBuffer, zzCurrentPos).column;
         if (i == null || i.column < column) {
             zzIndentationStack.push(JunctionIndentation.and(column));
+            yybegin(HANDLE_INDENT);
             yypushback(yylength());
-            return TLAplusElementTypes.INDENT;
+            return TLAplusElementTypes.JUNCTION_BEGIN;
         }
         if (i.type == Type.And && i.column == column) {
-            return TLAplusElementTypes.OP_LAND;
+            yybegin(HANDLE_INDENT);
+            yypushback(yylength());
+            return TLAplusElementTypes.JUNCTION_CONT;
         }
 
         zzIndentationStack.pop();
         yypushback(yylength());
-        return TLAplusElementTypes.DEDENT;
+        return TLAplusElementTypes.JUNCTION_BREAK;
     }
   \\land               { return maybeHandleIndent(TLAplusElementTypes.OP_LAND); }
   "\\/"                {
+        if (forHighlighting) {
+          return TLAplusElementTypes.OP_LOR2;
+        }
+        if (yystate() == HANDLE_INDENT) {
+            yybegin(IN_MODULE);
+            return TLAplusElementTypes.OP_LOR2;
+        }
         JunctionIndentation i = zzIndentationStack.isEmpty() ? null : zzIndentationStack.peek();
         int column = StringUtil.offsetToLineColumn(zzBuffer, zzCurrentPos).column;
         if (i == null || i.column < column) {
             zzIndentationStack.push(JunctionIndentation.or(column));
             yypushback(yylength());
-            return TLAplusElementTypes.INDENT;
+            yybegin(HANDLE_INDENT);
+            return TLAplusElementTypes.JUNCTION_BEGIN;
         }
         if (i.type == Type.Or && i.column == column) {
-            return TLAplusElementTypes.OP_LOR;
+            yybegin(HANDLE_INDENT);
+            yypushback(yylength());
+            return TLAplusElementTypes.JUNCTION_CONT;
         }
 
         zzIndentationStack.pop();
         yypushback(yylength());
-        return TLAplusElementTypes.DEDENT;
+        return TLAplusElementTypes.JUNCTION_BREAK;
   }
   \\lor                { return maybeHandleIndent(TLAplusElementTypes.OP_LOR); }
   \\in                 { return maybeHandleIndent(TLAplusElementTypes.OP_IN); }
@@ -298,7 +332,7 @@ MODULE_BEGIN = {SEPARATOR} " "* "MODULE"
   "(*"          { yybegin(IN_BLOCK_COMMENT); yypushback(2); }
 
   {WHITE_SPACE}+ { return TokenType.WHITE_SPACE; }
-  {SEPARATOR}    { return TLAplusElementTypes.SEPARATOR; }
+  {SEPARATOR}    { return clearIndent(TLAplusElementTypes.SEPARATOR, IN_MODULE); }
   ==== =*        {
     if (zzNestedModuleLevel == 0) {
         return clearIndent(TLAplusElementTypes.MODULE_END, TERMINATED);
