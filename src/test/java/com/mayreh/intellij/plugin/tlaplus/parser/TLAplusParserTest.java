@@ -11,6 +11,10 @@ public class TLAplusParserTest extends TLAplusParserTestCaseBase {
         doTest();
     }
 
+    public void test_fairness() {
+        doTest();
+    }
+
     public void test_ABSpec() {
         doTest();
     }

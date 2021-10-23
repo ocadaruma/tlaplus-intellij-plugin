@@ -344,7 +344,22 @@ postfix_op ::= clear_indent (
              | '^#'
              | "'")
 
-op_period ::= clear_indent '.'
+op_period ::= '.'
+
+private op_suite ::= prefix_op | infix_op | postfix_op | expr
+
+op_args ::= clear_indent '(' <<comma_list op_suite>> clear_indent ')'
+
+private no_op_extension ::= clear_indent 'identifier' op_args? ('!' no_op_extension)?
+
+private reduced_expr ::= no_op_extension
+                       | paren_expr
+                       | set_expr
+                       | functions_expr
+                       | records_expr
+                       | except_expr
+                       | action_expr
+                       | tuple_expr
 
 op_decl ::= clear_indent 'identifier'
           | clear_indent 'identifier' clear_indent '(' <<comma_list (clear_indent '_')>> clear_indent ')'
@@ -402,7 +417,9 @@ assumption ::= clear_indent ('ASSUME' | 'ASSUMPTION' | 'AXIOM') expr { pin = 2 }
 
 theorem ::= clear_indent 'THEOREM' expr { pin = 2 }
 
-identifier_expr ::= general_identifier (clear_indent '(' <<comma_list argument>> clear_indent ')')?
+identifier_expr ::= general_identifier
+
+identifier_args_expr ::= general_identifier clear_indent '(' <<comma_list argument>> clear_indent ')'
 
 prefix_op_expr ::= general_prefix_op expr
 
@@ -452,7 +469,7 @@ cartesian_product_expr ::= expr (clear_indent '\X' expr)+
 action_expr ::= clear_indent '[' expr clear_indent ']_' expr
               | clear_indent '<<' expr clear_indent '>>_' expr
 
-fairness_expr ::= clear_indent ('WF_' | 'SF_') expr clear_indent '(' expr clear_indent ')'
+fairness_expr ::= clear_indent ('WF_' | 'SF_') reduced_expr (clear_indent '(' expr clear_indent ')')?
 {
   pin = 2
 }
@@ -496,7 +513,6 @@ expr ::= action_expr
        | junction_list_expr
        | paren_expr
        | set_expr
-       | apply_argument_expr
        | functions_expr
        | records_expr
        | prefix_op_expr
@@ -504,5 +520,7 @@ expr ::= action_expr
        | infix_op_expr
        | cartesian_product_expr
        | at_expr
+       | apply_argument_expr
+       | identifier_args_expr
        | identifier_expr
        | literal_expr

@@ -77,6 +77,7 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 WHITE_SPACE = " " | \t | \f | \R
 SEPARATOR = ---- -*
 MODULE_BEGIN = {SEPARATOR} " "* "MODULE"
+IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
 
 %%
 <YYINITIAL> {
@@ -311,21 +312,11 @@ MODULE_BEGIN = {SEPARATOR} " "* "MODULE"
   "^#"                 { return maybeHandleIndent(TLAplusElementTypes.OP_CARETSHARP); }
   "-."                 { return maybeHandleIndent(TLAplusElementTypes.OP_DASHDOT); }
 
-  // identifier
-  [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]* {
-      // fairness operators should be tokenized even if there's no whitespace
-      if (yylength() > 3) {
-          if ("WF_".equals(yytext().subSequence(0, 3))) {
-              yypushback(yylength() - 3);
-              return maybeHandleIndent(TLAplusElementTypes.KEYWORD_WF_);
-          }
-          if ("SF_".equals(yytext().subSequence(0, 3))) {
-              yypushback(yylength() - 3);
-              return maybeHandleIndent(TLAplusElementTypes.KEYWORD_SF_);
-          }
-      }
-      return maybeHandleIndent(TLAplusElementTypes.IDENTIFIER);
-  }
+  WF_ / {IDENTIFIER} { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_WF_); }
+
+  SF_ / {IDENTIFIER} { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_SF_); }
+
+  {IDENTIFIER} { return maybeHandleIndent(TLAplusElementTypes.IDENTIFIER); }
 
   // comments
   \\"*"[^\r\n]* { return TLAplusElementTypes.COMMENT_LINE; }
