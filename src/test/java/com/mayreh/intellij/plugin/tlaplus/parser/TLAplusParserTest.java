@@ -18,4 +18,12 @@ public class TLAplusParserTest extends TLAplusParserTestCaseBase {
     public void test_ABSpec() {
         doTest();
     }
+
+    public void test_TrickyLand() {
+        doTest();
+    }
+
+    public void test_InfixPrefixOpMixed() {
+        doTest();
+    }
 }

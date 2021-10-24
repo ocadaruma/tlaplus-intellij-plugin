@@ -3,6 +3,7 @@ package com.mayreh.intellij.plugin.tlaplus.parser;
 import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes.INFIX_OP;
 import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes.JUNCTION_BEGIN;
 import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes.JUNCTION_BREAK;
+import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes.JUNCTION_CONT;
 import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes.OP_LAND2;
 import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes.OP_LOR2;
 
@@ -76,6 +77,9 @@ public class TLAplusParserUtil extends GeneratedParserUtilBase {
         if (result && falseJunctionBegin) {
             while (!b.eof()) {
                 b.advanceLexer();
+                if (b.getTokenType() == JUNCTION_CONT) {
+                    b.remapCurrentToken(TokenType.WHITE_SPACE);
+                }
                 if (b.getTokenType() == JUNCTION_BREAK) {
                     b.remapCurrentToken(TokenType.WHITE_SPACE);
                     break;

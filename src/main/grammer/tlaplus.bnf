@@ -201,6 +201,7 @@
     ]
 
     extends('.*_expr') = expr
+    consumeTokenMethod('.*_expr') = "consumeTokenFast"
 //    generateTokenAccessors=true
 }
 
@@ -211,7 +212,7 @@ module ::= module_header ('EXTENDS' <<comma_list 'identifier'>>)? unit* clear_in
 
 private meta comma_list ::= <<param>>(clear_indent ',' <<param>>)*
 
-private clear_indent ::= 'JUNCTION_BREAK'*
+private clear_indent ::= junc_break*
 
 module_header ::= clear_indent 'MODULE_BEGIN' 'identifier' '----'
 {
@@ -400,16 +401,16 @@ private argument ::= expr
                    | general_infix_op
                    | general_postfix_op
 
-private instance_prefix ::= (clear_indent 'identifier' (
-    clear_indent '(' <<comma_list expr>> clear_indent ')')? clear_indent '!')*
+instance_prefix ::= (clear_indent 'identifier' (
+    clear_indent '(' <<comma_list expr>> clear_indent ')')? clear_indent '!')+
 
-private general_identifier ::= instance_prefix clear_indent 'identifier'
+private general_identifier ::= instance_prefix? clear_indent 'identifier'
 
-private general_prefix_op ::= instance_prefix prefix_op
+private general_prefix_op ::= instance_prefix? prefix_op
 
-private general_infix_op ::= instance_prefix infix_op_outer
+private general_infix_op ::= instance_prefix? infix_op_outer
 
-private general_postfix_op ::= instance_prefix postfix_op
+private general_postfix_op ::= instance_prefix? postfix_op
 
 module_definition ::= nonfix_lhs clear_indent '==' instance
 
@@ -466,8 +467,8 @@ tuple_expr ::= clear_indent '<<' <<comma_list expr>> clear_indent '>>' { pin = 2
 
 cartesian_product_expr ::= expr (clear_indent '\X' expr)+
 
-action_expr ::= clear_indent '[' expr clear_indent ']_' expr
-              | clear_indent '<<' expr clear_indent '>>_' expr
+action_expr ::= clear_indent '[' expr clear_indent ']_' reduced_expr
+              | clear_indent '<<' expr clear_indent '>>_' reduced_expr
 
 fairness_expr ::= clear_indent ('WF_' | 'SF_') reduced_expr (clear_indent '(' expr clear_indent ')')?
 {
@@ -492,17 +493,27 @@ let_expr ::= clear_indent 'LET' (op_definition | func_definition | module_defini
   pin = 2
 }
 
+private junc_begin ::= 'JUNCTION_BEGIN' {
+  consumeTokenMethod = "consumeTokenFast"
+}
+
+private junc_cont ::= 'JUNCTION_CONT' {
+  consumeTokenMethod = "consumeTokenFast"
+}
+
+private junc_break ::= 'JUNCTION_BREAK' {
+  consumeTokenMethod = "consumeTokenFast"
+}
+
 // Junction-arm can be terminated by other tokens than JUNCTION_BREAK like braces, parenthesis
-junction_list_expr ::= ('JUNCTION_BEGIN' '/\' expr ('JUNCTION_CONT' '/\' expr)* 'JUNCTION_BREAK'?)
-                     | ('JUNCTION_BEGIN' '\/' expr ('JUNCTION_CONT' '\/' expr)* 'JUNCTION_BREAK'?)
+junction_list_expr ::= (junc_begin '/\' expr (junc_cont '/\' expr)* junc_break?)
+                     | (junc_begin '\/' expr (junc_cont '\/' expr)* junc_break?)
 
 literal_expr ::= clear_indent ('string' | 'number')
 
 at_expr ::= clear_indent '@'
 
-expr ::= action_expr
-       | fairness_expr
-       | if_expr
+expr ::= if_expr
        | except_expr
        | tuple_expr
        | case_expr
@@ -510,16 +521,18 @@ expr ::= action_expr
        | temporal_quantifier_expr
        | choose_expr
        | let_expr
-       | junction_list_expr
        | paren_expr
        | set_expr
        | functions_expr
        | records_expr
-       | prefix_op_expr
-       | postfix_op_expr
        | infix_op_expr
        | cartesian_product_expr
+       | prefix_op_expr
+       | postfix_op_expr
        | at_expr
+       | junction_list_expr
+       | action_expr
+       | fairness_expr
        | apply_argument_expr
        | identifier_args_expr
        | identifier_expr
