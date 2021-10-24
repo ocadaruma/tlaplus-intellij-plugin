@@ -39,6 +39,8 @@ public class TLAplusSyntaxHighlighter extends SyntaxHighlighterBase {
             "Brackets", DefaultLanguageHighlighterColors.BRACKETS);
     private static final TextAttributesKey COMMA = createAttrKey(
             "Comma", DefaultLanguageHighlighterColors.COMMA);
+    private static final TextAttributesKey OPERATOR = createAttrKey(
+            "Operator", DefaultLanguageHighlighterColors.OPERATION_SIGN);
 
     @Override
     public @NotNull Lexer getHighlightingLexer() {
@@ -82,6 +84,9 @@ public class TLAplusSyntaxHighlighter extends SyntaxHighlighterBase {
         }
         if (tokenType.equals(TLAplusElementTypes.COMMA)) {
             return pack(COMMA);
+        }
+        if (TokenSets.OPERATORS.contains(tokenType)) {
+            return pack(OPERATOR);
         }
         if (TokenSets.KEYWORDS.contains(tokenType)) {
             return pack(KEYWORD);

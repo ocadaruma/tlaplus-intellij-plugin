@@ -375,13 +375,16 @@ constant_decl ::= clear_indent ('CONSTANT' | 'CONSTANTS') <<comma_list op_decl>>
 nonfix_lhs ::= clear_indent 'identifier' (
    clear_indent '(' <<comma_list (clear_indent 'identifier' | op_decl)>> clear_indent ')')?
 
-prefix_op_lhs ::= prefix_op clear_indent 'identifier'
+prefix_op_lhs ::= clear_indent prefix_op clear_indent 'identifier'
+
+dashdot_op_lhs ::= clear_indent '-.' clear_indent 'identifier'
 
 infix_op_lhs ::= clear_indent 'identifier' infix_op_outer clear_indent 'identifier'
 
 postfix_op_lhs ::= clear_indent 'identifier' postfix_op
 
 op_definition ::= (infix_op_lhs
+                 | dashdot_op_lhs
                  | prefix_op_lhs
                  | postfix_op_lhs
                  | nonfix_lhs) clear_indent '==' expr
