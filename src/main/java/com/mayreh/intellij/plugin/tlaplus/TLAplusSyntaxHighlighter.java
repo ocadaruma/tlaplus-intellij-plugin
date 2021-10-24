@@ -31,6 +31,14 @@ public class TLAplusSyntaxHighlighter extends SyntaxHighlighterBase {
             "BlockComment", DefaultLanguageHighlighterColors.BLOCK_COMMENT);
     private static final TextAttributesKey LINE_COMMENT = createAttrKey(
             "LineComment", DefaultLanguageHighlighterColors.LINE_COMMENT);
+    private static final TextAttributesKey PARENTHESIS = createAttrKey(
+            "Parenthesis", DefaultLanguageHighlighterColors.PARENTHESES);
+    private static final TextAttributesKey BRACES = createAttrKey(
+            "Braces", DefaultLanguageHighlighterColors.BRACES);
+    private static final TextAttributesKey BRACKETS = createAttrKey(
+            "Brackets", DefaultLanguageHighlighterColors.BRACKETS);
+    private static final TextAttributesKey COMMA = createAttrKey(
+            "Comma", DefaultLanguageHighlighterColors.COMMA);
 
     @Override
     public @NotNull Lexer getHighlightingLexer() {
@@ -62,6 +70,18 @@ public class TLAplusSyntaxHighlighter extends SyntaxHighlighterBase {
         }
         if (tokenType.equals(TLAplusElementTypes.COMMENT_LINE)) {
             return pack(LINE_COMMENT);
+        }
+        if (tokenType.equals(TLAplusElementTypes.LPAREN) || tokenType.equals(TLAplusElementTypes.RPAREN)) {
+            return pack(PARENTHESIS);
+        }
+        if (tokenType.equals(TLAplusElementTypes.LBRACKET) || tokenType.equals(TLAplusElementTypes.RBRACKET)) {
+            return pack(BRACES);
+        }
+        if (tokenType.equals(TLAplusElementTypes.LSQBRACKET) || tokenType.equals(TLAplusElementTypes.RSQBRACKET)) {
+            return pack(BRACKETS);
+        }
+        if (tokenType.equals(TLAplusElementTypes.COMMA)) {
+            return pack(COMMA);
         }
         if (TokenSets.KEYWORDS.contains(tokenType)) {
             return pack(KEYWORD);

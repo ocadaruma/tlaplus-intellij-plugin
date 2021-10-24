@@ -372,13 +372,19 @@ variable_decl ::= clear_indent ('VARIABLE' | 'VARIABLES') <<comma_list 'identifi
 
 constant_decl ::= clear_indent ('CONSTANT' | 'CONSTANTS') <<comma_list op_decl>>
 
-private nonfix_lhs ::= clear_indent 'identifier' (
+nonfix_lhs ::= clear_indent 'identifier' (
    clear_indent '(' <<comma_list (clear_indent 'identifier' | op_decl)>> clear_indent ')')?
 
-op_definition ::= (nonfix_lhs |
-                   prefix_op clear_indent 'identifier' |
-                   clear_indent 'identifier' infix_op_outer clear_indent 'identifier' |
-                   clear_indent 'identifier' postfix_op) clear_indent '==' expr
+prefix_op_lhs ::= prefix_op clear_indent 'identifier'
+
+infix_op_lhs ::= clear_indent 'identifier' infix_op_outer clear_indent 'identifier'
+
+postfix_op_lhs ::= clear_indent 'identifier' postfix_op
+
+op_definition ::= (infix_op_lhs
+                 | prefix_op_lhs
+                 | postfix_op_lhs
+                 | nonfix_lhs) clear_indent '==' expr
 
 func_definition ::= clear_indent 'identifier'
     clear_indent '[' <<comma_list quantifier_bound>> clear_indent ']' clear_indent '==' expr

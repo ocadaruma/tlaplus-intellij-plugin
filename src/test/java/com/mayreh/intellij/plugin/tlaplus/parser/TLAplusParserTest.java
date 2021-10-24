@@ -26,4 +26,8 @@ public class TLAplusParserTest extends TLAplusParserTestCaseBase {
     public void test_InfixPrefixOpMixed() {
         doTest();
     }
+
+    public void test_OpDef() {
+        doTest();
+    }
 }
