@@ -30,5 +30,7 @@
         <lang.commenter
           language="TLA+"
           implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusCommenter"/>
+        <configurationType
+          implementation="com.mayreh.intellij.plugin.tlaplus.run.TLCRunConfigurationType"/>
     </extensions>
 </idea-plugin>

@@ -247,7 +247,7 @@ prefix_op ::= clear_indent (
             | 'UNION')
 
 infix_op ::= clear_indent (
-             '!'
+            '!'
            | '/='
            | '##'
            | '$'
@@ -299,7 +299,6 @@ infix_op ::= clear_indent (
            | '|='
            | '||'
            | '~>'
-           | op_period
            | '\approx'
            | '\sqsupseteq'
            | '\asymp'
@@ -342,8 +341,6 @@ postfix_op ::= clear_indent (
              | '^*'
              | '^#'
              | "'")
-
-op_period ::= '.'
 
 private op_suite ::= prefix_op | infix_op | postfix_op | lambda_expr | expr
 
@@ -436,6 +433,8 @@ identifier_args_expr ::= general_identifier clear_indent '(' <<comma_list op_sui
 prefix_op_expr ::= general_prefix_op expr
 
 infix_op_expr ::= expr general_infix_op expr
+
+field_access_expr ::= expr clear_indent '.' clear_indent 'identifier'
 
 postfix_op_expr ::= expr general_postfix_op
 
@@ -547,6 +546,7 @@ expr ::= if_expr
        | action_expr
        | fairness_expr
        | apply_argument_expr
+       | field_access_expr
        | identifier_args_expr
        | identifier_expr
        | literal_expr
