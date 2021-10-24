@@ -28,7 +28,8 @@ public interface TokenSets {
             TLAplusElementTypes.KEYWORD_VARIABLE,
             TLAplusElementTypes.KEYWORD_VARIABLES,
             TLAplusElementTypes.KEYWORD_WF_,
-            TLAplusElementTypes.KEYWORD_WITH
+            TLAplusElementTypes.KEYWORD_WITH,
+            TLAplusElementTypes.KEYWORD_LAMBDA
     );
 
     TokenSet OPERATORS = TokenSet.create(
@@ -130,6 +131,7 @@ public interface TokenSets {
             TLAplusElementTypes.OP_CARETCARET,
             TLAplusElementTypes.OP_VBAR,
             TLAplusElementTypes.OP_VBARVBAR,
+            TLAplusElementTypes.OP_ATAT,
             TLAplusElementTypes.OP_TILDEGT,
             TLAplusElementTypes.OP_PRIME,
             TLAplusElementTypes.OP_CARETPLUS,

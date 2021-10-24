@@ -58,6 +58,7 @@
         KEYWORD_INSTANCE   = 'INSTANCE'
         KEYWORD_THEOREM    = 'THEOREM'
         KEYWORD_LET        = 'LET'
+        KEYWORD_LAMBDA     = 'LAMBDA'
 
         LITERAL_NUMBER     = 'number'
         LITERAL_STRING     = 'string'
@@ -195,9 +196,6 @@
         QUANTIFIER_EE      = '\EE'
         QUANTIFIER_A       = '\A'
         QUANTIFIER_AA      = '\AA'
-
-        // only for live preview
-//        WHITE_SPACE = 'regexp:(\s|\R)+'
     ]
 
     extends('.*_expr') = expr
@@ -347,7 +345,7 @@ postfix_op ::= clear_indent (
 
 op_period ::= '.'
 
-private op_suite ::= prefix_op | infix_op | postfix_op | expr
+private op_suite ::= prefix_op | infix_op | postfix_op | lambda_expr | expr
 
 op_args ::= clear_indent '(' <<comma_list op_suite>> clear_indent ')'
 
@@ -362,18 +360,22 @@ private reduced_expr ::= no_op_extension
                        | action_expr
                        | tuple_expr
 
-op_decl ::= clear_indent 'identifier'
+anon_infix_op ::= clear_indent '_' infix_op_outer clear_indent '_'
+anon_prefix_op ::= prefix_op clear_indent '_'
+anon_postfix_op ::= clear_indent '_' postfix_op
+
+op_decl ::= anon_infix_op
+          | anon_prefix_op
+          | anon_postfix_op
           | clear_indent 'identifier' clear_indent '(' <<comma_list (clear_indent '_')>> clear_indent ')'
-          | prefix_op clear_indent '_'
-          | clear_indent '_' infix_op_outer clear_indent '_'
-          | clear_indent '_' postfix_op
+          | clear_indent 'identifier'
 
 variable_decl ::= clear_indent ('VARIABLE' | 'VARIABLES') <<comma_list 'identifier'>>
 
 constant_decl ::= clear_indent ('CONSTANT' | 'CONSTANTS') <<comma_list op_decl>>
 
 nonfix_lhs ::= clear_indent 'identifier' (
-   clear_indent '(' <<comma_list (clear_indent 'identifier' | op_decl)>> clear_indent ')')?
+   clear_indent '(' <<comma_list (op_decl | (clear_indent 'identifier'))>> clear_indent ')')?
 
 prefix_op_lhs ::= clear_indent prefix_op clear_indent 'identifier'
 
@@ -403,7 +405,7 @@ instance ::= clear_indent 'INSTANCE' clear_indent 'identifier' (clear_indent 'WI
 private substitution ::= (clear_indent 'identifier'
                         | prefix_op
                         | infix_op_outer
-                        | postfix_op) clear_indent '<-' argument
+                        | postfix_op) clear_indent '<-' op_suite
 
 private argument ::= expr
                    | general_prefix_op
@@ -429,7 +431,7 @@ theorem ::= clear_indent 'THEOREM' expr { pin = 2 }
 
 identifier_expr ::= general_identifier
 
-identifier_args_expr ::= general_identifier clear_indent '(' <<comma_list argument>> clear_indent ')'
+identifier_args_expr ::= general_identifier clear_indent '(' <<comma_list op_suite>> clear_indent ')'
 
 prefix_op_expr ::= general_prefix_op expr
 
@@ -438,6 +440,8 @@ infix_op_expr ::= expr general_infix_op expr
 postfix_op_expr ::= expr general_postfix_op
 
 paren_expr ::= clear_indent '(' expr clear_indent ')' { pin = 2 }
+
+lambda_expr ::= clear_indent 'LAMBDA' <<comma_list (clear_indent 'identifier')>> clear_indent ':' expr
 
 temporal_quantifier_expr ::= clear_indent ('\AA' | '\EE') <<comma_list (clear_indent 'identifier')>> clear_indent ':' expr
 {

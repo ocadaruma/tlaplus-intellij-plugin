@@ -122,6 +122,7 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
   "INSTANCE"   { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_INSTANCE); }
   "THEOREM"    { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_THEOREM); }
   "LET"        { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_LET); }
+  "LAMBDA"     { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_LAMBDA); }
 
   // quantifier
   \\EE         { return maybeHandleIndent(TLAplusElementTypes.QUANTIFIER_EE); }
@@ -305,6 +306,7 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
   "^^"                 { return maybeHandleIndent(TLAplusElementTypes.OP_CARETCARET); }
   "|"                  { return maybeHandleIndent(TLAplusElementTypes.OP_VBAR); }
   "||"                 { return maybeHandleIndent(TLAplusElementTypes.OP_VBARVBAR); }
+  "@@"                 { return maybeHandleIndent(TLAplusElementTypes.OP_ATAT); }
   "~>"                 { return maybeHandleIndent(TLAplusElementTypes.OP_TILDEGT); }
   \'                   { return maybeHandleIndent(TLAplusElementTypes.OP_PRIME); }
   "^+"                 { return maybeHandleIndent(TLAplusElementTypes.OP_CARETPLUS); }
