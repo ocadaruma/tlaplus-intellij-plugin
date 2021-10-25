@@ -30,4 +30,8 @@ public class TLAplusParserTest extends TLAplusParserTestCaseBase {
     public void test_OpDef() {
         doTest();
     }
+
+    public void test_Precedence() {
+        doTest();
+    }
 }
