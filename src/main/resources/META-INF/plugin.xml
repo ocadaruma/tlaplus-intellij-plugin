@@ -32,5 +32,7 @@
           implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusCommenter"/>
         <configurationType
           implementation="com.mayreh.intellij.plugin.tlaplus.run.TLCRunConfigurationType"/>
+        <runConfigurationProducer
+          implementation="com.mayreh.intellij.plugin.tlaplus.run.TLCRunConfigurationProducer"/>
     </extensions>
 </idea-plugin>

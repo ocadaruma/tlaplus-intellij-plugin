@@ -1,9 +1,9 @@
 package com.mayreh.intellij.plugin.tlaplus.run;
 
-import com.intellij.execution.configurations.RunConfigurationOptions;
+import com.intellij.execution.configurations.LocatableRunConfigurationOptions;
 import com.intellij.openapi.components.StoredProperty;
 
-public class TLCRunConfigurationOptions extends RunConfigurationOptions {
+public class TLCRunConfigurationOptions extends LocatableRunConfigurationOptions {
     private final StoredProperty<String> workingDirectory = string("")
             .provideDelegate(this, "workingDirectory");
 
