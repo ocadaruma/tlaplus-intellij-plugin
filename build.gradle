@@ -26,8 +26,16 @@ repositories {
     mavenCentral()
 }
 
+ext {
+    lombokVersion = '1.18.22'
+}
+
 dependencies {
     implementation files('libs/tla2tools.jar')
+    compileOnly "org.projectlombok:lombok:$lombokVersion"
+    annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+    testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+    testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
     testImplementation "junit:junit:4.13.2"
     testImplementation "org.assertj:assertj-core:3.21.0"
 }

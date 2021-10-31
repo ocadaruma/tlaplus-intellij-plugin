@@ -14,40 +14,40 @@ import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.mayreh.intellij.plugin.tlaplus.run.TLCRunConfiguration;
 
 public class TLCSettingsEditor extends SettingsEditor<TLCRunConfiguration> {
-    private JPanel myPanel;
-    private LabeledComponent<TextFieldWithBrowseButton> myWorkingDirectory;
-    private LabeledComponent<TextFieldWithBrowseButton> myFile;
-    private LabeledComponent<TextFieldWithBrowseButton> myConfigFile;
+    private JPanel panel;
+    private LabeledComponent<TextFieldWithBrowseButton> workingDirectoryField;
+    private LabeledComponent<TextFieldWithBrowseButton> fileField;
+    private LabeledComponent<TextFieldWithBrowseButton> configFileField;
 
     @Override
     protected void resetEditorFrom(@NotNull TLCRunConfiguration s) {
-        myWorkingDirectory.getComponent().setText(s.getWorkingDirectory());
-        myFile.getComponent().setText(s.getFile());
-        myConfigFile.getComponent().setText(s.getConfigFile());
+        workingDirectoryField.getComponent().setText(s.getWorkingDirectory());
+        fileField.getComponent().setText(s.getFile());
+        configFileField.getComponent().setText(s.getConfigFile());
     }
 
     @Override
     protected void applyEditorTo(@NotNull TLCRunConfiguration s) throws ConfigurationException {
-        s.setWorkingDirectory(myWorkingDirectory.getComponent().getText());
-        s.setFile(myFile.getComponent().getText());
-        s.setConfigFile(myConfigFile.getComponent().getText());
+        s.setWorkingDirectory(workingDirectoryField.getComponent().getText());
+        s.setFile(fileField.getComponent().getText());
+        s.setConfigFile(configFileField.getComponent().getText());
     }
 
     @Override
     protected @NotNull JComponent createEditor() {
-        return myPanel;
+        return panel;
     }
 
     private void createUIComponents() {
-        myWorkingDirectory = new LabeledComponent<>();
-        myFile = new LabeledComponent<>();
-        myConfigFile = new LabeledComponent<>();
+        workingDirectoryField = new LabeledComponent<>();
+        fileField = new LabeledComponent<>();
+        configFileField = new LabeledComponent<>();
 
-        myWorkingDirectory.setComponent(fileChooseComponent(
+        workingDirectoryField.setComponent(fileChooseComponent(
                 FileChooserDescriptorFactory.createSingleFolderDescriptor()));
-        myFile.setComponent(fileChooseComponent(
+        fileField.setComponent(fileChooseComponent(
                 FileChooserDescriptorFactory.createSingleFileDescriptor("tla")));
-        myConfigFile.setComponent(fileChooseComponent(
+        configFileField.setComponent(fileChooseComponent(
                 FileChooserDescriptorFactory.createSingleFileDescriptor("cfg")));
     }
 

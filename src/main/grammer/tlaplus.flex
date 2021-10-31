@@ -56,7 +56,7 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
           return e;
       }
       int column = StringUtil.offsetToLineColumn(zzBuffer, zzCurrentPos).column;
-      if (i.column < column) {
+      if (i.column() < column) {
           if (yystate() == HANDLE_INDENT) {
               yybegin(IN_MODULE);
           }
@@ -176,13 +176,13 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
         }
         JunctionIndentation i = zzIndentationStack.isEmpty() ? null : zzIndentationStack.peek();
         int column = StringUtil.offsetToLineColumn(zzBuffer, zzCurrentPos).column;
-        if (i == null || i.column < column) {
+        if (i == null || i.column() < column) {
             zzIndentationStack.push(JunctionIndentation.and(column));
             yybegin(HANDLE_INDENT);
             yypushback(yylength());
             return TLAplusElementTypes.JUNCTION_BEGIN;
         }
-        if (i.type == Type.And && i.column == column) {
+        if (i.type() == Type.And && i.column() == column) {
             yybegin(HANDLE_INDENT);
             yypushback(yylength());
             return TLAplusElementTypes.JUNCTION_CONT;
@@ -203,13 +203,13 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
         }
         JunctionIndentation i = zzIndentationStack.isEmpty() ? null : zzIndentationStack.peek();
         int column = StringUtil.offsetToLineColumn(zzBuffer, zzCurrentPos).column;
-        if (i == null || i.column < column) {
+        if (i == null || i.column() < column) {
             zzIndentationStack.push(JunctionIndentation.or(column));
             yypushback(yylength());
             yybegin(HANDLE_INDENT);
             return TLAplusElementTypes.JUNCTION_BEGIN;
         }
-        if (i.type == Type.Or && i.column == column) {
+        if (i.type() == Type.Or && i.column() == column) {
             yybegin(HANDLE_INDENT);
             yypushback(yylength());
             return TLAplusElementTypes.JUNCTION_CONT;
