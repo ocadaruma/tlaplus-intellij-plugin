@@ -34,5 +34,8 @@
           implementation="com.mayreh.intellij.plugin.tlaplus.run.TLCRunConfigurationType"/>
         <runConfigurationProducer
           implementation="com.mayreh.intellij.plugin.tlaplus.run.TLCRunConfigurationProducer"/>
+        <runLineMarkerContributor
+          language="TLA+"
+          implementationClass="com.mayreh.intellij.plugin.tlaplus.run.TLCRunLineMarkerContributor"/>
     </extensions>
 </idea-plugin>
