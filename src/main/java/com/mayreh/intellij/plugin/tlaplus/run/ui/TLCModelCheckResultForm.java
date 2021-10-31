@@ -1,5 +1,6 @@
 package com.mayreh.intellij.plugin.tlaplus.run.ui;
 
+import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.MouseWheelListener;
 import java.util.Arrays;
@@ -17,7 +18,13 @@ import javax.swing.JTree;
 import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.MutableTreeNode;
+import javax.swing.tree.TreeModel;
+import javax.swing.tree.TreeNode;
 
+import com.intellij.ui.components.JBList;
 import com.intellij.ui.table.JBTable;
 import com.intellij.util.ui.JBUI.Borders;
 
@@ -26,43 +33,52 @@ public class TLCModelCheckResultForm {
     private JLabel resultLabel;
     private JLabel startLabel;
     private JLabel endLabel;
-    private JTable statesTable;
-    private JTable coverageTable;
-    private JList errorsList;
     private JTree errorTraceTree;
-    private JScrollPane statesTableScrollPane;
-    private JScrollPane coverageTableScrollPane;
+    private JPanel statesTablePanel;
+    private JPanel coverageTablePanel;
+    private JPanel errorsPanel;
     private TableModel statesTableModel;
+    private TableModel coverageTableModel;
+    private TableModel errorsTableModel;
+
+    private MutableTreeNode errorTraceRoot;
+    private DefaultTreeModel errorTraceModel;
 
     public JComponent component() {
         return panel;
     }
 
     private void createUIComponents() {
-        statesTableModel = new TableModel("Time", "Diameter", "Found", "Distinct", "Queue");
-        statesTable = new JBTable(statesTableModel) {
-            @Override
-            public Dimension getPreferredScrollableViewportSize() {
-                return new Dimension(getPreferredSize().width, getRowHeight() * getRowCount());
-            }
-        };
-        coverageTable = new JBTable(new TableModel("Module", "Action", "Total", "Distinct"));
-        statesTable.setCellSelectionEnabled(false);
-        coverageTable.setCellSelectionEnabled(false);
     }
 
     public void initUI() {
-        statesTableScrollPane.setWheelScrollingEnabled(false);
-        coverageTableScrollPane.setWheelScrollingEnabled(false);
-        clearMouseWheelListeners(statesTableScrollPane);
-        clearMouseWheelListeners(coverageTableScrollPane);
-        clearMouseWheelListeners(statesTable);
-        clearMouseWheelListeners(coverageTable);
+        errorsTableModel = new TableModel("Error");
+        JTable errorsTable = new SimpleTable(errorsTableModel);
+        errorsPanel.add(errorsTable, BorderLayout.CENTER);
+
+        statesTableModel = new TableModel("Time", "Diameter", "Found", "Distinct", "Queue");
+        JTable statesTable = new SimpleTable(statesTableModel);
+        statesTablePanel.add(statesTable.getTableHeader(), BorderLayout.NORTH);
+        statesTablePanel.add(statesTable, BorderLayout.CENTER);
+
+        coverageTableModel = new TableModel("Module", "Action", "Total", "Distinct");
+        JTable coverageTable = new SimpleTable(coverageTableModel);
+        coverageTablePanel.add(coverageTable.getTableHeader(), BorderLayout.NORTH);
+        coverageTablePanel.add(coverageTable, BorderLayout.CENTER);
+
+        errorTraceRoot = new DefaultMutableTreeNode("root");
+        errorTraceModel = new DefaultTreeModel(errorTraceRoot);
+        errorTraceTree.setModel(errorTraceModel);
     }
 
     public void notify(String message) {
         statesTableModel.addRow(Arrays.asList(
                 String.valueOf(ThreadLocalRandom.current().nextInt()), "2", "3", "4", "5"));
+
+        errorTraceModel.insertNodeInto(new DefaultMutableTreeNode(
+                String.valueOf(ThreadLocalRandom.current().nextInt())
+        ), errorTraceRoot, errorTraceRoot.getChildCount());
+        errorTraceModel.nodeStructureChanged((TreeNode) errorTraceModel.getRoot());
     }
 
     public static class TableModel extends DefaultTableModel {
@@ -80,9 +96,14 @@ public class TLCModelCheckResultForm {
         }
     }
 
-    private static void clearMouseWheelListeners(JComponent component) {
-        for (MouseWheelListener listener : component.getMouseWheelListeners()) {
-            component.removeMouseWheelListener(listener);
+    public static class SimpleTable extends JBTable {
+        public SimpleTable(TableModel model) {
+            super(model);
+        }
+
+        @Override
+        public Dimension getPreferredScrollableViewportSize() {
+            return new Dimension(getPreferredSize().width, getRowHeight() * getRowCount());
         }
     }
 }

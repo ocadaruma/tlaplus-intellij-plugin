@@ -103,14 +103,6 @@
           <text value="Errors"/>
         </properties>
       </component>
-      <component id="bb5b7" class="javax.swing.JList" binding="errorsList">
-        <constraints>
-          <grid row="7" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="2" anchor="0" fill="3" indent="2" use-parent-layout="false">
-            <preferred-size width="150" height="50"/>
-          </grid>
-        </constraints>
-        <properties/>
-      </component>
       <component id="74c5c" class="com.intellij.ui.TitledSeparator">
         <constraints>
           <grid row="8" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="1" indent="1" use-parent-layout="false"/>
@@ -123,46 +115,34 @@
         <constraints>
           <grid row="9" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="2" use-parent-layout="false"/>
         </constraints>
-        <properties/>
+        <properties>
+          <rootVisible value="false"/>
+        </properties>
       </component>
-      <scrollpane id="36a" binding="statesTableScrollPane">
+      <grid id="a53e5" binding="statesTablePanel" layout-manager="BorderLayout" hgap="0" vgap="0">
         <constraints>
-          <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="2" use-parent-layout="false"/>
+          <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="2" use-parent-layout="false"/>
         </constraints>
-        <properties>
-          <enabled value="true"/>
-          <horizontalScrollBarPolicy value="31"/>
-          <verticalScrollBarPolicy value="21"/>
-          <wheelScrollingEnabled value="false"/>
-        </properties>
+        <properties/>
         <border type="empty"/>
-        <children>
-          <component id="56d26" class="javax.swing.JTable" binding="statesTable" custom-create="true">
-            <constraints/>
-            <properties>
-              <enabled value="true"/>
-              <minimumSize width="30" height="32"/>
-            </properties>
-          </component>
-        </children>
-      </scrollpane>
-      <scrollpane id="aa879" binding="coverageTableScrollPane">
+        <children/>
+      </grid>
+      <grid id="289b1" binding="coverageTablePanel" layout-manager="BorderLayout" hgap="0" vgap="0">
         <constraints>
-          <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="2" use-parent-layout="false"/>
+          <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="2" use-parent-layout="false"/>
         </constraints>
-        <properties>
-          <horizontalScrollBarPolicy value="31"/>
-          <verticalScrollBarPolicy value="21"/>
-          <wheelScrollingEnabled value="false"/>
-        </properties>
+        <properties/>
         <border type="empty"/>
-        <children>
-          <component id="d93f9" class="javax.swing.JTable" binding="coverageTable" custom-create="true">
-            <constraints/>
-            <properties/>
-          </component>
-        </children>
-      </scrollpane>
+        <children/>
+      </grid>
+      <grid id="d6f06" binding="errorsPanel" layout-manager="BorderLayout" hgap="0" vgap="0">
+        <constraints>
+          <grid row="7" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="2" use-parent-layout="false"/>
+        </constraints>
+        <properties/>
+        <border type="empty"/>
+        <children/>
+      </grid>
     </children>
   </grid>
 </form>
