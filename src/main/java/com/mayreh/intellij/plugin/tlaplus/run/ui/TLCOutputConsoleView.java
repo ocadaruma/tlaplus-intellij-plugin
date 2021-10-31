@@ -62,7 +62,10 @@ public class TLCOutputConsoleView implements ConsoleView, HelpIdProvider {
             private final ProcessListener listener = new ProcessAdapter() {
                 @Override
                 public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
-                    consoleView.print(event.getText(), ConsoleViewContentType.getConsoleViewType(outputType));
+                    if (!event.getText().startsWith("@!@!")) {
+                        consoleView.print(event.getText(), ConsoleViewContentType.getConsoleViewType(outputType));
+                        consoleView.resultPanel.notify(event.getText());
+                    }
                 }
             };
 
@@ -88,8 +91,8 @@ public class TLCOutputConsoleView implements ConsoleView, HelpIdProvider {
     @Getter
     @Accessors(fluent = true)
     private ConsoleViewImpl console;
-    private TLCResultPanel resultPanel;
     private State state = new State.NotRunning();
+    private final TLCResultPanel resultPanel;
 
     public TLCOutputConsoleView(TLCTestConsoleProperties properties) {
         console = new ConsoleViewImpl(
@@ -102,7 +105,6 @@ public class TLCOutputConsoleView implements ConsoleView, HelpIdProvider {
         Disposer.register(this, properties);
         Disposer.register(this, console);
 
-        setHelpId("reference.runToolWindow.testResultsTab");
         resultPanel = new TLCResultPanel(this, properties);
         resultPanel.initUI();
         Disposer.register(this, resultPanel);
@@ -176,6 +178,10 @@ public class TLCOutputConsoleView implements ConsoleView, HelpIdProvider {
 
     @Override
     public AnAction @NotNull [] createConsoleActions() {
+        return AnAction.EMPTY_ARRAY;
+    }
+
+    public AnAction @NotNull [] consoleActions() {
         List<AnAction> actions = new ArrayList<>();
         actions.add(new ToggleUseSoftWrapsToolbarAction(SoftWrapAppliancePlaces.CONSOLE) {
             @Override

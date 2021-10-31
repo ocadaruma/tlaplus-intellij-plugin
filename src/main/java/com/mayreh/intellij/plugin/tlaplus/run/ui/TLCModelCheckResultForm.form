@@ -1,33 +1,168 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="com.mayreh.intellij.plugin.tlaplus.run.ui.TLCModelCheckResultForm">
-  <grid id="27dc6" binding="panel" layout-manager="GridLayoutManager" row-count="2" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+  <grid id="27dc6" binding="panel" layout-manager="GridLayoutManager" row-count="11" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="0" left="0" bottom="0" right="0"/>
     <constraints>
-      <xy x="20" y="20" width="500" height="400"/>
+      <xy x="20" y="20" width="500" height="513"/>
     </constraints>
     <properties/>
     <border type="none"/>
     <children>
-      <component id="11e0e" class="javax.swing.JTextArea" binding="teeestTextArea" default-binding="true">
+      <component id="94f62" class="com.intellij.ui.TitledSeparator">
         <constraints>
-          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
+          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="1" indent="1" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="General"/>
+        </properties>
+      </component>
+      <vspacer id="e09ac">
+        <constraints>
+          <grid row="10" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+        </constraints>
+      </vspacer>
+      <grid id="7790" layout-manager="GridLayoutManager" row-count="3" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+        <margin top="0" left="0" bottom="0" right="0"/>
+        <constraints>
+          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="2" use-parent-layout="false"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <component id="a327c" class="javax.swing.JLabel">
+            <constraints>
+              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="Result:"/>
+            </properties>
+          </component>
+          <component id="d06dc" class="javax.swing.JLabel" binding="resultLabel">
+            <constraints>
+              <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value=""/>
+            </properties>
+          </component>
+          <component id="78b5f" class="javax.swing.JLabel">
+            <constraints>
+              <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="Start:"/>
+            </properties>
+          </component>
+          <component id="6aec5" class="javax.swing.JLabel" binding="startLabel">
+            <constraints>
+              <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value=""/>
+            </properties>
+          </component>
+          <component id="a3505" class="javax.swing.JLabel">
+            <constraints>
+              <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="End:"/>
+            </properties>
+          </component>
+          <component id="615d9" class="javax.swing.JLabel" binding="endLabel">
+            <constraints>
+              <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value=""/>
+            </properties>
+          </component>
+        </children>
+      </grid>
+      <component id="1c8ae" class="com.intellij.ui.TitledSeparator">
+        <constraints>
+          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="1" indent="1" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="States"/>
+        </properties>
+      </component>
+      <component id="7505c" class="com.intellij.ui.TitledSeparator">
+        <constraints>
+          <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="1" indent="1" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Coverage"/>
+        </properties>
+      </component>
+      <component id="ee957" class="com.intellij.ui.TitledSeparator">
+        <constraints>
+          <grid row="6" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="1" indent="1" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Errors"/>
+        </properties>
+      </component>
+      <component id="bb5b7" class="javax.swing.JList" binding="errorsList">
+        <constraints>
+          <grid row="7" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="2" anchor="0" fill="3" indent="2" use-parent-layout="false">
             <preferred-size width="150" height="50"/>
           </grid>
         </constraints>
+        <properties/>
+      </component>
+      <component id="74c5c" class="com.intellij.ui.TitledSeparator">
+        <constraints>
+          <grid row="8" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="1" indent="1" use-parent-layout="false"/>
+        </constraints>
         <properties>
-          <text value="teeest"/>
+          <text value="Error Trace"/>
         </properties>
       </component>
-      <hspacer id="d879d">
+      <component id="85f73" class="javax.swing.JTree" binding="errorTraceTree">
         <constraints>
-          <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="9" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="2" use-parent-layout="false"/>
         </constraints>
-      </hspacer>
-      <vspacer id="a5bbf">
+        <properties/>
+      </component>
+      <scrollpane id="36a" binding="statesTableScrollPane">
         <constraints>
-          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+          <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="2" use-parent-layout="false"/>
         </constraints>
-      </vspacer>
+        <properties>
+          <enabled value="true"/>
+          <horizontalScrollBarPolicy value="31"/>
+          <verticalScrollBarPolicy value="21"/>
+          <wheelScrollingEnabled value="false"/>
+        </properties>
+        <border type="empty"/>
+        <children>
+          <component id="56d26" class="javax.swing.JTable" binding="statesTable" custom-create="true">
+            <constraints/>
+            <properties>
+              <enabled value="true"/>
+              <minimumSize width="30" height="32"/>
+            </properties>
+          </component>
+        </children>
+      </scrollpane>
+      <scrollpane id="aa879" binding="coverageTableScrollPane">
+        <constraints>
+          <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="2" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <horizontalScrollBarPolicy value="31"/>
+          <verticalScrollBarPolicy value="21"/>
+          <wheelScrollingEnabled value="false"/>
+        </properties>
+        <border type="empty"/>
+        <children>
+          <component id="d93f9" class="javax.swing.JTable" binding="coverageTable" custom-create="true">
+            <constraints/>
+            <properties/>
+          </component>
+        </children>
+      </scrollpane>
     </children>
   </grid>
 </form>

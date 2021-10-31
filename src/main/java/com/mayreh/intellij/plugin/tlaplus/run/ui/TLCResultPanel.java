@@ -45,7 +45,11 @@ public class TLCResultPanel extends JPanel implements Disposable {
         super(new BorderLayout(0, 1));
         this.properties = properties;
         console = consoleView.console().getComponent();
-        consoleActions = consoleView.createConsoleActions();
+        consoleActions = consoleView.consoleActions();
+    }
+
+    public void notify(String message) {
+        modelCheckResultForm.notify(message);
     }
 
     public void initUI() {
@@ -76,6 +80,7 @@ public class TLCResultPanel extends JPanel implements Disposable {
         splitter.setSecondComponent(rightPanel);
 
         modelCheckResultForm = new TLCModelCheckResultForm();
+        modelCheckResultForm.initUI();
         leftPane.setViewportView(modelCheckResultForm.component());
     }
 
