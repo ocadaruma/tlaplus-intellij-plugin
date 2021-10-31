@@ -31,6 +31,7 @@ import com.intellij.openapi.editor.impl.softwrap.SoftWrapAppliancePlaces;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEventParser;
 
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -56,22 +57,19 @@ public class TLCOutputConsoleView implements ConsoleView, HelpIdProvider {
         }
 
         class Running implements State {
-            private final TLCOutputConsoleView consoleView;
             private final ProcessHandler processHandler;
             private final NotRunning finishedState = new NotRunning();
-            private final ProcessListener listener = new ProcessAdapter() {
-                @Override
-                public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
-                    if (!event.getText().startsWith("@!@!")) {
-                        consoleView.print(event.getText(), ConsoleViewContentType.getConsoleViewType(outputType));
-                        consoleView.resultPanel.notify(event.getText());
-                    }
-                }
-            };
+            private final ProcessListener listener;
 
             public Running(TLCOutputConsoleView consoleView, ProcessHandler processHandler) {
-                this.consoleView = consoleView;
                 this.processHandler = processHandler;
+                listener = new ProcessAdapter() {
+                    private TLCEventParser currentParser = new TLCEventParser.Default(consoleView.resultPanel);
+                    @Override
+                    public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
+                        currentParser = currentParser.addLine(event.getText());
+                    }
+                };
                 processHandler.addProcessListener(listener);
             }
 
@@ -112,17 +110,17 @@ public class TLCOutputConsoleView implements ConsoleView, HelpIdProvider {
 
     @Override
     public void print(@NotNull String text, @NotNull ConsoleViewContentType contentType) {
-        console.print(text, contentType);
+        // noop
     }
 
     @Override
     public void clear() {
-        console.clear();
+        // noop
     }
 
     @Override
     public void scrollTo(int offset) {
-        console.scrollTo(offset);
+        // noop
     }
 
     @Override
@@ -168,7 +166,7 @@ public class TLCOutputConsoleView implements ConsoleView, HelpIdProvider {
 
     @Override
     public void printHyperlink(@NotNull String hyperlinkText, @Nullable HyperlinkInfo info) {
-        console.printHyperlink(hyperlinkText, info);
+        // noop
     }
 
     @Override

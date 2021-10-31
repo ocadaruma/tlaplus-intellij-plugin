@@ -8,7 +8,9 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.border.CompoundBorder;
 
+import com.intellij.execution.impl.ConsoleViewImpl;
 import com.intellij.execution.testframework.ui.TestResultsPanel;
+import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.ActionToolbar;
@@ -25,18 +27,21 @@ import com.intellij.ui.ScrollPaneFactory;
 import com.intellij.ui.SideBorder;
 import com.intellij.ui.components.panels.NonOpaquePanel;
 import com.intellij.util.ui.UIUtil;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEventListener;
 
 /**
  * Split panel which has TLC result as left pane and console-output as right pane.
  * The implementation is mostly taken from {@link TestResultsPanel}
  */
-public class TLCResultPanel extends JPanel implements Disposable {
+public class TLCResultPanel extends JPanel implements TLCEventListener, Disposable {
     private static final String SPLITTER_PROPERTY = "TLCResult.Splitter.Proportion";
 
     private JScrollPane leftPane;
     private OnePixelSplitter splitter;
     private TLCModelCheckResultForm modelCheckResultForm;
-    private final JComponent console;
+    private final ConsoleViewImpl consoleView;
+    private final JComponent consoleComponent;
     private final TLCTestConsoleProperties properties;
     private final AnAction[] consoleActions;
 
@@ -44,12 +49,9 @@ public class TLCResultPanel extends JPanel implements Disposable {
                           TLCTestConsoleProperties properties) {
         super(new BorderLayout(0, 1));
         this.properties = properties;
-        console = consoleView.console().getComponent();
+        this.consoleView = consoleView.console();
+        consoleComponent = this.consoleView.getComponent();
         consoleActions = consoleView.consoleActions();
-    }
-
-    public void notify(String message) {
-        modelCheckResultForm.notify(message);
     }
 
     public void initUI() {
@@ -65,6 +67,7 @@ public class TLCResultPanel extends JPanel implements Disposable {
 
         splitter.setFirstComponent(leftPane);
 
+        JComponent console = consoleView.getComponent();
         JPanel rightPanel = new NonOpaquePanel(new BorderLayout());
         console.setFocusable(true);
         Color editorBackground = EditorColorsManager.getInstance().getGlobalScheme().getDefaultBackground();
@@ -104,5 +107,14 @@ public class TLCResultPanel extends JPanel implements Disposable {
             splitVertically = anchor == ToolWindowAnchor.LEFT || anchor == ToolWindowAnchor.RIGHT;
         }
         return splitVertically;
+    }
+
+    @Override
+    public void onEvent(TLCEvent event) {
+        if (event instanceof TLCEvent.TextEvent) {
+            consoleView.print(((TLCEvent.TextEvent) event).text(), ConsoleViewContentType.NORMAL_OUTPUT);
+        } else {
+            modelCheckResultForm.onEvent(event);
+        }
     }
 }

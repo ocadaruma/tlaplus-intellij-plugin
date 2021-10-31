@@ -29,10 +29,11 @@ import com.intellij.ui.components.JBList;
 import com.intellij.ui.table.JBTable;
 import com.intellij.ui.treeStructure.Tree;
 import com.intellij.util.ui.JBUI.Borders;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent;
 
 public class TLCModelCheckResultForm {
     private JPanel panel;
-    private JLabel resultLabel;
+    private JLabel statusLabel;
     private JLabel startLabel;
     private JLabel endLabel;
     private JTree errorTraceTree;
@@ -79,19 +80,24 @@ public class TLCModelCheckResultForm {
         errorTraceModel = new DefaultTreeModel(errorTraceRoot);
         errorTraceTree.setModel(errorTraceModel);
 
-        DefaultMutableTreeNode abcde = new DefaultMutableTreeNode("1: abcde");
-        DefaultMutableTreeNode ghijk = new DefaultMutableTreeNode("2: ghijk");
-        DefaultMutableTreeNode lmnop = new DefaultMutableTreeNode("1-1: lmnop");
-
-        errorTraceModel.insertNodeInto(lmnop, abcde, abcde.getChildCount());
-        errorTraceModel.insertNodeInto(abcde, errorTraceRoot, errorTraceRoot.getChildCount());
-        errorTraceModel.insertNodeInto(ghijk, errorTraceRoot, errorTraceRoot.getChildCount());
-        errorTraceModel.nodeStructureChanged(errorTraceRoot);
+//        DefaultMutableTreeNode abcde = new DefaultMutableTreeNode("1: abcde");
+//        DefaultMutableTreeNode ghijk = new DefaultMutableTreeNode("2: ghijk");
+//        DefaultMutableTreeNode lmnop = new DefaultMutableTreeNode("1-1: lmnop");
+//
+//        errorTraceModel.insertNodeInto(lmnop, abcde, abcde.getChildCount());
+//        errorTraceModel.insertNodeInto(abcde, errorTraceRoot, errorTraceRoot.getChildCount());
+//        errorTraceModel.insertNodeInto(ghijk, errorTraceRoot, errorTraceRoot.getChildCount());
+//        errorTraceModel.nodeStructureChanged(errorTraceRoot);
     }
 
-    public void notify(String message) {
-        statesTableModel.addRow(Arrays.asList(
-                String.valueOf(ThreadLocalRandom.current().nextInt()), "2", "3", "4", "5"));
+    public void onEvent(TLCEvent event) {
+        if (event instanceof TLCEvent.SANYStart) {
+            statusLabel.setText(String.join(",", ((TLCEvent.SANYStart) event).messages()));
+        } else if (event instanceof TLCEvent.SANYEnd) {
+            statusLabel.setText(String.join(",", ((TLCEvent.SANYEnd) event).messages()));
+        }
+//        statesTableModel.addRow(Arrays.asList(
+//                String.valueOf(ThreadLocalRandom.current().nextInt()), "2", "3", "4", "5"));
 
 //        errorTraceModel.insertNodeInto(new DefaultMutableTreeNode(
 //                String.valueOf(ThreadLocalRandom.current().nextInt())
