@@ -111,7 +111,7 @@
           <text value="Error Trace"/>
         </properties>
       </component>
-      <component id="85f73" class="javax.swing.JTree" binding="errorTraceTree">
+      <component id="85f73" class="javax.swing.JTree" binding="errorTraceTree" custom-create="true">
         <constraints>
           <grid row="9" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="2" use-parent-layout="false"/>
         </constraints>

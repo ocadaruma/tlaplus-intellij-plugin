@@ -19,6 +19,7 @@ import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeModel;
@@ -26,6 +27,7 @@ import javax.swing.tree.TreeNode;
 
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.table.JBTable;
+import com.intellij.ui.treeStructure.Tree;
 import com.intellij.util.ui.JBUI.Borders;
 
 public class TLCModelCheckResultForm {
@@ -49,6 +51,13 @@ public class TLCModelCheckResultForm {
     }
 
     private void createUIComponents() {
+        errorTraceTree = new Tree();
+        errorTraceTree.setRootVisible(false);
+        DefaultTreeCellRenderer cellRenderer = new DefaultTreeCellRenderer();
+        cellRenderer.setOpenIcon(null);
+        cellRenderer.setClosedIcon(null);
+        cellRenderer.setLeafIcon(null);
+        errorTraceTree.setCellRenderer(cellRenderer);
     }
 
     public void initUI() {
@@ -69,16 +78,25 @@ public class TLCModelCheckResultForm {
         errorTraceRoot = new DefaultMutableTreeNode("root");
         errorTraceModel = new DefaultTreeModel(errorTraceRoot);
         errorTraceTree.setModel(errorTraceModel);
+
+        DefaultMutableTreeNode abcde = new DefaultMutableTreeNode("1: abcde");
+        DefaultMutableTreeNode ghijk = new DefaultMutableTreeNode("2: ghijk");
+        DefaultMutableTreeNode lmnop = new DefaultMutableTreeNode("1-1: lmnop");
+
+        errorTraceModel.insertNodeInto(lmnop, abcde, abcde.getChildCount());
+        errorTraceModel.insertNodeInto(abcde, errorTraceRoot, errorTraceRoot.getChildCount());
+        errorTraceModel.insertNodeInto(ghijk, errorTraceRoot, errorTraceRoot.getChildCount());
+        errorTraceModel.nodeStructureChanged(errorTraceRoot);
     }
 
     public void notify(String message) {
         statesTableModel.addRow(Arrays.asList(
                 String.valueOf(ThreadLocalRandom.current().nextInt()), "2", "3", "4", "5"));
 
-        errorTraceModel.insertNodeInto(new DefaultMutableTreeNode(
-                String.valueOf(ThreadLocalRandom.current().nextInt())
-        ), errorTraceRoot, errorTraceRoot.getChildCount());
-        errorTraceModel.nodeStructureChanged((TreeNode) errorTraceModel.getRoot());
+//        errorTraceModel.insertNodeInto(new DefaultMutableTreeNode(
+//                String.valueOf(ThreadLocalRandom.current().nextInt())
+//        ), errorTraceRoot, errorTraceRoot.getChildCount());
+//        errorTraceModel.nodeStructureChanged((TreeNode) errorTraceModel.getRoot());
     }
 
     public static class TableModel extends DefaultTableModel {
