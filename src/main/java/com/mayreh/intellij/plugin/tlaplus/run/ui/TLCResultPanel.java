@@ -117,4 +117,9 @@ public class TLCResultPanel extends JPanel implements TLCEventListener, Disposab
             modelCheckResultForm.onEvent(event);
         }
     }
+
+    @Override
+    public void onProcessExit(int exitCode) {
+
+    }
 }

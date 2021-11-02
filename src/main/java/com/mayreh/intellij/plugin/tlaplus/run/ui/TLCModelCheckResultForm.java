@@ -25,6 +25,7 @@ import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 
+import com.intellij.ui.AnimatedIcon;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.table.JBTable;
 import com.intellij.ui.treeStructure.Tree;
@@ -92,9 +93,15 @@ public class TLCModelCheckResultForm {
 
     public void onEvent(TLCEvent event) {
         if (event instanceof TLCEvent.SANYStart) {
-            statusLabel.setText(String.join(",", ((TLCEvent.SANYStart) event).messages()));
+            statusLabel.setText("SANY Started");
         } else if (event instanceof TLCEvent.SANYEnd) {
-            statusLabel.setText(String.join(",", ((TLCEvent.SANYEnd) event).messages()));
+            statusLabel.setText("SANY Finished");
+        } else if (event instanceof TLCEvent.TLCStart) {
+            statusLabel.setIcon(AnimatedIcon.Default.INSTANCE);
+            statusLabel.setText("TLC Started");
+        } else if (event instanceof TLCEvent.Finished) {
+            statusLabel.setIcon(null);
+            statusLabel.setText("TLC Finished");
         }
 //        statesTableModel.addRow(Arrays.asList(
 //                String.valueOf(ThreadLocalRandom.current().nextInt()), "2", "3", "4", "5"));

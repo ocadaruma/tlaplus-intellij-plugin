@@ -64,10 +64,15 @@ public class TLCOutputConsoleView implements ConsoleView, HelpIdProvider {
             public Running(TLCOutputConsoleView consoleView, ProcessHandler processHandler) {
                 this.processHandler = processHandler;
                 listener = new ProcessAdapter() {
-                    private TLCEventParser currentParser = new TLCEventParser.Default(consoleView.resultPanel);
+                    private TLCEventParser currentParser = TLCEventParser.create(consoleView.resultPanel);
                     @Override
                     public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
                         currentParser = currentParser.addLine(event.getText());
+                    }
+
+                    @Override
+                    public void processTerminated(@NotNull ProcessEvent event) {
+                        currentParser.notifyProcessExit(event.getExitCode());
                     }
                 };
                 processHandler.addProcessListener(listener);
