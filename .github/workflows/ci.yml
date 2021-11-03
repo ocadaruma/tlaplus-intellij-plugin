@@ -17,8 +17,6 @@ jobs:
       uses: actions/setup-java@v1
       with:
          java-version: 11
-    - name: Setup
-      run: ./setup.sh
     - name: Execute test
       uses: eskatos/gradle-command-action@v1
       with:

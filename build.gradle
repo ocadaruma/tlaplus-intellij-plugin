@@ -56,6 +56,11 @@ sourceSets {
     }
 }
 
+task prepareLib(type: Exec) {
+    workingDir project.rootDir
+    commandLine './setup.sh'
+}
+
 task generateTLAplusLexer(type: GenerateLexer) {
     source = "src/main/grammer/tlaplus.flex"
     targetDir = "src/gen/com/mayreh/intellij/plugin/tlaplus/lexer"
@@ -79,6 +84,7 @@ task generateTLAplusParser(type: GenerateParser) {
 }
 
 compileJava.dependsOn(
+        prepareLib,
         generateTLAplusLexer,
         generateTLAplusModuleBeginLexer,
         generateTLAplusParser)
