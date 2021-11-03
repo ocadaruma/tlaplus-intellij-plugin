@@ -78,6 +78,7 @@ public class TLCModelCheckResultForm {
     public void initUI() {
         errorsTableModel = new TableModel("Error");
         JTable errorsTable = new SimpleTable(errorsTableModel);
+        errorsTable.setForeground(ColorProgressBar.RED_TEXT);
         errorsPanel.add(errorsTable, BorderLayout.CENTER);
 
         statesTableModel = new StatesTableModel("Time", "Diameter", "Found", "Distinct", "Queue");

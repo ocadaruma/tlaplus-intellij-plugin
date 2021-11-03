@@ -115,17 +115,17 @@ public class TLCOutputConsoleView implements ConsoleView, HelpIdProvider {
 
     @Override
     public void print(@NotNull String text, @NotNull ConsoleViewContentType contentType) {
-        // noop
+        // noop as all outputs go to TLCResultPanel and routed to underlying ConsoleView as necessary
     }
 
     @Override
     public void clear() {
-        // noop
+        console.clear();
     }
 
     @Override
     public void scrollTo(int offset) {
-        // noop
+        console.scrollTo(offset);
     }
 
     @Override

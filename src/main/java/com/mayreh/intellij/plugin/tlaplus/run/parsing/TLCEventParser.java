@@ -13,12 +13,8 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.annotation.Nullable;
-
 import com.intellij.util.Range;
 
-import lombok.Value;
-import lombok.experimental.Accessors;
 import tlc2.output.EC;
 import tlc2.output.MP;
 
@@ -62,15 +58,7 @@ public abstract class TLCEventParser {
         this.listener = listener;
     }
 
-    @Value
-    @Accessors(fluent = true)
-    static class Message {
-        int code;
-        @Nullable
-        Integer severity;
-    }
-
-    protected Optional<Message> parseStartMessage(String line) {
+    protected Optional<TLCMessage> parseStartMessage(String line) {
         Matcher matcher = STARTMSG_PATTERN.matcher(line);
         if (matcher.find()) {
             int code = Integer.valueOf(matcher.group(1));
@@ -78,7 +66,7 @@ public abstract class TLCEventParser {
             if (matcher.group(2) != null) {
                 severity = Integer.valueOf(matcher.group(2).substring(1));
             }
-            return Optional.of(new Message(code, severity));
+            return Optional.of(new TLCMessage(code, severity));
         }
         return Optional.empty();
     }
@@ -96,8 +84,8 @@ public abstract class TLCEventParser {
         @Override
         public TLCEventParser addLine(String line) {
             return parseStartMessage(line).map(msg -> {
-                if (interestedSeverities.contains(msg.severity) &&
-                    !ignorableCodes.contains(msg.code)) {
+                if (interestedSeverities.contains(msg.severity()) &&
+                    !ignorableCodes.contains(msg.code())) {
                     return new MultilineTextParser<TLCEvent>(
                             listener, lines -> new TLCEvent.TLCError(String.join("", lines)));
                 }
@@ -105,7 +93,7 @@ public abstract class TLCEventParser {
                     case EC.TLC_MODE_MC:
                         return new MultilineTextParser<>(listener, TLCEvent.MC::new);
                     case EC.TLC_SANY_START:
-                        return new SANYParser(listener);
+                        return new SANYEventParser(listener);
                     case EC.TLC_STARTING:
                         return new MultilineTextParser<>(listener, lines -> {
                             Matcher matcher = mustMatch(DATETIME_PATTERN, String.join(" ", lines));
@@ -162,49 +150,6 @@ public abstract class TLCEventParser {
                 listener.onEvent(new TLCEvent.TextEvent(line));
                 return this;
             });
-        }
-    }
-
-    static class SANYParser extends TLCEventParser {
-        private final List<String> sanyLines = new ArrayList<>();
-
-        enum State { Init, Running, Ending, }
-        private State state = State.Init;
-
-        SANYParser(TLCEventListener listener) {
-            super(listener);
-        }
-
-        @Override
-        public TLCEventParser addLine(String line) {
-            switch (state) {
-                case Init:
-                    if (parseEndMessage(line)) {
-                        state = State.Running;
-                        listener.onEvent(TLCEvent.SANYStart.INSTANCE);
-                    } else {
-                        listener.onEvent(new TLCEvent.TextEvent(line));
-                    }
-                    return this;
-                case Running:
-                    Optional<Message> msg = parseStartMessage(line);
-                    if (msg.isPresent() && msg.get().code == EC.TLC_SANY_END) {
-                        state = State.Ending;
-                    } else {
-                        sanyLines.add(line);
-                    }
-                    return this;
-                case Ending:
-                    if (parseEndMessage(line)) {
-                        listener.onEvent(new TLCEvent.SANYEnd(sanyLines));
-                        return new Default(listener);
-                    } else {
-                        listener.onEvent(new TLCEvent.TextEvent(line));
-                        return this;
-                    }
-                default:
-                    throw new RuntimeException("Never");
-            }
         }
     }
 

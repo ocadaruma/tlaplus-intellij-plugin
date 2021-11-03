@@ -29,9 +29,10 @@ public interface TLCEvent {
         public static final SANYStart INSTANCE = new SANYStart();
     }
 
+    @Value
+    @Accessors(fluent = true)
     class SANYEnd implements TLCEvent {
-        public SANYEnd(List<String> sanyLines) {
-        }
+        List<SANYError> errors;
     }
 
     @Value
@@ -116,5 +117,13 @@ public interface TLCEvent {
     @Accessors(fluent = true)
     class ProcessTerminated implements TLCEvent {
         int exitCode;
+    }
+
+    @Value
+    @Accessors(fluent = true)
+    class SANYError {
+        String module;
+        SourceLocation location;
+        String message;
     }
 }
