@@ -86,8 +86,7 @@ public abstract class TLCEventParser {
             return parseStartMessage(line).map(msg -> {
                 if (interestedSeverities.contains(msg.severity()) &&
                     !ignorableCodes.contains(msg.code())) {
-                    return new MultilineTextParser<>(
-                            listener, lines -> Optional.of(new TLCEvent.TLCError(String.join("\n", lines))));
+                    return new MultilineTextParser<>(listener, lines -> Optional.of(ErrorParser.parse(lines)));
                 }
                 switch (msg.code()) {
                     case EC.TLC_MODE_MC:
@@ -261,6 +260,34 @@ public abstract class TLCEventParser {
                 return new TLCEvent.CoverageItem(
                         moduleName, actionName, total, distinct, new Range<>(start, endExclusive));
             });
+        }
+    }
+
+    private static class ErrorParser {
+        private static final Pattern LOCATION_PATTERN = Pattern.compile(
+                ".*\\b[Ll]ine (\\d+), column (\\d+) to line \\d+, column \\d+ in (\\w+)\\b.*");
+
+        static TLCEvent.TLCError parse(List<String> lines) {
+            List<TLCEvent.TLCError.ErrorItem> errors = new ArrayList<>();
+            for (String line : lines) {
+                line = line.trim();
+                if (line.isBlank()) {
+                    continue;
+                }
+
+                Matcher matcher = LOCATION_PATTERN.matcher(line);
+                if (matcher.find()) {
+                    int lineNum = toInt(matcher.group(1));
+                    int col = toInt(matcher.group(2));
+                    String module = matcher.group(3);
+                    errors.add(new TLCEvent.TLCError.LocatableErrorItem(
+                            module, new SourceLocation(lineNum, col), line));
+                } else {
+                    errors.add(new TLCEvent.TLCError.SimpleErrorItem(line));
+                }
+            }
+
+            return new TLCEvent.TLCError(errors);
         }
     }
 

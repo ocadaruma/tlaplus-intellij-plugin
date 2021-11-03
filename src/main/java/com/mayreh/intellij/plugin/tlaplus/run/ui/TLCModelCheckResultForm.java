@@ -36,6 +36,7 @@ import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.Progress;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.SANYEnd;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.SANYError;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCError;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCError.ErrorItem;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCFinished;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCStart;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCSuccess;
@@ -155,7 +156,9 @@ public class TLCModelCheckResultForm {
             statusSet = true;
         }
         if (event instanceof TLCError) {
-            errorsTableModel.addRow(Collections.singletonList(((TLCError) event).message()));
+            for (ErrorItem error : ((TLCError) event).errors()) {
+                errorsTableModel.addRow(Collections.singletonList(error.message()));
+            }
         }
         if (event instanceof ProcessTerminated) {
             statusLabel.setIcon(null);

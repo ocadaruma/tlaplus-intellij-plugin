@@ -97,7 +97,25 @@ public interface TLCEvent {
     @Value
     @Accessors(fluent = true)
     class TLCError implements TLCEvent {
-        String message;
+        public interface ErrorItem {
+            String message();
+        }
+
+        @Value
+        @Accessors(fluent = true)
+        public static class LocatableErrorItem implements ErrorItem {
+            String module;
+            SourceLocation location;
+            String message;
+        }
+
+        @Value
+        @Accessors(fluent = true)
+        public static class SimpleErrorItem implements ErrorItem {
+            String message;
+        }
+
+        List<ErrorItem> errors;
     }
 
     @Value
