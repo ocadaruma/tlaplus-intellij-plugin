@@ -14,6 +14,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.intellij.util.Range;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.CheckingLiveness;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.CheckingLivenessFinal;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.CheckpointStart;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.CoverageInit;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.CoverageNext;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.InitialStatesComputing;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.MC;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCFinished;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCStart;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCSuccess;
 
 import tlc2.output.EC;
 import tlc2.output.MP;
@@ -90,21 +100,21 @@ public abstract class TLCEventParser {
                 }
                 switch (msg.code()) {
                     case EC.TLC_MODE_MC:
-                        return new MultilineTextParser<>(listener, lines -> Optional.of(new TLCEvent.MC(lines)));
+                        return new MultilineTextParser<>(listener, lines -> Optional.of(new MC(lines)));
                     case EC.TLC_SANY_START:
                         return new SANYEventParser(listener);
                     case EC.TLC_STARTING:
                         return new MultilineTextParser<>(
                                 listener, lines -> maybeMatch(DATETIME_PATTERN, String.join(" ", lines))
-                                .map(matcher -> new TLCEvent.TLCStart(
+                                .map(matcher -> new TLCStart(
                                         LocalDateTime.parse(matcher.group(1), DATETIME_FORMAT))));
                     case EC.TLC_CHECKPOINT_START:
                         return new MultilineTextParser<>(
-                                listener, ignore -> Optional.of(TLCEvent.CheckpointStart.INSTANCE));
+                                listener, ignore -> Optional.of(CheckpointStart.INSTANCE));
                     case EC.TLC_COMPUTING_INIT:
                     case EC.TLC_COMPUTING_INIT_PROGRESS:
                         return new MultilineTextParser<>(
-                                listener, ignore -> Optional.of(TLCEvent.InitialStatesComputing.INSTANCE));
+                                listener, ignore -> Optional.of(InitialStatesComputing.INSTANCE));
                     case EC.TLC_INIT_GENERATED1:
                     case EC.TLC_INIT_GENERATED2:
                     case EC.TLC_INIT_GENERATED3:
@@ -113,32 +123,38 @@ public abstract class TLCEventParser {
                     case EC.TLC_CHECKING_TEMPORAL_PROPS:
                         return new MultilineTextParser<>(listener, lines -> {
                             if (String.join(" ", lines).contains("complete")) {
-                                return Optional.of(TLCEvent.CheckingLivenessFinal.INSTANCE);
+                                return Optional.of(CheckingLivenessFinal.INSTANCE);
                             }
-                            return Optional.of(TLCEvent.CheckingLiveness.INSTANCE);
+                            return Optional.of(CheckingLiveness.INSTANCE);
                         });
                     case EC.TLC_PROGRESS_STATS:
                         return new MultilineTextParser<>(listener, ProgressParser::parse);
                     case EC.TLC_COVERAGE_INIT:
                         return new MultilineTextParser<>(
-                                listener, lines -> CoverageItemParser.parse(lines).map(TLCEvent.CoverageInit::new));
+                                listener, lines -> CoverageItemParser.parse(lines).map(CoverageInit::new));
                     case EC.TLC_COVERAGE_NEXT:
                         return new MultilineTextParser<>(
-                                listener, lines -> CoverageItemParser.parse(lines).map(TLCEvent.CoverageNext::new));
+                                listener, lines -> CoverageItemParser.parse(lines).map(CoverageNext::new));
                     case EC.TLC_STATE_PRINT1:
                     case EC.TLC_STATE_PRINT2:
                     case EC.TLC_STATE_PRINT3:
                     case EC.TLC_BACK_TO_STATE:
                         return new MultilineTextParser<>(
-                                listener, lines -> Optional.of(new TLCEvent.ErrorTrace(lines)));
+                                listener, lines -> {
+                            // TODO: Parse error trace
+                            for (String s : lines) {
+                                listener.onEvent(new TLCEvent.TextEvent(s));
+                            }
+                            return Optional.empty();
+                        });
                     case EC.TLC_SUCCESS:
                         return new MultilineTextParser<>(
                                 listener, lines -> maybeMatch(SUCCESS_PATTERN, String.join(" ", lines))
-                                .map(matcher -> new TLCEvent.TLCSuccess(Double.valueOf(matcher.group(1)))));
+                                .map(matcher -> new TLCSuccess(Double.valueOf(matcher.group(1)))));
                     case EC.TLC_FINISHED:
                         return new MultilineTextParser<>(
                                 listener, lines -> maybeMatch(FINISH_PATTERN, String.join(" ", lines))
-                                .map(matcher -> new TLCEvent.TLCFinished(
+                                .map(matcher -> new TLCFinished(
                                         Duration.ofMillis(Long.valueOf(matcher.group(1))),
                                         LocalDateTime.parse(matcher.group(2), DATETIME_FORMAT))));
                     default:
