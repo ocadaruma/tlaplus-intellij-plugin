@@ -41,6 +41,8 @@ public class TLCResultPanel extends JPanel implements TLCEventListener, Disposab
     private OnePixelSplitter splitter;
     private TLCModelCheckResultForm modelCheckResultForm;
     private final ConsoleViewImpl consoleView;
+    // FIXME: We can't turn this to local variable because getComponent() has side-effect
+    private final JComponent consoleComponent;
     private final TLCTestConsoleProperties properties;
     private final AnAction[] consoleActions;
 
@@ -49,7 +51,7 @@ public class TLCResultPanel extends JPanel implements TLCEventListener, Disposab
         super(new BorderLayout(0, 1));
         this.properties = properties;
         this.consoleView = consoleView.console();
-        JComponent consoleComponent = this.consoleView.getComponent();
+        consoleComponent = this.consoleView.getComponent();
         consoleActions = consoleView.consoleActions();
     }
 

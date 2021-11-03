@@ -86,26 +86,26 @@ public abstract class TLCEventParser {
             return parseStartMessage(line).map(msg -> {
                 if (interestedSeverities.contains(msg.severity()) &&
                     !ignorableCodes.contains(msg.code())) {
-                    return new MultilineTextParser<TLCEvent>(
-                            listener, lines -> new TLCEvent.TLCError(String.join("", lines)));
+                    return new MultilineTextParser<>(
+                            listener, lines -> Optional.of(new TLCEvent.TLCError(String.join("\n", lines))));
                 }
                 switch (msg.code()) {
                     case EC.TLC_MODE_MC:
-                        return new MultilineTextParser<>(listener, TLCEvent.MC::new);
+                        return new MultilineTextParser<>(listener, lines -> Optional.of(new TLCEvent.MC(lines)));
                     case EC.TLC_SANY_START:
                         return new SANYEventParser(listener);
                     case EC.TLC_STARTING:
-                        return new MultilineTextParser<>(listener, lines -> {
-                            Matcher matcher = mustMatch(DATETIME_PATTERN, String.join(" ", lines));
-                            return new TLCEvent.TLCStart(LocalDateTime.parse(matcher.group(1), DATETIME_FORMAT));
-                        });
+                        return new MultilineTextParser<>(
+                                listener, lines -> maybeMatch(DATETIME_PATTERN, String.join(" ", lines))
+                                .map(matcher -> new TLCEvent.TLCStart(
+                                        LocalDateTime.parse(matcher.group(1), DATETIME_FORMAT))));
                     case EC.TLC_CHECKPOINT_START:
                         return new MultilineTextParser<>(
-                                listener, ignore -> TLCEvent.CheckpointStart.INSTANCE);
+                                listener, ignore -> Optional.of(TLCEvent.CheckpointStart.INSTANCE));
                     case EC.TLC_COMPUTING_INIT:
                     case EC.TLC_COMPUTING_INIT_PROGRESS:
                         return new MultilineTextParser<>(
-                                listener, ignore -> TLCEvent.InitialStatesComputing.INSTANCE);
+                                listener, ignore -> Optional.of(TLCEvent.InitialStatesComputing.INSTANCE));
                     case EC.TLC_INIT_GENERATED1:
                     case EC.TLC_INIT_GENERATED2:
                     case EC.TLC_INIT_GENERATED3:
@@ -114,35 +114,34 @@ public abstract class TLCEventParser {
                     case EC.TLC_CHECKING_TEMPORAL_PROPS:
                         return new MultilineTextParser<>(listener, lines -> {
                             if (String.join(" ", lines).contains("complete")) {
-                                return TLCEvent.CheckingLivenessFinal.INSTANCE;
+                                return Optional.of(TLCEvent.CheckingLivenessFinal.INSTANCE);
                             }
-                            return TLCEvent.CheckingLiveness.INSTANCE;
+                            return Optional.of(TLCEvent.CheckingLiveness.INSTANCE);
                         });
                     case EC.TLC_PROGRESS_STATS:
                         return new MultilineTextParser<>(listener, ProgressParser::parse);
                     case EC.TLC_COVERAGE_INIT:
-                        return new MultilineTextParser<>(listener, lines ->
-                                new TLCEvent.CoverageInit(CoverageItemParser.parse(lines)));
+                        return new MultilineTextParser<>(
+                                listener, lines -> CoverageItemParser.parse(lines).map(TLCEvent.CoverageInit::new));
                     case EC.TLC_COVERAGE_NEXT:
-                        return new MultilineTextParser<>(listener, lines ->
-                                new TLCEvent.CoverageNext(CoverageItemParser.parse(lines)));
+                        return new MultilineTextParser<>(
+                                listener, lines -> CoverageItemParser.parse(lines).map(TLCEvent.CoverageNext::new));
                     case EC.TLC_STATE_PRINT1:
                     case EC.TLC_STATE_PRINT2:
                     case EC.TLC_STATE_PRINT3:
                     case EC.TLC_BACK_TO_STATE:
-                        return new MultilineTextParser<>(listener, TLCEvent.ErrorTrace::new);
+                        return new MultilineTextParser<>(
+                                listener, lines -> Optional.of(new TLCEvent.ErrorTrace(lines)));
                     case EC.TLC_SUCCESS:
-                        return new MultilineTextParser<>(listener, lines -> {
-                            Matcher matcher = mustMatch(SUCCESS_PATTERN, String.join(" ", lines));
-                            return new TLCEvent.TLCSuccess(Double.valueOf(matcher.group(1)));
-                        });
+                        return new MultilineTextParser<>(
+                                listener, lines -> maybeMatch(SUCCESS_PATTERN, String.join(" ", lines))
+                                .map(matcher -> new TLCEvent.TLCSuccess(Double.valueOf(matcher.group(1)))));
                     case EC.TLC_FINISHED:
-                        return new MultilineTextParser<>(listener, lines -> {
-                            Matcher matcher = mustMatch(FINISH_PATTERN, String.join(" ", lines));
-                            return new TLCEvent.TLCFinished(
-                                    Duration.ofMillis(Long.valueOf(matcher.group(1))),
-                                    LocalDateTime.parse(matcher.group(2), DATETIME_FORMAT));
-                        });
+                        return new MultilineTextParser<>(
+                                listener, lines -> maybeMatch(FINISH_PATTERN, String.join(" ", lines))
+                                .map(matcher -> new TLCEvent.TLCFinished(
+                                        Duration.ofMillis(Long.valueOf(matcher.group(1))),
+                                        LocalDateTime.parse(matcher.group(2), DATETIME_FORMAT))));
                     default:
                         return new Other(listener);
                 }
@@ -174,11 +173,11 @@ public abstract class TLCEventParser {
     }
 
     static class MultilineTextParser<T extends TLCEvent> extends StatefulParser {
-        private final Function<List<String>, T> createEvent;
+        private final Function<List<String>, Optional<T>> createEvent;
         private final List<String> lines = new ArrayList<>();
 
         MultilineTextParser(TLCEventListener listener,
-                            Function<List<String>, T> createEvent) {
+                            Function<List<String>, Optional<T>> createEvent) {
             super(listener);
             this.createEvent = createEvent;
         }
@@ -190,7 +189,12 @@ public abstract class TLCEventParser {
 
         @Override
         protected void finish() {
-            listener.onEvent(createEvent.apply(lines));
+            Optional<T> maybeEvent = createEvent.apply(lines);
+            if (maybeEvent.isPresent()) {
+                listener.onEvent(maybeEvent.get());
+            } else {
+                listener.onEvent(new TLCEvent.TextEvent(String.join("\n", lines)));
+            }
         }
     }
 
@@ -216,21 +220,23 @@ public abstract class TLCEventParser {
         private static final Pattern PATTERN = Pattern.compile(
                 "Progress\\(([\\d,]+)\\) at (\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}): ([\\d,]+) states generated.*, ([\\d,]+) distinct states found.*, ([\\d,]+) states left on queue.*");
 
-        static TLCEvent.Progress parseInit(List<String> lines) {
-            Matcher matcher = mustMatch(INIT_PATTERN, String.join("", lines));
-            int count = toInt(matcher.group(1));
-            LocalDateTime timestamp = LocalDateTime.parse(matcher.group(2), DATETIME_FORMAT);
-            return new TLCEvent.Progress(timestamp, 0, count, count, count);
+        static Optional<TLCEvent.Progress> parseInit(List<String> lines) {
+            return maybeMatch(INIT_PATTERN, String.join("", lines)).map(matcher -> {
+                int count = toInt(matcher.group(1));
+                LocalDateTime timestamp = LocalDateTime.parse(matcher.group(2), DATETIME_FORMAT);
+                return new TLCEvent.Progress(timestamp, 0, count, count, count);
+            });
         }
 
-        static TLCEvent.Progress parse(List<String> lines) {
-            Matcher matcher = mustMatch(PATTERN, String.join("", lines));
-            LocalDateTime timestamp = LocalDateTime.parse(matcher.group(2), DATETIME_FORMAT);
-            int diameter = toInt(matcher.group(1));
-            int total = toInt(matcher.group(3));
-            int distinct = toInt(matcher.group(4));
-            int queueSize = toInt(matcher.group(5));
-            return new TLCEvent.Progress(timestamp, diameter, total, distinct, queueSize);
+        static Optional<TLCEvent.Progress> parse(List<String> lines) {
+            return maybeMatch(PATTERN, String.join("", lines)).map(matcher -> {
+                LocalDateTime timestamp = LocalDateTime.parse(matcher.group(2), DATETIME_FORMAT);
+                int diameter = toInt(matcher.group(1));
+                int total = toInt(matcher.group(3));
+                int distinct = toInt(matcher.group(4));
+                int queueSize = toInt(matcher.group(5));
+                return new TLCEvent.Progress(timestamp, diameter, total, distinct, queueSize);
+            });
         }
     }
 
@@ -238,29 +244,33 @@ public abstract class TLCEventParser {
         private static final Pattern PATTERN = Pattern.compile(
                 "<(\\w+) line (\\d+), col (\\d+) to line (\\d+), col (\\d+) of module (\\w+)>: (\\d+):(\\d+)");
 
-        static TLCEvent.CoverageItem parse(List<String> lines) {
-            Matcher matcher = mustMatch(PATTERN, String.join("", lines));
-            String moduleName = matcher.group(6);
-            String actionName = matcher.group(1);
+        static Optional<TLCEvent.CoverageItem> parse(List<String> lines) {
+            return maybeMatch(PATTERN, String.join("", lines)).map(matcher -> {
+                String moduleName = matcher.group(6);
+                String actionName = matcher.group(1);
 
-            // translating to 0-origin
-            SourceLocation start = new SourceLocation(
-                    toInt(matcher.group(2)) - 1, toInt(matcher.group(3)) - 1);
-            // column should be exclusive so no need to subtract 1
-            SourceLocation endExclusive = new SourceLocation(
-                    toInt(matcher.group(4)) - 1, toInt(matcher.group(5)));
+                // translating to 0-origin
+                SourceLocation start = new SourceLocation(
+                        toInt(matcher.group(2)) - 1, toInt(matcher.group(3)) - 1);
+                // column should be exclusive so no need to subtract 1
+                SourceLocation endExclusive = new SourceLocation(
+                        toInt(matcher.group(4)) - 1, toInt(matcher.group(5)));
 
-            int distinct = toInt(matcher.group(7));
-            int total = toInt(matcher.group(8));
-            return new TLCEvent.CoverageItem(moduleName, actionName, total, distinct, new Range<>(start, endExclusive));
+                int distinct = toInt(matcher.group(7));
+                int total = toInt(matcher.group(8));
+                return new TLCEvent.CoverageItem(
+                        moduleName, actionName, total, distinct, new Range<>(start, endExclusive));
+            });
         }
     }
 
-    private static Matcher mustMatch(Pattern pattern, String input) {
+    private static Optional<Matcher> maybeMatch(Pattern pattern, String input) {
         Matcher matcher = pattern.matcher(input);
-        boolean matched = matcher.find();
-        assert matched : "Input " + input + " must match to the pattern " + pattern;
-        return matcher;
+        if (matcher.find()) {
+            return Optional.of(matcher);
+        } else {
+            return Optional.empty();
+        }
     }
 
     private static int toInt(String s) {
