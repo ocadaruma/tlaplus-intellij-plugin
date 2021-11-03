@@ -2,7 +2,10 @@ package com.mayreh.intellij.plugin.tlaplus.run.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -47,8 +50,8 @@ public class TLCModelCheckResultForm {
     private JPanel statesTablePanel;
     private JPanel coverageTablePanel;
     private JPanel errorsPanel;
-    private TableModel statesTableModel;
-    private TableModel coverageTableModel;
+    private StatesTableModel statesTableModel;
+    private CoverageTableModel coverageTableModel;
     private TableModel errorsTableModel;
 
     private MutableTreeNode errorTraceRoot;
@@ -77,12 +80,12 @@ public class TLCModelCheckResultForm {
         JTable errorsTable = new SimpleTable(errorsTableModel);
         errorsPanel.add(errorsTable, BorderLayout.CENTER);
 
-        statesTableModel = new TableModel("Time", "Diameter", "Found", "Distinct", "Queue");
+        statesTableModel = new StatesTableModel("Time", "Diameter", "Found", "Distinct", "Queue");
         JTable statesTable = new SimpleTable(statesTableModel);
         statesTablePanel.add(statesTable.getTableHeader(), BorderLayout.NORTH);
         statesTablePanel.add(statesTable, BorderLayout.CENTER);
 
-        coverageTableModel = new TableModel("Module", "Action", "Total", "Distinct");
+        coverageTableModel = new CoverageTableModel("Module", "Action", "Total", "Distinct");
         JTable coverageTable = new SimpleTable(coverageTableModel);
         coverageTablePanel.add(coverageTable.getTableHeader(), BorderLayout.NORTH);
         coverageTablePanel.add(coverageTable, BorderLayout.CENTER);
@@ -114,14 +117,7 @@ public class TLCModelCheckResultForm {
             startLabel.setText(((TLCStart) event).startedAt().format(DATETIME_FORMAT));
         }
         if (event instanceof Progress) {
-            Progress progress = (Progress) event;
-            statesTableModel.addRow(Arrays.asList(
-                    progress.timestamp().format(DATETIME_FORMAT),
-                    String.valueOf(progress.diameter()),
-                    String.valueOf(progress.total()),
-                    String.valueOf(progress.distinct()),
-                    String.valueOf(progress.queueSize())
-            ));
+            statesTableModel.addRow((Progress) event);
         }
         if (event instanceof CoverageInit || event instanceof CoverageNext) {
             if (event instanceof CoverageInit) {
@@ -129,12 +125,7 @@ public class TLCModelCheckResultForm {
             }
             CoverageItem coverage = event instanceof CoverageInit ?
                                     ((CoverageInit) event).item() : ((CoverageNext) event).item();
-            coverageTableModel.addRow(Arrays.asList(
-                    coverage.module(),
-                    coverage.action(),
-                    String.valueOf(coverage.total()),
-                    String.valueOf(coverage.distinct())
-            ));
+            coverageTableModel.addRow(coverage);
         }
         if (event instanceof TLCFinished) {
             statusLabel.setIcon(null);
@@ -145,7 +136,7 @@ public class TLCModelCheckResultForm {
         }
         if (event instanceof TLCSuccess) {
             statusLabel.setIcon(null);
-            statusLabel.setText(String.format("Succeeded (Fingerprint collision probability: %f)",
+            statusLabel.setText(String.format("Succeeded (Fingerprint collision probability: %E)",
                                               ((TLCSuccess) event).fingerprintCollisionProbability()));
             statusLabel.setFont(JBFont.label().asBold());
             statusLabel.setForeground(ColorProgressBar.GREEN);
@@ -172,8 +163,8 @@ public class TLCModelCheckResultForm {
         }
     }
 
-    public static class TableModel extends DefaultTableModel {
-        public TableModel(String... headers) {
+    private static class TableModel extends DefaultTableModel {
+        TableModel(String... headers) {
             super(new Vector<>(Arrays.asList(headers)), 0);
         }
 
@@ -185,11 +176,77 @@ public class TLCModelCheckResultForm {
         public void addRow(List<String> columns) {
             super.addRow(new Vector<>(columns));
         }
+    }
+
+    private static class CoverageTableModel extends TableModel {
+        CoverageTableModel(String... headers) {
+            super(headers);
+        }
+
+        public void addRow(CoverageItem coverage) {
+            addRow(Arrays.asList(
+                    coverage.module(),
+                    coverage.action(),
+                    String.valueOf(coverage.total()),
+                    String.valueOf(coverage.distinct())
+            ));
+        }
 
         public void clearRows() {
             while (getRowCount() > 0) {
                 removeRow(0);
             }
+        }
+    }
+
+    private static class StatesTableModel extends TableModel {
+        StatesTableModel(String... headers) {
+            super(headers);
+        }
+
+        private final List<Progress> underlying = new ArrayList<>();
+
+        public void addRow(Progress progress) {
+            if (underlying.isEmpty()) {
+                underlying.add(progress);
+                addRowInternal(underlying.get(0).timestamp(), progress);
+            } else {
+                int existingIdx = -1;
+                for (int i = 0; i < underlying.size(); i++) {
+                    if (underlying.get(i).timestamp().equals(progress.timestamp())) {
+                        existingIdx = i;
+                        break;
+                    }
+                }
+                if (existingIdx >= 0) {
+                    underlying.remove(existingIdx);
+                    underlying.add(existingIdx, progress);
+                    removeRow(existingIdx);
+                    addRowInternal(existingIdx, underlying.get(0).timestamp(), progress);
+                } else {
+                    underlying.add(progress);
+                    addRowInternal(underlying.get(0).timestamp(), progress);
+                }
+            }
+        }
+
+        private void addRowInternal(LocalDateTime initTimestamp, Progress progress) {
+            addRowInternal(getRowCount(), initTimestamp, progress);
+        }
+
+        private void addRowInternal(int idx, LocalDateTime initTimestamp, Progress progress) {
+            Duration duration = Duration.between(initTimestamp, progress.timestamp());
+            String time = String.format("%02d:%02d:%02d",
+                                        duration.toHoursPart(),
+                                        duration.toMinutesPart(),
+                                        duration.toSecondsPart());
+            insertRow(idx, new Vector<>(Arrays.asList(
+                    time,
+                    String.valueOf(progress.diameter()),
+                    String.valueOf(progress.total()),
+                    String.valueOf(progress.distinct()),
+                    String.valueOf(progress.queueSize())
+            )));
         }
     }
 
