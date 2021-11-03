@@ -29,6 +29,9 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 
   private IElementType clearIndent(IElementType e, int nextState) {
       if (forHighlighting) {
+          if (yystate() != nextState) {
+              yybegin(nextState);
+          }
           return e;
       }
 
@@ -345,8 +348,7 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
 }
 
 <TERMINATED> {
-  <<EOF>> { yybegin(YYINITIAL); return TLAplusElementTypes.IGNORED; }
-  [^]     {}
+  [^]     { return TLAplusElementTypes.IGNORED; }
 }
 
 // catch all
