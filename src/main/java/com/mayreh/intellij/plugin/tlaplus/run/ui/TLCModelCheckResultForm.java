@@ -33,6 +33,8 @@ import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.CoverageItem;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.CoverageNext;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ProcessTerminated;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.Progress;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.SANYEnd;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.SANYError;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCError;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCFinished;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCStart;
@@ -111,6 +113,15 @@ public class TLCModelCheckResultForm {
         }
         if (event instanceof TLCEvent.SANYEnd) {
             statusLabel.setText("SANY finished");
+            for (SANYError sanyError : ((SANYEnd) event).errors()) {
+                String message = String.format(
+                        "%s(%d:%d): %s",
+                        sanyError.module(),
+                        sanyError.location().line(),
+                        sanyError.location().col(),
+                        sanyError.message());
+                errorsTableModel.addRow(Collections.singletonList(message));
+            }
         }
         if (event instanceof TLCEvent.TLCStart) {
             statusLabel.setIcon(AnimatedIcon.Default.INSTANCE);
