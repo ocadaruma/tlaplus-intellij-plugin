@@ -4,6 +4,8 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.intellij.util.Range;
+
 import lombok.Value;
 import lombok.experimental.Accessors;
 
@@ -46,11 +48,6 @@ public interface TLCEvent {
         public static final InitialStatesComputing INSTANCE = new InitialStatesComputing();
     }
 
-    class InitialStatesComputed implements TLCEvent {
-        public InitialStatesComputed(List<String> lines) {
-        }
-    }
-
     class CheckingLiveness implements TLCEvent {
         public static final CheckingLiveness INSTANCE = new CheckingLiveness();
     }
@@ -59,9 +56,36 @@ public interface TLCEvent {
         public static final CheckingLivenessFinal INSTANCE = new CheckingLivenessFinal();
     }
 
+    @Value
+    @Accessors(fluent = true)
     class Progress implements TLCEvent {
-        public Progress(List<String> lines) {
-        }
+        LocalDateTime timestamp;
+        int diameter;
+        int total;
+        int distinct;
+        int queueSize;
+    }
+
+    @Value
+    @Accessors(fluent = true)
+    class CoverageInit implements TLCEvent {
+        CoverageItem item;
+    }
+
+    @Value
+    @Accessors(fluent = true)
+    class CoverageNext implements TLCEvent {
+        CoverageItem item;
+    }
+
+    @Value
+    @Accessors(fluent = true)
+    class CoverageItem {
+        String module;
+        String action;
+        int total;
+        int distinct;
+        Range<SourceLocation> range;
     }
 
     class ErrorTrace implements TLCEvent {
@@ -71,14 +95,26 @@ public interface TLCEvent {
 
     @Value
     @Accessors(fluent = true)
-    class Success implements TLCEvent {
+    class TLCError implements TLCEvent {
+        String message;
+    }
+
+    @Value
+    @Accessors(fluent = true)
+    class TLCSuccess implements TLCEvent {
         double fingerprintCollisionProbability;
     }
 
     @Value
     @Accessors(fluent = true)
-    class Finished implements TLCEvent {
+    class TLCFinished implements TLCEvent {
         Duration duration;
         LocalDateTime finishedAt;
+    }
+
+    @Value
+    @Accessors(fluent = true)
+    class ProcessTerminated implements TLCEvent {
+        int exitCode;
     }
 }

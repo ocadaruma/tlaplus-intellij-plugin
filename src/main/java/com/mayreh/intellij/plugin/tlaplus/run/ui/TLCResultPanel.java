@@ -41,7 +41,6 @@ public class TLCResultPanel extends JPanel implements TLCEventListener, Disposab
     private OnePixelSplitter splitter;
     private TLCModelCheckResultForm modelCheckResultForm;
     private final ConsoleViewImpl consoleView;
-    private final JComponent consoleComponent;
     private final TLCTestConsoleProperties properties;
     private final AnAction[] consoleActions;
 
@@ -50,7 +49,7 @@ public class TLCResultPanel extends JPanel implements TLCEventListener, Disposab
         super(new BorderLayout(0, 1));
         this.properties = properties;
         this.consoleView = consoleView.console();
-        consoleComponent = this.consoleView.getComponent();
+        JComponent consoleComponent = this.consoleView.getComponent();
         consoleActions = consoleView.consoleActions();
     }
 
@@ -116,10 +115,5 @@ public class TLCResultPanel extends JPanel implements TLCEventListener, Disposab
         } else {
             modelCheckResultForm.onEvent(event);
         }
-    }
-
-    @Override
-    public void onProcessExit(int exitCode) {
-
     }
 }

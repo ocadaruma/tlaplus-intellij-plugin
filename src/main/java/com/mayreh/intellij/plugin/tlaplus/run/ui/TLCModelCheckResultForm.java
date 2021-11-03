@@ -2,37 +2,43 @@ package com.mayreh.intellij.plugin.tlaplus.run.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.event.MouseWheelListener;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
-import java.util.concurrent.ThreadLocalRandom;
 
 import javax.swing.JComponent;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTree;
-import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.JTableHeader;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.MutableTreeNode;
-import javax.swing.tree.TreeModel;
-import javax.swing.tree.TreeNode;
 
+import com.intellij.openapi.progress.util.ColorProgressBar;
 import com.intellij.ui.AnimatedIcon;
-import com.intellij.ui.components.JBList;
 import com.intellij.ui.table.JBTable;
 import com.intellij.ui.treeStructure.Tree;
-import com.intellij.util.ui.JBUI.Borders;
+import com.intellij.util.ui.JBFont;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.CoverageInit;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.CoverageItem;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.CoverageNext;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ProcessTerminated;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.Progress;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCError;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCFinished;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCStart;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCSuccess;
 
 public class TLCModelCheckResultForm {
+    private static final DateTimeFormatter DATETIME_FORMAT =
+            DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss");
+
     private JPanel panel;
     private JLabel statusLabel;
     private JLabel startLabel;
@@ -47,6 +53,10 @@ public class TLCModelCheckResultForm {
 
     private MutableTreeNode errorTraceRoot;
     private DefaultTreeModel errorTraceModel;
+
+    // We want to set statusLabel from exitCode=0 event only when
+    // TLCFinished event is not received yet. (though not sure if such case can happen)
+    private boolean statusSet = false;
 
     public JComponent component() {
         return panel;
@@ -93,23 +103,73 @@ public class TLCModelCheckResultForm {
 
     public void onEvent(TLCEvent event) {
         if (event instanceof TLCEvent.SANYStart) {
-            statusLabel.setText("SANY Started");
-        } else if (event instanceof TLCEvent.SANYEnd) {
-            statusLabel.setText("SANY Finished");
-        } else if (event instanceof TLCEvent.TLCStart) {
-            statusLabel.setIcon(AnimatedIcon.Default.INSTANCE);
-            statusLabel.setText("TLC Started");
-        } else if (event instanceof TLCEvent.Finished) {
-            statusLabel.setIcon(null);
-            statusLabel.setText("TLC Finished");
+            statusLabel.setText("SANY running");
         }
-//        statesTableModel.addRow(Arrays.asList(
-//                String.valueOf(ThreadLocalRandom.current().nextInt()), "2", "3", "4", "5"));
-
-//        errorTraceModel.insertNodeInto(new DefaultMutableTreeNode(
-//                String.valueOf(ThreadLocalRandom.current().nextInt())
-//        ), errorTraceRoot, errorTraceRoot.getChildCount());
-//        errorTraceModel.nodeStructureChanged((TreeNode) errorTraceModel.getRoot());
+        if (event instanceof TLCEvent.SANYEnd) {
+            statusLabel.setText("SANY finished");
+        }
+        if (event instanceof TLCEvent.TLCStart) {
+            statusLabel.setIcon(AnimatedIcon.Default.INSTANCE);
+            statusLabel.setText("TLC running");
+            startLabel.setText(((TLCStart) event).startedAt().format(DATETIME_FORMAT));
+        }
+        if (event instanceof Progress) {
+            Progress progress = (Progress) event;
+            statesTableModel.addRow(Arrays.asList(
+                    progress.timestamp().format(DATETIME_FORMAT),
+                    String.valueOf(progress.diameter()),
+                    String.valueOf(progress.total()),
+                    String.valueOf(progress.distinct()),
+                    String.valueOf(progress.queueSize())
+            ));
+        }
+        if (event instanceof CoverageInit || event instanceof CoverageNext) {
+            if (event instanceof CoverageInit) {
+                coverageTableModel.clearRows();
+            }
+            CoverageItem coverage = event instanceof CoverageInit ?
+                                    ((CoverageInit) event).item() : ((CoverageNext) event).item();
+            coverageTableModel.addRow(Arrays.asList(
+                    coverage.module(),
+                    coverage.action(),
+                    String.valueOf(coverage.total()),
+                    String.valueOf(coverage.distinct())
+            ));
+        }
+        if (event instanceof TLCFinished) {
+            statusLabel.setIcon(null);
+            if (!statusSet) {
+                statusLabel.setText("TLC finished");
+            }
+            endLabel.setText(((TLCFinished) event).finishedAt().format(DATETIME_FORMAT));
+        }
+        if (event instanceof TLCSuccess) {
+            statusLabel.setIcon(null);
+            statusLabel.setText(String.format("Succeeded (Fingerprint collision probability: %f)",
+                                              ((TLCSuccess) event).fingerprintCollisionProbability()));
+            statusLabel.setFont(JBFont.label().asBold());
+            statusLabel.setForeground(ColorProgressBar.GREEN);
+            statusSet = true;
+        }
+        if (event instanceof TLCError) {
+            errorsTableModel.addRow(Collections.singletonList(((TLCError) event).message()));
+        }
+        if (event instanceof ProcessTerminated) {
+            statusLabel.setIcon(null);
+            statusLabel.setFont(JBFont.label().asBold());
+            int exitCode = ((ProcessTerminated) event).exitCode();
+            // SIGKILL (forcibly stopped by button)
+            if (exitCode == 137) {
+                statusLabel.setForeground(ColorProgressBar.YELLOW);
+                statusLabel.setText("Aborted");
+            } else if (exitCode != 0) {
+                statusLabel.setForeground(ColorProgressBar.RED_TEXT);
+                statusLabel.setText("Failed");
+            } else if (!statusSet) {
+                statusLabel.setForeground(ColorProgressBar.GREEN);
+                statusLabel.setText("Finished");
+            }
+        }
     }
 
     public static class TableModel extends DefaultTableModel {
@@ -124,6 +184,12 @@ public class TLCModelCheckResultForm {
 
         public void addRow(List<String> columns) {
             super.addRow(new Vector<>(columns));
+        }
+
+        public void clearRows() {
+            while (getRowCount() > 0) {
+                removeRow(0);
+            }
         }
     }
 
