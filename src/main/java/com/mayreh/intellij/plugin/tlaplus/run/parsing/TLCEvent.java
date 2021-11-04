@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.intellij.util.Range;
 
+import lombok.ToString;
 import lombok.Value;
 import lombok.experimental.Accessors;
 
@@ -25,8 +26,9 @@ public interface TLCEvent {
         List<String> lines;
     }
 
-    class SANYStart implements TLCEvent {
-        public static final SANYStart INSTANCE = new SANYStart();
+    @ToString
+    enum SANYStart implements TLCEvent {
+        INSTANCE
     }
 
     @Value
@@ -41,20 +43,24 @@ public interface TLCEvent {
         LocalDateTime startedAt;
     }
 
-    class CheckpointStart implements TLCEvent {
-        public static final CheckpointStart INSTANCE = new CheckpointStart();
+    @ToString
+    enum CheckpointStart implements TLCEvent {
+        INSTANCE
     }
 
-    class InitialStatesComputing implements TLCEvent {
-        public static final InitialStatesComputing INSTANCE = new InitialStatesComputing();
+    @ToString
+    enum InitialStatesComputing implements TLCEvent {
+        INSTANCE
     }
 
-    class CheckingLiveness implements TLCEvent {
-        public static final CheckingLiveness INSTANCE = new CheckingLiveness();
+    @ToString
+    enum CheckingLiveness implements TLCEvent {
+        INSTANCE
     }
 
-    class CheckingLivenessFinal implements TLCEvent {
-        public static final CheckingLivenessFinal INSTANCE = new CheckingLivenessFinal();
+    @ToString
+    enum CheckingLivenessFinal implements TLCEvent {
+        INSTANCE
     }
 
     @Value
@@ -97,6 +103,10 @@ public interface TLCEvent {
     @Value
     @Accessors(fluent = true)
     class TLCError implements TLCEvent {
+        public enum Severity {
+            Warning, Error,
+        }
+
         public interface ErrorItem {
             String message();
         }
@@ -115,6 +125,7 @@ public interface TLCEvent {
             String message;
         }
 
+        Severity severity;
         List<ErrorItem> errors;
     }
 

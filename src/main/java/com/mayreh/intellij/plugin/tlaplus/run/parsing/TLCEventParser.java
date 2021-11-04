@@ -21,6 +21,8 @@ import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.CoverageInit;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.CoverageNext;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.InitialStatesComputing;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.MC;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCError;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCError.Severity;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCFinished;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCStart;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCSuccess;
@@ -96,7 +98,10 @@ public abstract class TLCEventParser {
             return parseStartMessage(line).map(msg -> {
                 if (interestedSeverities.contains(msg.severity()) &&
                     !ignorableCodes.contains(msg.code())) {
-                    return new MultilineTextParser<>(listener, lines -> Optional.of(ErrorParser.parse(lines)));
+                    return new MultilineTextParser<>(
+                            // unboxing msg.severity() here is safe because non-null is ensured by
+                            // `interestedSeverities.contains(msg.severity())` above
+                            listener, lines -> Optional.of(ErrorParser.parse(msg.severity(), lines)));
                 }
                 switch (msg.code()) {
                     case EC.TLC_MODE_MC:
@@ -283,8 +288,8 @@ public abstract class TLCEventParser {
         private static final Pattern LOCATION_PATTERN = Pattern.compile(
                 ".*\\b[Ll]ine (\\d+), column (\\d+) to line \\d+, column \\d+ in (\\w+)\\b.*");
 
-        static TLCEvent.TLCError parse(List<String> lines) {
-            List<TLCEvent.TLCError.ErrorItem> errors = new ArrayList<>();
+        static TLCError parse(int severityCode, List<String> lines) {
+            List<TLCError.ErrorItem> errors = new ArrayList<>();
             for (String line : lines) {
                 line = line.trim();
                 if (line.isBlank()) {
@@ -296,14 +301,15 @@ public abstract class TLCEventParser {
                     int lineNum = toInt(matcher.group(1));
                     int col = toInt(matcher.group(2));
                     String module = matcher.group(3);
-                    errors.add(new TLCEvent.TLCError.LocatableErrorItem(
+                    errors.add(new TLCError.LocatableErrorItem(
                             module, new SourceLocation(lineNum, col), line));
                 } else {
-                    errors.add(new TLCEvent.TLCError.SimpleErrorItem(line));
+                    errors.add(new TLCError.SimpleErrorItem(line));
                 }
             }
 
-            return new TLCEvent.TLCError(errors);
+            Severity severity = severityCode == MP.WARNING ? Severity.Warning : Severity.Error;
+            return new TLCError(severity, errors);
         }
     }
 

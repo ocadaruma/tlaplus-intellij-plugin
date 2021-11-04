@@ -1,0 +1,943 @@
+/path/to/bin/java -Dfile.encoding=UTF-8 -classpath /path/to/build/idea-sandbox/plugins/tlaplus-intellij-plugin/lib/tla2tools.jar tlc2.TLC -tool -modelcheck -coverage 1 /path/to/PaxosCommit.tla
+@!@!@STARTMSG 2262:0 @!@!@
+TLC2 Version 2.16 of 31 December 2020 (rev: cdddf55)
+@!@!@ENDMSG 2262 @!@!@
+@!@!@STARTMSG 2187:0 @!@!@
+Running breadth-first search Model-Checking with fp 56 and seed -2012372804540769786 with 1 worker on 8 cores with 3641MB heap and 64MB offheap memory (Mac OS X 11.2.2 aarch64, Azul Systems, Inc. 1.8.0_275 x86_64, MSBDiskFPSet, DiskStateQueue).
+@!@!@ENDMSG 2187 @!@!@
+@!@!@STARTMSG 2220:0 @!@!@
+Starting SANY...
+@!@!@ENDMSG 2220 @!@!@
+Parsing file /path/to/PaxosCommit.tla
+Parsing file /private/var/folders/4d/sp1jr9gx0wb943h2nvp485880000gn/T/tlc-5030088494634594378/Integers.tla (jar:file:/path/to/build/idea-sandbox/plugins/tlaplus-intellij-plugin/lib/tla2tools.jar!/tla2sany/StandardModules/Integers.tla)
+Parsing file /private/var/folders/4d/sp1jr9gx0wb943h2nvp485880000gn/T/tlc-5030088494634594378/Naturals.tla (jar:file:/path/to/build/idea-sandbox/plugins/tlaplus-intellij-plugin/lib/tla2tools.jar!/tla2sany/StandardModules/Naturals.tla)
+Parsing file /path/to/TCommit.tla
+Parsing file /private/var/folders/4d/sp1jr9gx0wb943h2nvp485880000gn/T/tlc-5030088494634594378/TLC.tla (jar:file:/path/to/build/idea-sandbox/plugins/tlaplus-intellij-plugin/lib/tla2tools.jar!/tla2sany/StandardModules/TLC.tla)
+Parsing file /private/var/folders/4d/sp1jr9gx0wb943h2nvp485880000gn/T/tlc-5030088494634594378/Sequences.tla (jar:file:/path/to/build/idea-sandbox/plugins/tlaplus-intellij-plugin/lib/tla2tools.jar!/tla2sany/StandardModules/Sequences.tla)
+Parsing file /private/var/folders/4d/sp1jr9gx0wb943h2nvp485880000gn/T/tlc-5030088494634594378/FiniteSets.tla (jar:file:/path/to/build/idea-sandbox/plugins/tlaplus-intellij-plugin/lib/tla2tools.jar!/tla2sany/StandardModules/FiniteSets.tla)
+Semantic processing of module Naturals
+Semantic processing of module Integers
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module TCommit
+Semantic processing of module PaxosCommit
+@!@!@STARTMSG 2219:0 @!@!@
+SANY finished.
+@!@!@ENDMSG 2219 @!@!@
+@!@!@STARTMSG 2185:0 @!@!@
+Starting... (2021-11-04 00:15:12)
+@!@!@ENDMSG 2185 @!@!@
+@!@!@STARTMSG 2189:0 @!@!@
+Computing initial states...
+@!@!@ENDMSG 2189 @!@!@
+@!@!@STARTMSG 2190:0 @!@!@
+Finished computing initial states: 1 distinct state generated at 2021-11-04 00:15:17.
+@!@!@ENDMSG 2190 @!@!@
+@!@!@STARTMSG 2200:0 @!@!@
+Progress(12) at 2021-11-04 00:15:20: 332,975 states generated (332,975 s/min), 57,490 distinct states found (57,490 ds/min), 26,714 states left on queue.
+@!@!@ENDMSG 2200 @!@!@
+@!@!@STARTMSG 2200:0 @!@!@
+Progress(18) at 2021-11-04 00:16:20: 7,137,563 states generated (6,804,588 s/min), 775,364 distinct states found (717,874 ds/min), 180,267 states left on queue.
+@!@!@ENDMSG 2200 @!@!@
+@!@!@STARTMSG 2201:0 @!@!@
+The coverage statistics at 2021-11-04 00:16:20
+@!@!@ENDMSG 2201 @!@!@
+@!@!@STARTMSG 2773:0 @!@!@
+<PCInit line 96, col 1 to line 96, col 6 of module PaxosCommit>: 1:1
+@!@!@ENDMSG 2773 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 97, col 3 to line 101, col 14 of module PaxosCommit: 1
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<RMPrepare line 114, col 1 to line 114, col 13 of module PaxosCommit>: 4:89704
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 119, col 6 to line 119, col 28 of module PaxosCommit: 1279918
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 119, col 6 to line 119, col 16 of module PaxosCommit: 1190214
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 120, col 6 to line 120, col 51 of module PaxosCommit: 89704
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 121, col 6 to line 121, col 74 of module PaxosCommit: 89704
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 122, col 6 to line 122, col 21 of module PaxosCommit: 89704
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<RMChooseToAbort line 124, col 1 to line 124, col 19 of module PaxosCommit>: 4:89704
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 130, col 6 to line 130, col 28 of module PaxosCommit: 1279918
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 130, col 6 to line 130, col 16 of module PaxosCommit: 1190214
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 131, col 6 to line 131, col 50 of module PaxosCommit: 89704
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 132, col 6 to line 132, col 73 of module PaxosCommit: 89704
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 133, col 6 to line 133, col 21 of module PaxosCommit: 89704
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<RMRcvCommitMsg line 135, col 1 to line 135, col 18 of module PaxosCommit>: 10421:61838
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 142, col 6 to line 142, col 33 of module PaxosCommit: 1252052
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 142, col 6 to line 142, col 24 of module PaxosCommit: 1190214
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 142, col 30 to line 142, col 33 of module PaxosCommit: 1190214
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 143, col 6 to line 143, col 52 of module PaxosCommit: 61838
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 144, col 6 to line 144, col 31 of module PaxosCommit: 61838
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<RMRcvAbortMsg line 146, col 1 to line 146, col 17 of module PaxosCommit>: 46519:451582
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 151, col 6 to line 151, col 32 of module PaxosCommit: 1641798
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 151, col 6 to line 151, col 23 of module PaxosCommit: 1190216
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 151, col 29 to line 151, col 32 of module PaxosCommit: 1190218
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 152, col 6 to line 152, col 50 of module PaxosCommit: 451582
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 153, col 6 to line 153, col 31 of module PaxosCommit: 451582
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<Phase1a line 163, col 1 to line 163, col 16 of module PaxosCommit>: 27:1190218
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 170, col 6 to line 170, col 56 of module PaxosCommit: 1190220
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 171, col 6 to line 171, col 34 of module PaxosCommit: 1190220
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<Phase2a line 173, col 1 to line 173, col 16 of module PaxosCommit>: 39306:233147
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 191, col 6 to line 193, col 35 of module PaxosCommit: 1354004
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 191, col 7 to line 193, col 35 of module PaxosCommit: 1190232
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 191, col 23 to line 193, col 35 of module PaxosCommit: 9001600
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 191, col 26 to line 191, col 43 of module PaxosCommit: 9001600
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 192, col 26 to line 192, col 36 of module PaxosCommit: 3131497
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 193, col 26 to line 193, col 35 of module PaxosCommit: 1322371
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 191, col 16 to line 191, col 19 of module PaxosCommit: 1190236
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 203, col 47 to line 203, col 56 of module PaxosCommit: 2230658
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 203, col 47 to line 203, col 51 of module PaxosCommit: 1764364
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 203, col 55 to line 203, col 56 of module PaxosCommit: 1764364
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 203, col 40 to line 203, col 43 of module PaxosCommit: 1767874
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2775:0 @!@!@
+  |line 195, col 21 to line 198, col 51 of module PaxosCommit: 1767874:3532238
+@!@!@ENDMSG 2775 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 195, col 35 to line 198, col 50 of module PaxosCommit: 22145211
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 195, col 38 to line 195, col 55 of module PaxosCommit: 22145211
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 196, col 38 to line 196, col 48 of module PaxosCommit: 6134197
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 197, col 38 to line 197, col 49 of module PaxosCommit: 2508084
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 198, col 38 to line 198, col 50 of module PaxosCommit: 2508084
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 195, col 28 to line 195, col 31 of module PaxosCommit: 1767874
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 203, col 26 to line 203, col 27 of module PaxosCommit: 1257141
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 106, col 12 to line 106, col 32 of module PaxosCommit: 233147
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 204, col 21 to line 204, col 78 of module PaxosCommit: 233147
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 204, col 42 to line 204, col 51 of module PaxosCommit: 233147
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 204, col 54 to line 204, col 64 of module PaxosCommit: 233147
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 204, col 75 to line 204, col 77 of module PaxosCommit: 233147
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 200, col 20 to line 202, col 66 of module PaxosCommit: 233147
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 200, col 23 to line 200, col 33 of module PaxosCommit: 233147
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 200, col 23 to line 200, col 28 of module PaxosCommit: 233147
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||line 199, col 23 to line 199, col 51 of module PaxosCommit: 233147
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||line 35, col 7 to line 39, col 58 of module PaxosCommit: 233147
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||line 40, col 7 to line 40, col 12 of module PaxosCommit: 233147
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2775:0 @!@!@
+  ||||||line 199, col 31 to line 199, col 50 of module PaxosCommit: 233147:1379952
+@!@!@ENDMSG 2775 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||||line 199, col 32 to line 199, col 36 of module PaxosCommit: 466294
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||||line 199, col 46 to line 199, col 49 of module PaxosCommit: 233147
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2775:0 @!@!@
+  ||||||||line 195, col 21 to line 198, col 51 of module PaxosCommit: 233147:699441
+@!@!@ENDMSG 2775 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||||||line 195, col 35 to line 198, col 50 of module PaxosCommit: 3084637
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||||line 195, col 38 to line 195, col 55 of module PaxosCommit: 3084637
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||||line 196, col 38 to line 196, col 48 of module PaxosCommit: 1037104
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||||line 197, col 38 to line 197, col 49 of module PaxosCommit: 570357
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||||line 198, col 38 to line 198, col 50 of module PaxosCommit: 570357
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||||||line 195, col 28 to line 195, col 31 of module PaxosCommit: 233148
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 200, col 32 to line 200, col 33 of module PaxosCommit: 233148
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 202, col 27 to line 202, col 66 of module PaxosCommit: 163052
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 202, col 28 to line 202, col 61 of module PaxosCommit: 163052
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||line 202, col 48 to line 202, col 61 of module PaxosCommit: 274893
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||line 202, col 48 to line 202, col 52 of module PaxosCommit: 274893
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||line 202, col 56 to line 202, col 61 of module PaxosCommit: 274893
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||||line 199, col 23 to line 199, col 51 of module PaxosCommit: 274893
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||line 35, col 7 to line 39, col 58 of module PaxosCommit: 274893
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||line 40, col 7 to line 40, col 12 of module PaxosCommit: 274893
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2775:0 @!@!@
+  ||||||||line 199, col 31 to line 199, col 50 of module PaxosCommit: 274893:1994300
+@!@!@ENDMSG 2775 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||||||line 199, col 32 to line 199, col 36 of module PaxosCommit: 549786
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||||||line 199, col 46 to line 199, col 49 of module PaxosCommit: 274893
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2775:0 @!@!@
+  ||||||||||line 195, col 21 to line 198, col 51 of module PaxosCommit: 274893:824679
+@!@!@ENDMSG 2775 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||||||||line 195, col 35 to line 198, col 50 of module PaxosCommit: 3711782
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||||||line 195, col 38 to line 195, col 55 of module PaxosCommit: 3711782
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||||||line 196, col 38 to line 196, col 48 of module PaxosCommit: 1213096
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||||||line 197, col 38 to line 197, col 49 of module PaxosCommit: 669611
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||||||line 198, col 38 to line 198, col 50 of module PaxosCommit: 669611
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||||||||line 195, col 28 to line 195, col 31 of module PaxosCommit: 274893
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||line 202, col 41 to line 202, col 44 of module PaxosCommit: 163052
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2775:0 @!@!@
+  ||||||line 195, col 21 to line 198, col 51 of module PaxosCommit: 163052:274893
+@!@!@ENDMSG 2775 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||||line 195, col 35 to line 198, col 50 of module PaxosCommit: 2208927
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||line 195, col 38 to line 195, col 55 of module PaxosCommit: 2208927
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||line 196, col 38 to line 196, col 48 of module PaxosCommit: 716575
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||line 197, col 38 to line 197, col 49 of module PaxosCommit: 396609
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||line 198, col 38 to line 198, col 50 of module PaxosCommit: 396609
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||||line 195, col 28 to line 195, col 31 of module PaxosCommit: 163052
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 194, col 16 to line 194, col 23 of module PaxosCommit: 419048
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 205, col 6 to line 205, col 34 of module PaxosCommit: 233147
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<Decide line 207, col 1 to line 207, col 6 of module PaxosCommit>: 49631:790597
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 219, col 29 to line 220, col 73 of module PaxosCommit: 6056523
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 219, col 29 to line 220, col 64 of module PaxosCommit: 5706045
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 219, col 50 to line 219, col 59 of module PaxosCommit: 5706040
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 220, col 31 to line 220, col 39 of module PaxosCommit: 5706040
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 220, col 42 to line 220, col 50 of module PaxosCommit: 5706040
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 220, col 53 to line 220, col 62 of module PaxosCommit: 5706040
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 220, col 70 to line 220, col 73 of module PaxosCommit: 5706069
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 219, col 24 to line 219, col 25 of module PaxosCommit: 4940238
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 218, col 21 to line 218, col 26 of module PaxosCommit: 823373
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 218, col 36 to line 218, col 43 of module PaxosCommit: 823373
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 221, col 39 to line 221, col 40 of module PaxosCommit: 823373
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 221, col 26 to line 221, col 27 of module PaxosCommit: 595142
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 222, col 16 to line 222, col 40 of module PaxosCommit: 104103
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 219, col 29 to line 220, col 73 of module PaxosCommit: 9978632
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 219, col 29 to line 220, col 64 of module PaxosCommit: 8605634
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 220, col 70 to line 220, col 73 of module PaxosCommit: 8605634
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 219, col 24 to line 219, col 25 of module PaxosCommit: 7141716
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 218, col 21 to line 218, col 26 of module PaxosCommit: 1190286
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 218, col 36 to line 218, col 43 of module PaxosCommit: 1190286
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 223, col 39 to line 223, col 40 of module PaxosCommit: 1190286
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 223, col 26 to line 223, col 27 of module PaxosCommit: 595144
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 106, col 12 to line 106, col 32 of module PaxosCommit: 686500
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 106, col 20 to line 106, col 32 of module PaxosCommit: 686501
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 224, col 21 to line 224, col 38 of module PaxosCommit: 686501
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 225, col 6 to line 225, col 34 of module PaxosCommit: 790598
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<Phase1b line 230, col 1 to line 230, col 12 of module PaxosCommit>: 132890:915137
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 232, col 8 to line 232, col 25 of module PaxosCommit: 24774177
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 232, col 8 to line 232, col 13 of module PaxosCommit: 23859039
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 232, col 8 to line 232, col 8 of module PaxosCommit: 23859039
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 233, col 8 to line 233, col 38 of module PaxosCommit: 915138
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 233, col 8 to line 233, col 30 of module PaxosCommit: 3407844
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 233, col 34 to line 233, col 38 of module PaxosCommit: 3407846
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 234, col 8 to line 234, col 59 of module PaxosCommit: 915139
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 235, col 8 to line 240, col 27 of module PaxosCommit: 915138
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 241, col 8 to line 241, col 24 of module PaxosCommit: 915138
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 231, col 12 to line 231, col 15 of module PaxosCommit: 1785441
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<Phase2b line 243, col 1 to line 243, col 12 of module PaxosCommit>: 496601:3316084
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 245, col 11 to line 245, col 28 of module PaxosCommit: 27175187
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 245, col 11 to line 245, col 16 of module PaxosCommit: 23859108
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 246, col 11 to line 246, col 44 of module PaxosCommit: 3316088
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 246, col 11 to line 246, col 33 of module PaxosCommit: 5537519
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 246, col 40 to line 246, col 44 of module PaxosCommit: 5537521
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 247, col 11 to line 249, col 62 of module PaxosCommit: 3316090
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 247, col 21 to line 249, col 62 of module PaxosCommit: 3316091
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 106, col 12 to line 106, col 32 of module PaxosCommit: 3316091
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 106, col 20 to line 106, col 32 of module PaxosCommit: 3316091
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 250, col 16 to line 251, col 45 of module PaxosCommit: 3316097
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 244, col 15 to line 244, col 18 of module PaxosCommit: 1785447
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 252, col 6 to line 252, col 22 of module PaxosCommit: 3316085
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2202:0 @!@!@
+End of statistics.
+@!@!@ENDMSG 2202 @!@!@
+@!@!@STARTMSG 2200:0 @!@!@
+Progress(21) at 2021-11-04 00:17:20: 13,432,205 states generated (6,294,642 s/min), 1,200,093 distinct states found (424,729 ds/min), 121,504 states left on queue.
+@!@!@ENDMSG 2200 @!@!@
+@!@!@STARTMSG 2193:0 @!@!@
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 1.1E-6
+  based on the actual fingerprints:  val = 4.1E-7
+@!@!@ENDMSG 2193 @!@!@
+@!@!@STARTMSG 2201:0 @!@!@
+The coverage statistics at 2021-11-04 00:17:55
+@!@!@ENDMSG 2201 @!@!@
+@!@!@STARTMSG 2773:0 @!@!@
+<PCInit line 96, col 1 to line 96, col 6 of module PaxosCommit>: 1:1
+@!@!@ENDMSG 2773 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 97, col 3 to line 101, col 14 of module PaxosCommit: 1
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<RMPrepare line 114, col 1 to line 114, col 13 of module PaxosCommit>: 4:111770
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 119, col 6 to line 119, col 28 of module PaxosCommit: 2755292
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 119, col 6 to line 119, col 16 of module PaxosCommit: 2643522
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 120, col 6 to line 120, col 51 of module PaxosCommit: 111770
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 121, col 6 to line 121, col 74 of module PaxosCommit: 111770
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 122, col 6 to line 122, col 21 of module PaxosCommit: 111770
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<RMChooseToAbort line 124, col 1 to line 124, col 19 of module PaxosCommit>: 4:111770
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 130, col 6 to line 130, col 28 of module PaxosCommit: 2755292
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 130, col 6 to line 130, col 16 of module PaxosCommit: 2643522
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 131, col 6 to line 131, col 50 of module PaxosCommit: 111770
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 132, col 6 to line 132, col 73 of module PaxosCommit: 111770
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 133, col 6 to line 133, col 21 of module PaxosCommit: 111770
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<RMRcvCommitMsg line 135, col 1 to line 135, col 18 of module PaxosCommit>: 26058:320000
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 142, col 6 to line 142, col 33 of module PaxosCommit: 2963522
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 142, col 6 to line 142, col 24 of module PaxosCommit: 2643522
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 142, col 30 to line 142, col 33 of module PaxosCommit: 2643522
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 143, col 6 to line 143, col 52 of module PaxosCommit: 320000
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 144, col 6 to line 144, col 31 of module PaxosCommit: 320000
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<RMRcvAbortMsg line 146, col 1 to line 146, col 17 of module PaxosCommit>: 72396:1283840
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 151, col 6 to line 151, col 32 of module PaxosCommit: 3927362
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 151, col 6 to line 151, col 23 of module PaxosCommit: 2643522
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 151, col 29 to line 151, col 32 of module PaxosCommit: 2643522
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 152, col 6 to line 152, col 50 of module PaxosCommit: 1283840
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 153, col 6 to line 153, col 31 of module PaxosCommit: 1283840
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<Phase1a line 163, col 1 to line 163, col 16 of module PaxosCommit>: 27:2643522
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 170, col 6 to line 170, col 56 of module PaxosCommit: 2643522
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 171, col 6 to line 171, col 34 of module PaxosCommit: 2643522
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<Phase2a line 173, col 1 to line 173, col 16 of module PaxosCommit>: 49592:328716
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 191, col 6 to line 193, col 35 of module PaxosCommit: 2862666
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 191, col 7 to line 193, col 35 of module PaxosCommit: 2643522
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 191, col 23 to line 193, col 35 of module PaxosCommit: 18031600
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 191, col 26 to line 191, col 43 of module PaxosCommit: 18031600
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 192, col 26 to line 192, col 36 of module PaxosCommit: 7377696
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 193, col 26 to line 193, col 35 of module PaxosCommit: 3428064
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 191, col 16 to line 191, col 19 of module PaxosCommit: 2643522
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 203, col 47 to line 203, col 56 of module PaxosCommit: 2958444
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 203, col 47 to line 203, col 51 of module PaxosCommit: 2301012
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 203, col 55 to line 203, col 56 of module PaxosCommit: 2301012
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 203, col 40 to line 203, col 43 of module PaxosCommit: 2136654
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2775:0 @!@!@
+  |line 195, col 21 to line 198, col 51 of module PaxosCommit: 2136654:4437666
+@!@!@ENDMSG 2775 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 195, col 35 to line 198, col 50 of module PaxosCommit: 28249800
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 195, col 38 to line 195, col 55 of module PaxosCommit: 28249800
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 196, col 38 to line 196, col 48 of module PaxosCommit: 7803360
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 197, col 38 to line 197, col 49 of module PaxosCommit: 3287160
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 198, col 38 to line 198, col 50 of module PaxosCommit: 3287160
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 195, col 28 to line 195, col 31 of module PaxosCommit: 2136654
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 203, col 26 to line 203, col 27 of module PaxosCommit: 1479222
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 106, col 12 to line 106, col 32 of module PaxosCommit: 328716
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 204, col 21 to line 204, col 78 of module PaxosCommit: 328716
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 204, col 42 to line 204, col 51 of module PaxosCommit: 328716
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 204, col 54 to line 204, col 64 of module PaxosCommit: 328716
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 204, col 75 to line 204, col 77 of module PaxosCommit: 328716
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||line 200, col 20 to line 202, col 66 of module PaxosCommit: 328716
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 200, col 23 to line 200, col 33 of module PaxosCommit: 328716
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 200, col 23 to line 200, col 28 of module PaxosCommit: 328716
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||line 199, col 23 to line 199, col 51 of module PaxosCommit: 328716
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||line 35, col 7 to line 39, col 58 of module PaxosCommit: 328716
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||line 40, col 7 to line 40, col 12 of module PaxosCommit: 328716
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2775:0 @!@!@
+  ||||||line 199, col 31 to line 199, col 50 of module PaxosCommit: 328716:1938672
+@!@!@ENDMSG 2775 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||||line 199, col 32 to line 199, col 36 of module PaxosCommit: 657432
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||||line 199, col 46 to line 199, col 49 of module PaxosCommit: 328716
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2775:0 @!@!@
+  ||||||||line 195, col 21 to line 198, col 51 of module PaxosCommit: 328716:986148
+@!@!@ENDMSG 2775 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||||||line 195, col 35 to line 198, col 50 of module PaxosCommit: 4687482
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||||line 195, col 38 to line 195, col 55 of module PaxosCommit: 4687482
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||||line 196, col 38 to line 196, col 48 of module PaxosCommit: 1516590
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||||line 197, col 38 to line 197, col 49 of module PaxosCommit: 821790
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||||line 198, col 38 to line 198, col 50 of module PaxosCommit: 821790
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||||||line 195, col 28 to line 195, col 31 of module PaxosCommit: 328716
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 200, col 32 to line 200, col 33 of module PaxosCommit: 328716
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||line 202, col 27 to line 202, col 66 of module PaxosCommit: 252816
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||line 202, col 28 to line 202, col 61 of module PaxosCommit: 252816
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||line 202, col 48 to line 202, col 61 of module PaxosCommit: 408768
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||line 202, col 48 to line 202, col 52 of module PaxosCommit: 408768
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||line 202, col 56 to line 202, col 61 of module PaxosCommit: 408768
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||||line 199, col 23 to line 199, col 51 of module PaxosCommit: 408768
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||line 35, col 7 to line 39, col 58 of module PaxosCommit: 408768
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||line 40, col 7 to line 40, col 12 of module PaxosCommit: 408768
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2775:0 @!@!@
+  ||||||||line 199, col 31 to line 199, col 50 of module PaxosCommit: 408768:2882688
+@!@!@ENDMSG 2775 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||||||line 199, col 32 to line 199, col 36 of module PaxosCommit: 817536
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||||||line 199, col 46 to line 199, col 49 of module PaxosCommit: 408768
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2775:0 @!@!@
+  ||||||||||line 195, col 21 to line 198, col 51 of module PaxosCommit: 408768:1226304
+@!@!@ENDMSG 2775 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||||||||line 195, col 35 to line 198, col 50 of module PaxosCommit: 5954304
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||||||line 195, col 38 to line 195, col 55 of module PaxosCommit: 5954304
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||||||line 196, col 38 to line 196, col 48 of module PaxosCommit: 1884768
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||||||line 197, col 38 to line 197, col 49 of module PaxosCommit: 1021920
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||||||line 198, col 38 to line 198, col 50 of module PaxosCommit: 1021920
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||||||||line 195, col 28 to line 195, col 31 of module PaxosCommit: 408768
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||line 202, col 41 to line 202, col 44 of module PaxosCommit: 252816
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2775:0 @!@!@
+  ||||||line 195, col 21 to line 198, col 51 of module PaxosCommit: 252816:408768
+@!@!@ENDMSG 2775 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||||line 195, col 35 to line 198, col 50 of module PaxosCommit: 3718320
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||line 195, col 38 to line 195, col 55 of module PaxosCommit: 3718320
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||line 196, col 38 to line 196, col 48 of module PaxosCommit: 1165416
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||line 197, col 38 to line 197, col 49 of module PaxosCommit: 632040
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  ||||||||line 198, col 38 to line 198, col 50 of module PaxosCommit: 632040
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |||||||line 195, col 28 to line 195, col 31 of module PaxosCommit: 252816
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 194, col 16 to line 194, col 23 of module PaxosCommit: 493074
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 205, col 6 to line 205, col 34 of module PaxosCommit: 328716
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<Decide line 207, col 1 to line 207, col 6 of module PaxosCommit>: 61454:2886972
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 219, col 29 to line 220, col 73 of module PaxosCommit: 18678174
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 219, col 29 to line 220, col 64 of module PaxosCommit: 16318014
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 220, col 70 to line 220, col 73 of module PaxosCommit: 16318014
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 219, col 24 to line 219, col 25 of module PaxosCommit: 13160142
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 218, col 21 to line 218, col 26 of module PaxosCommit: 2193357
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 218, col 36 to line 218, col 43 of module PaxosCommit: 2193357
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 221, col 39 to line 221, col 40 of module PaxosCommit: 2193357
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 221, col 26 to line 221, col 27 of module PaxosCommit: 1321761
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 222, col 16 to line 222, col 40 of module PaxosCommit: 784080
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 219, col 29 to line 220, col 73 of module PaxosCommit: 23952264
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 219, col 29 to line 220, col 64 of module PaxosCommit: 19746480
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 220, col 70 to line 220, col 73 of module PaxosCommit: 19746480
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 219, col 24 to line 219, col 25 of module PaxosCommit: 15861132
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 218, col 21 to line 218, col 26 of module PaxosCommit: 2643522
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 218, col 36 to line 218, col 43 of module PaxosCommit: 2643522
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 223, col 39 to line 223, col 40 of module PaxosCommit: 2643522
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 223, col 26 to line 223, col 27 of module PaxosCommit: 1321761
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 224, col 16 to line 224, col 39 of module PaxosCommit: 2102892
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 225, col 6 to line 225, col 34 of module PaxosCommit: 2886972
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<Phase1b line 230, col 1 to line 230, col 12 of module PaxosCommit>: 192131:1370904
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 232, col 8 to line 232, col 25 of module PaxosCommit: 64133436
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 232, col 8 to line 232, col 13 of module PaxosCommit: 62762532
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 233, col 8 to line 233, col 38 of module PaxosCommit: 1370904
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 233, col 8 to line 233, col 30 of module PaxosCommit: 7766208
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 233, col 34 to line 233, col 38 of module PaxosCommit: 7766208
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 234, col 8 to line 234, col 59 of module PaxosCommit: 1370904
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 235, col 8 to line 240, col 27 of module PaxosCommit: 1370904
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 241, col 8 to line 241, col 24 of module PaxosCommit: 1370904
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 231, col 12 to line 231, col 15 of module PaxosCommit: 3965283
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2772:0 @!@!@
+<Phase2b line 243, col 1 to line 243, col 12 of module PaxosCommit>: 920094:7901664
+@!@!@ENDMSG 2772 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 245, col 11 to line 245, col 28 of module PaxosCommit: 70664196
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 245, col 11 to line 245, col 16 of module PaxosCommit: 62762532
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 246, col 11 to line 246, col 44 of module PaxosCommit: 7901664
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 246, col 11 to line 246, col 33 of module PaxosCommit: 13888656
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  |line 246, col 40 to line 246, col 44 of module PaxosCommit: 13888656
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 247, col 11 to line 249, col 62 of module PaxosCommit: 7901664
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 250, col 11 to line 251, col 46 of module PaxosCommit: 7901664
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 244, col 15 to line 244, col 18 of module PaxosCommit: 3965283
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2221:0 @!@!@
+  line 252, col 6 to line 252, col 22 of module PaxosCommit: 7901664
+@!@!@ENDMSG 2221 @!@!@
+@!@!@STARTMSG 2202:0 @!@!@
+End of statistics.
+@!@!@ENDMSG 2202 @!@!@
+@!@!@STARTMSG 2200:0 @!@!@
+Progress(28) at 2021-11-04 00:17:55: 16,959,159 states generated (6,255,568 s/min), 1,321,761 distinct states found (487,545 ds/min), 0 states left on queue.
+@!@!@ENDMSG 2200 @!@!@
+@!@!@STARTMSG 2199:0 @!@!@
+16959159 states generated, 1321761 distinct states found, 0 states left on queue.
+@!@!@ENDMSG 2199 @!@!@
+@!@!@STARTMSG 2194:0 @!@!@
+The depth of the complete state graph search is 28.
+@!@!@ENDMSG 2194 @!@!@
+@!@!@STARTMSG 2268:0 @!@!@
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 12 and the 95th percentile is 3).
+@!@!@ENDMSG 2268 @!@!@
+@!@!@STARTMSG 2186:0 @!@!@
+Finished in 162669ms at (2021-11-04 00:17:55)
+@!@!@ENDMSG 2186 @!@!@
