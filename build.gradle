@@ -75,6 +75,13 @@ task generateTLAplusModuleBeginLexer(type: GenerateLexer) {
     purgeOldFiles = true
 }
 
+task generateTLCErrorTraceLexer(type: GenerateLexer) {
+    source = "src/main/grammer/tlc_error_trace.flex"
+    targetDir = "src/gen/com/mayreh/intellij/plugin/tlaplus/tlc/lexer"
+    targetClass = "_TLCErrorTraceLexer"
+    purgeOldFiles = true
+}
+
 task generateTLAplusParser(type: GenerateParser) {
     source = "src/main/grammer/tlaplus.bnf"
     targetRoot = "src/gen"
@@ -87,6 +94,7 @@ compileJava.dependsOn(
         prepareLib,
         generateTLAplusLexer,
         generateTLAplusModuleBeginLexer,
+        generateTLCErrorTraceLexer,
         generateTLAplusParser)
 
 tasks.withType(Test) {

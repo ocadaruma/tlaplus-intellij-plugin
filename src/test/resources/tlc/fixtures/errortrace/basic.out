@@ -1,0 +1,10 @@
+/\ msgs = {}
+/\ rmState = (r1 :> "working" @@ r2 :> "working")
+/\ aState = ( r1 :>
+      ( a1 :> [bal |-> -1, mbal |-> 0, val |-> "none"] @@
+        a2 :> [bal |-> -1, mbal |-> 0, val |-> "none"] @@
+        a3 :> [bal |-> -1, mbal |-> 0, val |-> "none"] ) @@
+  r2 :>
+      ( a1 :> [bal |-> -1, mbal |-> 0, val |-> "none"] @@
+        a2 :> [bal |-> -1, mbal |-> 0, val |-> "none"] @@
+        a3 :> [bal |-> -1, mbal |-> 0, val |-> "none"] ) )

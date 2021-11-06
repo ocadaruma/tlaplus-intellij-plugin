@@ -95,11 +95,6 @@ public interface TLCEvent {
         Range<SourceLocation> range;
     }
 
-    class ErrorTrace implements TLCEvent {
-        public ErrorTrace(List<String> lines) {
-        }
-    }
-
     @Value
     @Accessors(fluent = true)
     class TLCError implements TLCEvent {
@@ -154,5 +149,75 @@ public interface TLCEvent {
         String module;
         SourceLocation location;
         String message;
+    }
+
+    @Value
+    @Accessors(fluent = true)
+    class ErrorTrace implements TLCEvent {
+        @Value
+        @Accessors(fluent = true)
+        public static class TraceVariable {
+            String name;
+            TraceVariableValue value;
+        }
+
+        public interface TraceVariableValue {}
+
+        @Value
+        @Accessors(fluent = true)
+        public static class PrimitiveValue implements TraceVariableValue {
+            String content;
+        }
+
+        @Value
+        @Accessors(fluent = true)
+        public static class SequenceValue implements TraceVariableValue {
+            List<TraceVariableValue> values;
+        }
+
+        @Value
+        @Accessors(fluent = true)
+        public static class SetValue implements TraceVariableValue {
+            // We use list here though the value type is "Set" to preserve
+            // output from TLC
+            List<TraceVariableValue> values;
+        }
+
+        @Value
+        @Accessors(fluent = true)
+        public static class RecordValue implements TraceVariableValue {
+            @Value
+            @Accessors(fluent = true)
+            public static class Entry {
+                String key;
+                TraceVariableValue value;
+            }
+
+            List<Entry> entries;
+        }
+
+        @Value
+        @Accessors(fluent = true)
+        public static class FunctionValue implements TraceVariableValue {
+            @Value
+            @Accessors(fluent = true)
+            public static class Entry {
+                String key;
+                TraceVariableValue value;
+            }
+
+            List<Entry> entries;
+        }
+
+        // Should not happen in principle.
+        // Just a fallback type because currently we're not 100% sure about
+        // TLC's output spec
+        @Value
+        @Accessors(fluent = true)
+        public static class UnknownValue implements TraceVariableValue {
+            String text;
+        }
+
+        List<TraceVariable> variables;
     }
 }

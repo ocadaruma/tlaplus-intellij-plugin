@@ -196,11 +196,16 @@
         QUANTIFIER_EE      = '\EE'
         QUANTIFIER_A       = '\A'
         QUANTIFIER_AA      = '\AA'
+
+        // TLC
+        TLC_ERROR_TRACE_PRIMITIVE = 'tlc_error_trace_primitive'
     ]
 
     extends('.*_expr') = expr
     consumeTokenMethod('.*_expr') = "consumeTokenFast"
 //    generateTokenAccessors=true
+
+    extraRoot("tlc_error_trace") = true
 }
 
 module ::= module_header ('EXTENDS' <<comma_list 'identifier'>>)? unit* clear_indent '===='
@@ -550,3 +555,33 @@ expr ::= if_expr
        | identifier_args_expr
        | identifier_expr
        | literal_expr
+
+// TLC error trace parsing.
+// refs: https://github.com/tlaplus/tlaplus/blob/v1.7.1/toolbox/org.lamport.tla.toolbox.tool.tlc.ui/src/org/lamport/tla/toolbox/tool/tlc/output/data/TLCVariableValue.java
+// for the original implementation
+tlc_error_trace ::= multiple_variable_trace | single_variable_trace
+single_variable_trace ::= '/\' ? tlc_variable_decl
+multiple_variable_trace ::= ('/\' tlc_variable_decl)+
+tlc_variable_decl ::= 'identifier' '=' tlc_value
+
+tlc_primitive_value ::= 'tlc_error_trace_primitive' | 'string'
+
+tlc_record_value ::= '[' tlc_record_pair (',' tlc_record_pair)* ']'
+tlc_record_pair ::= 'identifier' '|->' tlc_value
+
+tlc_set_empty_value ::= '{' '}'
+tlc_set_value ::= '{' tlc_value (',' tlc_value)* '}'
+
+tlc_sequence_empty_value ::= '<<' '>>'
+tlc_sequence_value ::= '<<' tlc_value (',' tlc_value)* '>>'
+
+tlc_function_value ::= '(' tlc_function_pair ('@@' tlc_function_pair)* ')'
+tlc_function_pair ::= 'identifier' ':>' tlc_value
+
+tlc_value ::= tlc_function_value
+            | tlc_sequence_value
+            | tlc_sequence_empty_value
+            | tlc_set_value
+            | tlc_set_empty_value
+            | tlc_record_value
+            | tlc_primitive_value
