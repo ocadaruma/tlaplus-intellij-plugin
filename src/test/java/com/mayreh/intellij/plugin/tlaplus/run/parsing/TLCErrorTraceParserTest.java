@@ -2,12 +2,12 @@ package com.mayreh.intellij.plugin.tlaplus.run.parsing;
 
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
-import static org.junit.Assert.assertEquals;
 
 import java.util.Optional;
 
-import org.junit.Test;
+import org.junit.Assert;
 
+import com.intellij.testFramework.fixtures.BasePlatformTestCase;
 import com.intellij.util.Range;
 import com.mayreh.intellij.plugin.tlaplus.TestUtils;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent;
@@ -18,13 +18,12 @@ import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.S
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.SimpleErrorTrace;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.TraceVariable;
 
-public class TLCErrorTraceParserTest {
-    @Test
-    public void test() {
-        Optional<ErrorTraceEvent> result = TLCErrorTraceParser.parse(
+public class TLCErrorTraceParserTest extends BasePlatformTestCase {
+    public void testBasic() {
+        Optional<ErrorTraceEvent> result = new TLCErrorTraceParser(getProject()).parse(
                 TestUtils.resourceToString("tlc/fixtures/errortrace/basic.out")
                          .lines().collect(toList()));
-        assertEquals(new SimpleErrorTrace(
+        Assert.assertEquals(new SimpleErrorTrace(
                 2,
                 "PaxosCommit",
                 "RMPrepare",

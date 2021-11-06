@@ -31,6 +31,17 @@ import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.CoverageInit;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.CoverageItem;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.CoverageNext;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.BackToStateErrorTrace;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.FunctionValue;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.PrimitiveValue;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.RecordValue;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.SequenceValue;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.SetValue;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.SimpleErrorTrace;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.SpecialErrorTrace;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.TraceVariable;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.TraceVariableValue;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.UnknownValue;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ProcessTerminated;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.Progress;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.SANYEnd;
@@ -97,18 +108,9 @@ public class TLCModelCheckResultForm {
         errorTraceRoot = new DefaultMutableTreeNode("root");
         errorTraceModel = new DefaultTreeModel(errorTraceRoot);
         errorTraceTree.setModel(errorTraceModel);
-
-//        DefaultMutableTreeNode abcde = new DefaultMutableTreeNode("1: abcde");
-//        DefaultMutableTreeNode ghijk = new DefaultMutableTreeNode("2: ghijk");
-//        DefaultMutableTreeNode lmnop = new DefaultMutableTreeNode("1-1: lmnop");
-//
-//        errorTraceModel.insertNodeInto(lmnop, abcde, abcde.getChildCount());
-//        errorTraceModel.insertNodeInto(abcde, errorTraceRoot, errorTraceRoot.getChildCount());
-//        errorTraceModel.insertNodeInto(ghijk, errorTraceRoot, errorTraceRoot.getChildCount());
-//        errorTraceModel.nodeStructureChanged(errorTraceRoot);
     }
 
-    public void onEvent(TLCEvent event) {
+    public synchronized void onEvent(TLCEvent event) {
         if (event instanceof TLCEvent.SANYStart) {
             statusLabel.setText("SANY running");
         }
@@ -175,6 +177,95 @@ public class TLCModelCheckResultForm {
                 statusLabel.setForeground(ColorProgressBar.GREEN);
                 statusLabel.setText("Finished");
             }
+        }
+        if (event instanceof SimpleErrorTrace) {
+            SimpleErrorTrace trace = (SimpleErrorTrace) event;
+            DefaultMutableTreeNode parent =
+                    new DefaultMutableTreeNode(String.format(
+                            "%d: <%s(%s):%d:%d>",
+                            trace.number(),
+                            trace.module(),
+                            trace.action(),
+                            trace.range().getFrom().line(),
+                            trace.range().getFrom().col()));
+            renderTraceVariables(parent, trace.variables());
+        }
+        if (event instanceof SpecialErrorTrace) {
+            SpecialErrorTrace trace = (SpecialErrorTrace) event;
+            DefaultMutableTreeNode parent =
+                    new DefaultMutableTreeNode(String.format("%d: <%s>", trace.number(), trace.type()));
+            renderTraceVariables(parent, trace.variables());
+        }
+        if (event instanceof BackToStateErrorTrace) {
+            BackToStateErrorTrace trace = (BackToStateErrorTrace) event;
+            DefaultMutableTreeNode parent =
+                    new DefaultMutableTreeNode(String.format(
+                            "%d: Back to state <%s(%s):%d:%d>",
+                            trace.number(),
+                            trace.module(),
+                            trace.action(),
+                            trace.range().getFrom().line(),
+                            trace.range().getFrom().col()));
+            renderTraceVariables(parent, trace.variables());
+        }
+    }
+
+    private void renderTraceVariables(
+            MutableTreeNode parent,
+            List<TraceVariable> variables) {
+        for (TraceVariable variable : variables) {
+            DefaultMutableTreeNode nameNode = new DefaultMutableTreeNode(variable.name());
+            errorTraceModel.insertNodeInto(nameNode, parent, parent.getChildCount());
+            renderTraceVariableValue(nameNode, variable.value());
+        }
+        errorTraceModel.insertNodeInto(parent, errorTraceRoot, errorTraceRoot.getChildCount());
+        errorTraceModel.nodeStructureChanged(errorTraceRoot);
+    }
+
+    private void renderTraceVariableValue(
+            MutableTreeNode parent,
+            TraceVariableValue value) {
+        if (value instanceof PrimitiveValue) {
+            DefaultMutableTreeNode valueNode =
+                    new DefaultMutableTreeNode(((PrimitiveValue) value).content());
+            errorTraceModel.insertNodeInto(valueNode, parent, parent.getChildCount());
+        }
+        if (value instanceof SequenceValue) {
+            DefaultMutableTreeNode valueNode = new DefaultMutableTreeNode(":<<sequence>>");
+            errorTraceModel.insertNodeInto(valueNode, parent, parent.getChildCount());
+            for (TraceVariableValue subValue : ((SequenceValue) value).values()) {
+                renderTraceVariableValue(valueNode, subValue);
+            }
+        }
+        if (value instanceof SetValue) {
+            DefaultMutableTreeNode valueNode = new DefaultMutableTreeNode(":{set}");
+            errorTraceModel.insertNodeInto(valueNode, parent, parent.getChildCount());
+            for (TraceVariableValue subValue : ((SetValue) value).values()) {
+                renderTraceVariableValue(valueNode, subValue);
+            }
+        }
+        if (value instanceof RecordValue) {
+            DefaultMutableTreeNode valueNode = new DefaultMutableTreeNode(":[record]");
+            errorTraceModel.insertNodeInto(valueNode, parent, parent.getChildCount());
+            for (RecordValue.Entry entry : ((RecordValue) value).entries()) {
+                DefaultMutableTreeNode keyNode = new DefaultMutableTreeNode(entry.key());
+                errorTraceModel.insertNodeInto(keyNode, valueNode, valueNode.getChildCount());
+                renderTraceVariableValue(keyNode, entry.value());
+            }
+        }
+        if (value instanceof FunctionValue) {
+            DefaultMutableTreeNode valueNode = new DefaultMutableTreeNode(":(function)");
+            errorTraceModel.insertNodeInto(valueNode, parent, parent.getChildCount());
+            for (FunctionValue.Entry entry : ((FunctionValue) value).entries()) {
+                DefaultMutableTreeNode keyNode = new DefaultMutableTreeNode(entry.key());
+                errorTraceModel.insertNodeInto(keyNode, valueNode, valueNode.getChildCount());
+                renderTraceVariableValue(keyNode, entry.value());
+            }
+        }
+        if (value instanceof UnknownValue) {
+            DefaultMutableTreeNode valueNode =
+                    new DefaultMutableTreeNode(((UnknownValue) value).text());
+            errorTraceModel.insertNodeInto(valueNode, parent, parent.getChildCount());
         }
     }
 

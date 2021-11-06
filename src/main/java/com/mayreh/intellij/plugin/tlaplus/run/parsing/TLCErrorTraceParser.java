@@ -24,13 +24,11 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.intellij.core.CoreApplicationEnvironment;
-import com.intellij.core.CoreProjectEnvironment;
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.PsiParser;
 import com.intellij.lang.impl.PsiBuilderImpl;
 import com.intellij.lexer.Lexer;
-import com.intellij.openapi.Disposable;
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.util.Range;
@@ -47,6 +45,9 @@ import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.T
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.TraceVariableValue;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.UnknownValue;
 
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
 public class TLCErrorTraceParser {
     private static final Pattern ERROR_TRACE_PATTERN = Pattern.compile(
             "(\\d+): <(\\w+) line (\\d+), col (\\d+) to line (\\d+), col (\\d+) of module (\\w+)>");
@@ -56,16 +57,9 @@ public class TLCErrorTraceParser {
             "(\\d+): Back to state: <(\\w+) line (\\d+), col (\\d+) to line (\\d+), col (\\d+) of module (\\w+)>");
     private static final TLCErrorTraceParserDefinition PARSER_DEFINITION = new TLCErrorTraceParserDefinition();
 
-    // The technique parsing by using CoreProjectEnvironment is taken from
-    // https://github.com/JetBrains/Grammar-Kit/blob/2021.1.2/src/org/intellij/grammar/LightPsi.java#L165
-    private static final CoreProjectEnvironment DUMMY_PROJECT_ENV;
-    static {
-        Disposable noopDisposable = () -> {};
-        DUMMY_PROJECT_ENV = new CoreProjectEnvironment(
-                noopDisposable, new CoreApplicationEnvironment(noopDisposable));
-    }
+    private final Project project;
 
-    public static Optional<ErrorTraceEvent> parse(List<String> lines) {
+    public Optional<ErrorTraceEvent> parse(List<String> lines) {
         if (lines.isEmpty()) {
             return Optional.empty();
         }
@@ -119,11 +113,11 @@ public class TLCErrorTraceParser {
         return Optional.empty();
     }
 
-    private static List<TraceVariable> parseVariables(String text) {
+    private List<TraceVariable> parseVariables(String text) {
         PsiParser parser = PARSER_DEFINITION.createParser(null);
         Lexer lexer = PARSER_DEFINITION.createLexer(null);
         PsiBuilderImpl builder = new PsiBuilderImpl(
-                DUMMY_PROJECT_ENV.getProject(),
+                project,
                 null,
                 PARSER_DEFINITION,
                 lexer,

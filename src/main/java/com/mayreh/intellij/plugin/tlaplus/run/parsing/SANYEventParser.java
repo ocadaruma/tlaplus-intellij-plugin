@@ -7,6 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
+import com.intellij.openapi.project.Project;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.SANYError;
 
 import tlc2.output.EC;
@@ -21,8 +22,8 @@ class SANYEventParser extends TLCEventParser {
     enum State { Init, Running, Ending, }
     private State state = State.Init;
 
-    SANYEventParser(TLCEventListener listener) {
-        super(listener);
+    SANYEventParser(TLCEventListener listener, Project project) {
+        super(listener, project);
     }
 
     @Override
@@ -47,7 +48,7 @@ class SANYEventParser extends TLCEventParser {
             case Ending:
                 if (parseEndMessage(line)) {
                     listener.onEvent(result(sanyLines));
-                    return new Default(listener);
+                    return new Default(listener, project);
                 } else {
                     listener.onEvent(new TLCEvent.TextEvent(line));
                     return this;
