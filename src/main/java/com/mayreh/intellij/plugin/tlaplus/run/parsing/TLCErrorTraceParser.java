@@ -16,39 +16,44 @@ import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes.TLC_SET
 import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes.TLC_VALUE;
 import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes.TLC_VARIABLE_DECL;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.intellij.core.CoreApplicationEnvironment;
 import com.intellij.core.CoreProjectEnvironment;
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.PsiParser;
 import com.intellij.lang.impl.PsiBuilderImpl;
-import com.intellij.lang.impl.TokenSequence;
 import com.intellij.lexer.Lexer;
 import com.intellij.openapi.Disposable;
-import com.intellij.psi.impl.DebugUtil;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
-import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTrace;
-import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTrace.FunctionValue;
-import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTrace.PrimitiveValue;
-import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTrace.RecordValue;
-import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTrace.SequenceValue;
-import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTrace.SetValue;
-import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTrace.TraceVariable;
-import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTrace.TraceVariableValue;
-import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTrace.UnknownValue;
+import com.intellij.util.Range;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.BackToStateErrorTrace;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.FunctionValue;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.PrimitiveValue;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.RecordValue;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.SequenceValue;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.SetValue;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.SimpleErrorTrace;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.SpecialErrorTrace;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.TraceVariable;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.TraceVariableValue;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.UnknownValue;
 
 public class TLCErrorTraceParser {
+    private static final Pattern ERROR_TRACE_PATTERN = Pattern.compile(
+            "(\\d+): <(\\w+) line (\\d+), col (\\d+) to line (\\d+), col (\\d+) of module (\\w+)>");
+    private static final Pattern SPECIAL_ERROR_TRACE_PATTERN = Pattern.compile(
+            "(\\d+): <?([\\w\\s]+)>?");
+    private static final Pattern BACK_TO_STATE_PATTERN = Pattern.compile(
+            "(\\d+): Back to state: <(\\w+) line (\\d+), col (\\d+) to line (\\d+), col (\\d+) of module (\\w+)>");
     private static final TLCErrorTraceParserDefinition PARSER_DEFINITION = new TLCErrorTraceParserDefinition();
 
     // The technique parsing by using CoreProjectEnvironment is taken from
@@ -60,7 +65,61 @@ public class TLCErrorTraceParser {
                 noopDisposable, new CoreApplicationEnvironment(noopDisposable));
     }
 
-    public static Optional<TLCEvent.ErrorTrace> parse(String text) {
+    public static Optional<ErrorTraceEvent> parse(List<String> lines) {
+        if (lines.isEmpty()) {
+            return Optional.empty();
+        }
+        String firstLine = lines.get(0);
+        final List<TraceVariable> variables;
+        if (lines.size() > 1) {
+            variables = parseVariables(String.join("\n", lines.subList(1, lines.size())));
+        } else {
+            variables = emptyList();
+        }
+
+        Matcher matcher;
+        matcher = ERROR_TRACE_PATTERN.matcher(firstLine);
+        if (matcher.find()) {
+            return Optional.of(new SimpleErrorTrace(
+                    Integer.parseInt(matcher.group(1)),
+                    matcher.group(7),
+                    matcher.group(2),
+                    new Range<>(
+                            new SourceLocation(
+                                    Integer.parseInt(matcher.group(3)) - 1,
+                                    Integer.parseInt(matcher.group(4)) - 1),
+                            new SourceLocation(
+                                    Integer.parseInt(matcher.group(5)) - 1,
+                                    Integer.parseInt(matcher.group(6)))),
+                    variables));
+        }
+        matcher = SPECIAL_ERROR_TRACE_PATTERN.matcher(firstLine);
+        if (matcher.find()) {
+            return Optional.of(new SpecialErrorTrace(
+                    Integer.parseInt(matcher.group(1)),
+                    matcher.group(2),
+                    variables));
+        }
+        matcher = BACK_TO_STATE_PATTERN.matcher(firstLine);
+        if (matcher.find()) {
+            return Optional.of(new BackToStateErrorTrace(
+                    Integer.parseInt(matcher.group(1)),
+                    matcher.group(7),
+                    matcher.group(2),
+                    new Range<>(
+                            new SourceLocation(
+                                    Integer.parseInt(matcher.group(3)) - 1,
+                                    Integer.parseInt(matcher.group(4)) - 1),
+                            new SourceLocation(
+                                    Integer.parseInt(matcher.group(5)) - 1,
+                                    Integer.parseInt(matcher.group(6)))),
+                    variables));
+        }
+
+        return Optional.empty();
+    }
+
+    private static List<TraceVariable> parseVariables(String text) {
         PsiParser parser = PARSER_DEFINITION.createParser(null);
         Lexer lexer = PARSER_DEFINITION.createLexer(null);
         PsiBuilderImpl builder = new PsiBuilderImpl(
@@ -76,23 +135,21 @@ public class TLCErrorTraceParser {
         ASTNode traceNode = node.findChildByType(
                 TokenSet.create(SINGLE_VARIABLE_TRACE, MULTIPLE_VARIABLE_TRACE));
         if (traceNode == null) {
-            return Optional.empty();
+            return emptyList();
         }
-        List<TraceVariable> variables =
-                Arrays.stream(traceNode.getChildren(TokenSet.create(TLC_VARIABLE_DECL)))
-                      .flatMap(decl -> {
-                          Optional<String> nameOpt =
-                                  Optional.ofNullable(decl.findChildByType(IDENTIFIER))
-                                          .map(ASTNode::getText);
-                          Optional<TraceVariableValue> valueOpt =
-                                  Optional.ofNullable(decl.findChildByType(TLC_VALUE))
-                                          .map(TLCErrorTraceParser::parseVariableValue);
-                          return nameOpt.flatMap(
-                                  name -> valueOpt.map(
-                                          value -> new TraceVariable(name, value))).stream();
-                      })
-                      .collect(toList());
-        return Optional.of(new ErrorTrace(variables));
+        return Arrays.stream(traceNode.getChildren(TokenSet.create(TLC_VARIABLE_DECL)))
+                     .flatMap(decl -> {
+                         Optional<String> nameOpt =
+                                 Optional.ofNullable(decl.findChildByType(IDENTIFIER))
+                                         .map(ASTNode::getText);
+                         Optional<TraceVariableValue> valueOpt =
+                                 Optional.ofNullable(decl.findChildByType(TLC_VALUE))
+                                         .map(TLCErrorTraceParser::parseVariableValue);
+                         return nameOpt.flatMap(
+                                 name -> valueOpt.map(
+                                         value -> new TraceVariable(name, value))).stream();
+                     })
+                     .collect(toList());
     }
 
     private static TraceVariableValue parseVariableValue(ASTNode valueNode) {

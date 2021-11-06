@@ -564,7 +564,7 @@ single_variable_trace ::= '/\' ? tlc_variable_decl
 multiple_variable_trace ::= ('/\' tlc_variable_decl)+
 tlc_variable_decl ::= 'identifier' '=' tlc_value
 
-tlc_primitive_value ::= 'tlc_error_trace_primitive' | 'string'
+tlc_primitive_value ::= 'tlc_error_trace_primitive' | 'string' | 'identifier'
 
 tlc_record_value ::= '[' tlc_record_pair (',' tlc_record_pair)* ']'
 tlc_record_pair ::= 'identifier' '|->' tlc_value

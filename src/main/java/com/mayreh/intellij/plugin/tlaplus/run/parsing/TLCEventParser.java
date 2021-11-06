@@ -145,13 +145,7 @@ public abstract class TLCEventParser {
                     case EC.TLC_STATE_PRINT3:
                     case EC.TLC_BACK_TO_STATE:
                         return new MultilineTextParser<>(
-                                listener, lines -> {
-                            // TODO: Parse error trace
-                            for (String s : lines) {
-                                listener.onEvent(new TLCEvent.TextEvent(s));
-                            }
-                            return Optional.empty();
-                        });
+                                listener, TLCErrorTraceParser::parse);
                     case EC.TLC_SUCCESS:
                         return new MultilineTextParser<>(
                                 listener, lines -> maybeMatch(SUCCESS_PATTERN, String.join(" ", lines))
