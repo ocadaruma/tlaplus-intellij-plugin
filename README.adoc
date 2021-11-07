@@ -20,6 +20,7 @@ NOTE: This plugin is still in very early stage.
 *** Error trace exploration is not supported
 * [ ] PlusCal
 
-image::images/context_menu.png[]
+== Screenshots
 
-image::images/run_console.png[]
+image::images/context_menu.png["Context menu"480]
+image::images/run_console.png["Run console",480]
