@@ -12,13 +12,13 @@ NOTE: This plugin is still in very early stage.
 == Features
 
 * [x] Syntax highlighting
-* [ ] Find usages (Go to declaration)
 * [x] Run TLC
 ** Current limitations:
 *** You have to create TLC config file (`.cfg`) manually
 *** TLC parameters are not configurable
 *** Error trace exploration is not supported
-* [ ] PlusCal
+* [ ] (Not yet) Find usages (Go to declaration)
+* [ ] (Not yet) PlusCal
 
 == Screenshots
 
