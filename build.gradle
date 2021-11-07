@@ -110,3 +110,7 @@ tasks.withType(Test) {
         showStandardStreams false
     }
 }
+
+publishPlugin {
+    token = findProperty("intellijPublishToken")
+}
