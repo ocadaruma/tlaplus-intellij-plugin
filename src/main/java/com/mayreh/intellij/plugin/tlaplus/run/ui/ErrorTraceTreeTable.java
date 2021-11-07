@@ -1,7 +1,6 @@
 package com.mayreh.intellij.plugin.tlaplus.run.ui;
 
 import java.awt.Component;
-import java.awt.Dimension;
 import java.util.List;
 
 import javax.swing.JTable;
@@ -107,6 +106,9 @@ class ErrorTraceTreeTable extends TreeTable {
         return renderer == null ? super.getCellRenderer(row, column) : renderer;
     }
 
+    /**
+     * Add a state consists of variable assignments to the error-trace tree.
+     */
     void addState(StateRootNode stateRoot, List<TraceVariable> variables) {
         treeTableModel.rootNode.add(stateRoot);
         for (TraceVariable variable : variables) {
@@ -114,7 +116,7 @@ class ErrorTraceTreeTable extends TreeTable {
             stateRoot.add(variableNode);
             renderTraceVariableValue(variableNode, variable.value());
         }
-        treeTableModel.nodeChanged(treeTableModel.rootNode);
+        treeTableModel.nodeStructureChanged(treeTableModel.rootNode);
     }
 
     private static void renderTraceVariableValue(
