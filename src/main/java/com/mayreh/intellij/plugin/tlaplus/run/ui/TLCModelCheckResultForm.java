@@ -1,6 +1,7 @@
 package com.mayreh.intellij.plugin.tlaplus.run.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -16,16 +17,25 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.JTree;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.MutableTreeNode;
+import javax.swing.tree.TreePath;
+
+import org.jetbrains.annotations.Nullable;
 
 import com.intellij.openapi.progress.util.ColorProgressBar;
 import com.intellij.ui.AnimatedIcon;
 import com.intellij.ui.table.JBTable;
 import com.intellij.ui.treeStructure.Tree;
+import com.intellij.ui.treeStructure.treetable.ListTreeTableModel;
+import com.intellij.ui.treeStructure.treetable.TreeColumnInfo;
+import com.intellij.ui.treeStructure.treetable.TreeTable;
+import com.intellij.util.ui.ColumnInfo;
 import com.intellij.util.ui.JBFont;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.CoverageInit;
@@ -60,7 +70,7 @@ public class TLCModelCheckResultForm {
     private JLabel statusLabel;
     private JLabel startLabel;
     private JLabel endLabel;
-    private JTree errorTraceTree;
+    private TreeTable errorTraceTree;
     private JPanel statesTablePanel;
     private JPanel coverageTablePanel;
     private JPanel errorsPanel;
@@ -69,7 +79,7 @@ public class TLCModelCheckResultForm {
     private TableModel errorsTableModel;
 
     private MutableTreeNode errorTraceRoot;
-    private DefaultTreeModel errorTraceModel;
+    private ListTreeTableModel errorTraceModel;
 
     // We want to set statusLabel from exitCode=0 event only when
     // TLCFinished event is not received yet. (though not sure if such case can happen)
@@ -80,13 +90,45 @@ public class TLCModelCheckResultForm {
     }
 
     private void createUIComponents() {
-        errorTraceTree = new Tree();
+        errorTraceRoot = new DefaultMutableTreeNode("root");
+        ColumnInfo[] columns = {
+                new TreeColumnInfo("Name"),
+                new TreeColumnInfo("Value") {
+                    @Override
+                    public @Nullable TableCellRenderer getRenderer(Object o) {
+                        return new DefaultTableCellRenderer() {
+                            @Override
+                            public Component getTableCellRendererComponent(JTable table, Object value,
+                                                                           boolean isSelected, boolean hasFocus,
+                                                                           int row, int column) {
+                                Component component = super.getTableCellRendererComponent(
+                                        table,
+                                        value,
+                                        isSelected,
+                                        hasFocus,
+                                        row,
+                                        column);
+                                setValue("abcdefg");
+                                return component;
+                            }
+                        };
+                    }
+                }
+        };
+        errorTraceModel = new ListTreeTableModel(errorTraceRoot, columns);
+        errorTraceTree = new TreeTable(errorTraceModel) {
+            @Override
+            public TableCellRenderer getCellRenderer(int row, int column) {
+                TreePath treePath = getTree().getPathForRow(row);
+                if (treePath == null) {
+                    return super.getCellRenderer(row, column);
+                }
+                Object node = treePath.getLastPathComponent();
+                TableCellRenderer renderer = columns[column].getRenderer(node);
+                return renderer == null ? super.getCellRenderer(row, column) : renderer;
+            }
+        };
         errorTraceTree.setRootVisible(false);
-        DefaultTreeCellRenderer cellRenderer = new DefaultTreeCellRenderer();
-        cellRenderer.setOpenIcon(null);
-        cellRenderer.setClosedIcon(null);
-        cellRenderer.setLeafIcon(null);
-        errorTraceTree.setCellRenderer(cellRenderer);
     }
 
     public void initUI() {
@@ -104,13 +146,9 @@ public class TLCModelCheckResultForm {
         JTable coverageTable = new SimpleTable(coverageTableModel);
         coverageTablePanel.add(coverageTable.getTableHeader(), BorderLayout.NORTH);
         coverageTablePanel.add(coverageTable, BorderLayout.CENTER);
-
-        errorTraceRoot = new DefaultMutableTreeNode("root");
-        errorTraceModel = new DefaultTreeModel(errorTraceRoot);
-        errorTraceTree.setModel(errorTraceModel);
     }
 
-    public synchronized void onEvent(TLCEvent event) {
+    public void onEvent(TLCEvent event) {
         if (event instanceof TLCEvent.SANYStart) {
             statusLabel.setText("SANY running");
         }

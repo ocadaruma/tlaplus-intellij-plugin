@@ -24,6 +24,7 @@ import com.intellij.ide.HelpIdProvider;
 import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.actions.ScrollToTheEndToolbarAction;
 import com.intellij.openapi.editor.actions.ToggleUseSoftWrapsToolbarAction;
@@ -68,12 +69,15 @@ public class TLCOutputConsoleView implements ConsoleView, HelpIdProvider {
                             consoleView.resultPanel, consoleView.console().getProject());
                     @Override
                     public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
-                        currentParser = currentParser.addLine(event.getText());
+                        ApplicationManager.getApplication().invokeLater(
+                                () -> currentParser = currentParser.addLine(event.getText()));
                     }
 
                     @Override
                     public void processTerminated(@NotNull ProcessEvent event) {
-                        currentParser.notifyProcessExit(event.getExitCode());
+                        ApplicationManager.getApplication().invokeLater(
+                                () -> currentParser.notifyProcessExit(event.getExitCode()));
+
                     }
                 };
                 processHandler.addProcessListener(listener);

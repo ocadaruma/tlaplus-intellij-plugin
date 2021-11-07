@@ -3,6 +3,7 @@ package com.mayreh.intellij.plugin.tlaplus.run.parsing;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.intellij.util.Range;
 
@@ -187,18 +188,36 @@ public interface TLCEvent {
             TraceVariableValue value;
         }
 
-        interface TraceVariableValue {}
+        interface TraceVariableValue {
+            /**
+             * Represent this value as string.
+             * Will be used when showing the value in trace tree view.
+             */
+            String asString();
+        }
 
         @Value
         @Accessors(fluent = true)
         class PrimitiveValue implements TraceVariableValue {
             String content;
+
+            @Override
+            public String asString() {
+                return content;
+            }
         }
 
         @Value
         @Accessors(fluent = true)
         class SequenceValue implements TraceVariableValue {
             List<TraceVariableValue> values;
+
+            @Override
+            public String asString() {
+                return values.stream()
+                             .map(TraceVariableValue::asString)
+                             .collect(Collectors.joining(", ", "<<", ">>"));
+            }
         }
 
         @Value
@@ -207,6 +226,13 @@ public interface TLCEvent {
             // We use list here though the value type is "Set" to preserve
             // output from TLC
             List<TraceVariableValue> values;
+
+            @Override
+            public String asString() {
+                return values.stream()
+                             .map(TraceVariableValue::asString)
+                             .collect(Collectors.joining(", ", "{", "}"));
+            }
         }
 
         @Value
@@ -220,6 +246,13 @@ public interface TLCEvent {
             }
 
             List<Entry> entries;
+
+            @Override
+            public String asString() {
+                return entries.stream()
+                              .map(e -> e.key + " |-> " + e.value.asString())
+                              .collect(Collectors.joining(", ", "[", "]"));
+            }
         }
 
         @Value
@@ -233,6 +266,13 @@ public interface TLCEvent {
             }
 
             List<Entry> entries;
+
+            @Override
+            public String asString() {
+                return entries.stream()
+                              .map(e -> e.key + " :> " + e.value.asString())
+                              .collect(Collectors.joining(" @@ ", "(", ")"));
+            }
         }
 
         // Should not happen in principle.
@@ -242,6 +282,11 @@ public interface TLCEvent {
         @Accessors(fluent = true)
         class UnknownValue implements TraceVariableValue {
             String text;
+
+            @Override
+            public String asString() {
+                return text;
+            }
         }
     }
 }

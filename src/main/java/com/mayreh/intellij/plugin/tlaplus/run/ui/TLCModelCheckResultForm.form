@@ -111,14 +111,6 @@
           <text value="Error Trace"/>
         </properties>
       </component>
-      <component id="85f73" class="javax.swing.JTree" binding="errorTraceTree" custom-create="true">
-        <constraints>
-          <grid row="9" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="2" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <rootVisible value="false"/>
-        </properties>
-      </component>
       <grid id="a53e5" binding="statesTablePanel" layout-manager="BorderLayout" hgap="0" vgap="0">
         <constraints>
           <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="2" use-parent-layout="false"/>
@@ -143,6 +135,12 @@
         <border type="empty"/>
         <children/>
       </grid>
+      <component id="3c599" class="com.intellij.ui.treeStructure.treetable.TreeTable" binding="errorTraceTree" custom-create="true">
+        <constraints>
+          <grid row="9" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="2" use-parent-layout="false"/>
+        </constraints>
+        <properties/>
+      </component>
     </children>
   </grid>
 </form>
