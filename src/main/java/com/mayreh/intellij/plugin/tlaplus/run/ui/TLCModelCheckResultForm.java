@@ -1,7 +1,6 @@
 package com.mayreh.intellij.plugin.tlaplus.run.ui;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -16,42 +15,19 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTable;
-import javax.swing.JTree;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeCellRenderer;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.MutableTreeNode;
-import javax.swing.tree.TreePath;
-
-import org.jetbrains.annotations.Nullable;
 
 import com.intellij.openapi.progress.util.ColorProgressBar;
 import com.intellij.ui.AnimatedIcon;
 import com.intellij.ui.table.JBTable;
-import com.intellij.ui.treeStructure.Tree;
-import com.intellij.ui.treeStructure.treetable.ListTreeTableModel;
-import com.intellij.ui.treeStructure.treetable.TreeColumnInfo;
-import com.intellij.ui.treeStructure.treetable.TreeTable;
-import com.intellij.util.ui.ColumnInfo;
 import com.intellij.util.ui.JBFont;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.CoverageInit;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.CoverageItem;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.CoverageNext;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.BackToStateErrorTrace;
-import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.FunctionValue;
-import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.PrimitiveValue;
-import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.RecordValue;
-import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.SequenceValue;
-import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.SetValue;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.SimpleErrorTrace;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.SpecialErrorTrace;
-import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.TraceVariable;
-import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.TraceVariableValue;
-import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.UnknownValue;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ProcessTerminated;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.Progress;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.SANYEnd;
@@ -61,6 +37,7 @@ import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCError.ErrorIte
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCFinished;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCStart;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCSuccess;
+import com.mayreh.intellij.plugin.tlaplus.run.ui.ErrorTraceTreeTable.StateRootNode;
 
 public class TLCModelCheckResultForm {
     private static final DateTimeFormatter DATETIME_FORMAT =
@@ -70,16 +47,14 @@ public class TLCModelCheckResultForm {
     private JLabel statusLabel;
     private JLabel startLabel;
     private JLabel endLabel;
-    private TreeTable errorTraceTree;
+    private ErrorTraceTreeTable errorTraceTree;
     private JPanel statesTablePanel;
     private JPanel coverageTablePanel;
     private JPanel errorsPanel;
+    private JPanel errorTracePanel;
     private StatesTableModel statesTableModel;
     private CoverageTableModel coverageTableModel;
     private TableModel errorsTableModel;
-
-    private MutableTreeNode errorTraceRoot;
-    private ListTreeTableModel errorTraceModel;
 
     // We want to set statusLabel from exitCode=0 event only when
     // TLCFinished event is not received yet. (though not sure if such case can happen)
@@ -87,48 +62,6 @@ public class TLCModelCheckResultForm {
 
     public JComponent component() {
         return panel;
-    }
-
-    private void createUIComponents() {
-        errorTraceRoot = new DefaultMutableTreeNode("root");
-        ColumnInfo[] columns = {
-                new TreeColumnInfo("Name"),
-                new TreeColumnInfo("Value") {
-                    @Override
-                    public @Nullable TableCellRenderer getRenderer(Object o) {
-                        return new DefaultTableCellRenderer() {
-                            @Override
-                            public Component getTableCellRendererComponent(JTable table, Object value,
-                                                                           boolean isSelected, boolean hasFocus,
-                                                                           int row, int column) {
-                                Component component = super.getTableCellRendererComponent(
-                                        table,
-                                        value,
-                                        isSelected,
-                                        hasFocus,
-                                        row,
-                                        column);
-                                setValue("abcdefg");
-                                return component;
-                            }
-                        };
-                    }
-                }
-        };
-        errorTraceModel = new ListTreeTableModel(errorTraceRoot, columns);
-        errorTraceTree = new TreeTable(errorTraceModel) {
-            @Override
-            public TableCellRenderer getCellRenderer(int row, int column) {
-                TreePath treePath = getTree().getPathForRow(row);
-                if (treePath == null) {
-                    return super.getCellRenderer(row, column);
-                }
-                Object node = treePath.getLastPathComponent();
-                TableCellRenderer renderer = columns[column].getRenderer(node);
-                return renderer == null ? super.getCellRenderer(row, column) : renderer;
-            }
-        };
-        errorTraceTree.setRootVisible(false);
     }
 
     public void initUI() {
@@ -146,6 +79,10 @@ public class TLCModelCheckResultForm {
         JTable coverageTable = new SimpleTable(coverageTableModel);
         coverageTablePanel.add(coverageTable.getTableHeader(), BorderLayout.NORTH);
         coverageTablePanel.add(coverageTable, BorderLayout.CENTER);
+
+        errorTraceTree = new ErrorTraceTreeTable();
+        errorTracePanel.add(errorTraceTree.getTableHeader(), BorderLayout.NORTH);
+        errorTracePanel.add(errorTraceTree, BorderLayout.CENTER);
     }
 
     public void onEvent(TLCEvent event) {
@@ -218,92 +155,33 @@ public class TLCModelCheckResultForm {
         }
         if (event instanceof SimpleErrorTrace) {
             SimpleErrorTrace trace = (SimpleErrorTrace) event;
-            DefaultMutableTreeNode parent =
-                    new DefaultMutableTreeNode(String.format(
+            StateRootNode parent =
+                    new StateRootNode(String.format(
                             "%d: <%s(%s):%d:%d>",
                             trace.number(),
                             trace.module(),
                             trace.action(),
                             trace.range().getFrom().line(),
                             trace.range().getFrom().col()));
-            renderTraceVariables(parent, trace.variables());
+            errorTraceTree.addState(parent, trace.variables());
         }
         if (event instanceof SpecialErrorTrace) {
             SpecialErrorTrace trace = (SpecialErrorTrace) event;
-            DefaultMutableTreeNode parent =
-                    new DefaultMutableTreeNode(String.format("%d: <%s>", trace.number(), trace.type()));
-            renderTraceVariables(parent, trace.variables());
+            StateRootNode parent =
+                    new StateRootNode(String.format("%d: <%s>", trace.number(), trace.type()));
+            errorTraceTree.addState(parent, trace.variables());
         }
         if (event instanceof BackToStateErrorTrace) {
             BackToStateErrorTrace trace = (BackToStateErrorTrace) event;
-            DefaultMutableTreeNode parent =
-                    new DefaultMutableTreeNode(String.format(
+            StateRootNode parent =
+                    new StateRootNode(String.format(
                             "%d: Back to state <%s(%s):%d:%d>",
                             trace.number(),
                             trace.module(),
                             trace.action(),
                             trace.range().getFrom().line(),
                             trace.range().getFrom().col()));
-            renderTraceVariables(parent, trace.variables());
-        }
-    }
-
-    private void renderTraceVariables(
-            MutableTreeNode parent,
-            List<TraceVariable> variables) {
-        for (TraceVariable variable : variables) {
-            DefaultMutableTreeNode nameNode = new DefaultMutableTreeNode(variable.name());
-            errorTraceModel.insertNodeInto(nameNode, parent, parent.getChildCount());
-            renderTraceVariableValue(nameNode, variable.value());
-        }
-        errorTraceModel.insertNodeInto(parent, errorTraceRoot, errorTraceRoot.getChildCount());
-        errorTraceModel.nodeStructureChanged(errorTraceRoot);
-    }
-
-    private void renderTraceVariableValue(
-            MutableTreeNode parent,
-            TraceVariableValue value) {
-        if (value instanceof PrimitiveValue) {
-            DefaultMutableTreeNode valueNode =
-                    new DefaultMutableTreeNode(((PrimitiveValue) value).content());
-            errorTraceModel.insertNodeInto(valueNode, parent, parent.getChildCount());
-        }
-        if (value instanceof SequenceValue) {
-            DefaultMutableTreeNode valueNode = new DefaultMutableTreeNode(":<<sequence>>");
-            errorTraceModel.insertNodeInto(valueNode, parent, parent.getChildCount());
-            for (TraceVariableValue subValue : ((SequenceValue) value).values()) {
-                renderTraceVariableValue(valueNode, subValue);
-            }
-        }
-        if (value instanceof SetValue) {
-            DefaultMutableTreeNode valueNode = new DefaultMutableTreeNode(":{set}");
-            errorTraceModel.insertNodeInto(valueNode, parent, parent.getChildCount());
-            for (TraceVariableValue subValue : ((SetValue) value).values()) {
-                renderTraceVariableValue(valueNode, subValue);
-            }
-        }
-        if (value instanceof RecordValue) {
-            DefaultMutableTreeNode valueNode = new DefaultMutableTreeNode(":[record]");
-            errorTraceModel.insertNodeInto(valueNode, parent, parent.getChildCount());
-            for (RecordValue.Entry entry : ((RecordValue) value).entries()) {
-                DefaultMutableTreeNode keyNode = new DefaultMutableTreeNode(entry.key());
-                errorTraceModel.insertNodeInto(keyNode, valueNode, valueNode.getChildCount());
-                renderTraceVariableValue(keyNode, entry.value());
-            }
-        }
-        if (value instanceof FunctionValue) {
-            DefaultMutableTreeNode valueNode = new DefaultMutableTreeNode(":(function)");
-            errorTraceModel.insertNodeInto(valueNode, parent, parent.getChildCount());
-            for (FunctionValue.Entry entry : ((FunctionValue) value).entries()) {
-                DefaultMutableTreeNode keyNode = new DefaultMutableTreeNode(entry.key());
-                errorTraceModel.insertNodeInto(keyNode, valueNode, valueNode.getChildCount());
-                renderTraceVariableValue(keyNode, entry.value());
-            }
-        }
-        if (value instanceof UnknownValue) {
-            DefaultMutableTreeNode valueNode =
-                    new DefaultMutableTreeNode(((UnknownValue) value).text());
-            errorTraceModel.insertNodeInto(valueNode, parent, parent.getChildCount());
+            errorTraceTree.addState(parent, trace.variables());
         }
     }
 

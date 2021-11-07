@@ -194,6 +194,8 @@ public interface TLCEvent {
              * Will be used when showing the value in trace tree view.
              */
             String asString();
+
+            boolean hasChildren();
         }
 
         @Value
@@ -204,6 +206,11 @@ public interface TLCEvent {
             @Override
             public String asString() {
                 return content;
+            }
+
+            @Override
+            public boolean hasChildren() {
+                return false;
             }
         }
 
@@ -217,6 +224,11 @@ public interface TLCEvent {
                 return values.stream()
                              .map(TraceVariableValue::asString)
                              .collect(Collectors.joining(", ", "<<", ">>"));
+            }
+
+            @Override
+            public boolean hasChildren() {
+                return !values.isEmpty();
             }
         }
 
@@ -232,6 +244,11 @@ public interface TLCEvent {
                 return values.stream()
                              .map(TraceVariableValue::asString)
                              .collect(Collectors.joining(", ", "{", "}"));
+            }
+
+            @Override
+            public boolean hasChildren() {
+                return !values.isEmpty();
             }
         }
 
@@ -253,6 +270,11 @@ public interface TLCEvent {
                               .map(e -> e.key + " |-> " + e.value.asString())
                               .collect(Collectors.joining(", ", "[", "]"));
             }
+
+            @Override
+            public boolean hasChildren() {
+                return !entries.isEmpty();
+            }
         }
 
         @Value
@@ -273,6 +295,11 @@ public interface TLCEvent {
                               .map(e -> e.key + " :> " + e.value.asString())
                               .collect(Collectors.joining(" @@ ", "(", ")"));
             }
+
+            @Override
+            public boolean hasChildren() {
+                return !entries.isEmpty();
+            }
         }
 
         // Should not happen in principle.
@@ -286,6 +313,11 @@ public interface TLCEvent {
             @Override
             public String asString() {
                 return text;
+            }
+
+            @Override
+            public boolean hasChildren() {
+                return false;
             }
         }
     }
