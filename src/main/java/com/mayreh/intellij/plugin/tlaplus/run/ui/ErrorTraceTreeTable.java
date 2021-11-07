@@ -23,11 +23,8 @@ import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.S
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.TraceVariable;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.TraceVariableValue;
 
-import lombok.Getter;
-import lombok.experimental.Accessors;
-
 @SuppressWarnings({"rawtypes", "unchecked"})
-public class ErrorTraceTreeTable extends TreeTable {
+class ErrorTraceTreeTable extends TreeTable {
     private final ErrorTraceModel treeTableModel;
 
     static class ErrorTraceModel extends ListTreeTableModel {
@@ -41,7 +38,7 @@ public class ErrorTraceTreeTable extends TreeTable {
         }
 
         ErrorTraceModel() {
-            this(new DefaultMutableTreeNode(""), new ColumnInfo[]{
+            this(new DefaultMutableTreeNode("ROOT"), new ColumnInfo[]{
                     new TreeColumnInfo("Name"),
                     new TreeColumnInfo("Value") {
                         @Override
@@ -58,7 +55,7 @@ public class ErrorTraceTreeTable extends TreeTable {
                                     Component component = super.getTableCellRendererComponent(
                                             table, value, isSelected, hasFocus, row, column);
                                     if (o instanceof TraceVariableNode) {
-                                        setValue(((TraceVariableNode) o).value().asString());
+                                        setValue(((TraceVariableNode) o).value.asString());
                                     } else {
                                         setValue("");
                                     }
@@ -77,8 +74,6 @@ public class ErrorTraceTreeTable extends TreeTable {
         }
     }
 
-    @Getter
-    @Accessors(fluent = true)
     static class TraceVariableNode extends DefaultMutableTreeNode {
         private final String key;
         private final TraceVariableValue value;
@@ -94,6 +89,7 @@ public class ErrorTraceTreeTable extends TreeTable {
     ErrorTraceTreeTable(ErrorTraceModel treeTableModel) {
         super(treeTableModel);
         this.treeTableModel = treeTableModel;
+        setRootVisible(false);
     }
 
     ErrorTraceTreeTable() {
@@ -157,10 +153,5 @@ public class ErrorTraceTreeTable extends TreeTable {
                 renderTraceVariableValue(node, entry.value());
             }
         }
-    }
-
-    @Override
-    public Dimension getPreferredScrollableViewportSize() {
-        return new Dimension(getPreferredSize().width, getRowHeight() * getRowCount());
     }
 }
