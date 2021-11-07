@@ -3,11 +3,23 @@ Intellij plugin for TLA+
 
 image:https://github.com/ocadaruma/tlaplus-intellij-plugin/workflows/CI/badge.svg?branch=master[link="https://github.com/ocadaruma/tlaplus-intellij-plugin/actions?query=workflow%3ACI+branch%3Amaster+event%3Apush"]
 
+Intellij plugin for https://lamport.azurewebsites.net/tla/tla.html[TLA+] formal specification language.
+
+This plugin is heavily inspired by https://github.com/alygin/vscode-tlaplus[TLA+ for Visual Studio Code].
+
 NOTE: This plugin is still in very early stage.
 
 == Features
 
 * [x] Syntax highlighting
 * [ ] Find usages (Go to declaration)
-* [ ] Run TLC
+* [x] Run TLC
+** Current limitations:
+*** You have to create TLC config file (`.cfg`) manually
+*** TLC parameters are not configurable
+*** Error trace exploration is not supported
 * [ ] PlusCal
+
+image::images/context_menu.png[]
+
+image::images/run_console.png[]
