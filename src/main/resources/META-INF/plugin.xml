@@ -54,8 +54,8 @@
           name="TLC config"
           implementationClass="com.mayreh.intellij.plugin.tlc.TLCConfigFileType"
           fieldName="INSTANCE"
-          language="TLC config"
-          extensions="cfg"/>
+          language="TLC config"/>
+        <fileTypeDetector implementation="com.mayreh.intellij.plugin.tlc.TLCConfigFileType$Detector"/>
         <lang.parserDefinition
           language="TLC config"
           implementationClass="com.mayreh.intellij.plugin.tlc.TLCConfigParserDefinition"/>
