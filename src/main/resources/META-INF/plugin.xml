@@ -48,5 +48,22 @@
         <runLineMarkerContributor
           language="TLA+"
           implementationClass="com.mayreh.intellij.plugin.tlaplus.run.TLCRunLineMarkerContributor"/>
+
+        <!-- TLC config -->
+        <fileType
+          name="TLC config"
+          implementationClass="com.mayreh.intellij.plugin.tlc.TLCConfigFileType"
+          fieldName="INSTANCE"
+          language="TLC config"
+          extensions="cfg"/>
+        <lang.parserDefinition
+          language="TLC config"
+          implementationClass="com.mayreh.intellij.plugin.tlc.TLCConfigParserDefinition"/>
+        <lang.syntaxHighlighterFactory
+          language="TLC config"
+          implementationClass="com.mayreh.intellij.plugin.tlc.TLCConfigSyntaxHighlighterFactory"/>
+        <lang.commenter
+          language="TLC config"
+          implementationClass="com.mayreh.intellij.plugin.tlc.TLCConfigCommenter"/>
     </extensions>
 </idea-plugin>

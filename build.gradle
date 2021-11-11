@@ -90,12 +90,29 @@ task generateTLAplusParser(type: GenerateParser) {
     purgeOldFiles = true
 }
 
+task generateTLCConfigParser(type: GenerateParser) {
+    source = "src/main/grammer/tlc_config.bnf"
+    targetRoot = "src/gen"
+    pathToParser = "/com/mayreh/intellij/plugin/tlc/parser/TLCConfigParser.java"
+    pathToPsiRoot = "/com/mayreh/intellij/plugin/tlc/psi"
+    purgeOldFiles = true
+}
+
+task generateTLCConfigLexer(type: GenerateLexer) {
+    source = "src/main/grammer/tlc_config.flex"
+    targetDir = "src/gen/com/mayreh/intellij/plugin/tlc/lexer"
+    targetClass = "_TLCConfigLexer"
+    purgeOldFiles = true
+}
+
 compileJava.dependsOn(
         prepareLib,
         generateTLAplusLexer,
         generateTLAplusModuleBeginLexer,
         generateTLCErrorTraceLexer,
-        generateTLAplusParser)
+        generateTLAplusParser,
+        generateTLCConfigParser,
+        generateTLCConfigLexer)
 
 tasks.withType(Test) {
     testLogging {

@@ -21,25 +21,25 @@ public class TLAplusSyntaxHighlighter extends SyntaxHighlighterBase {
         return createTextAttributesKey("com.mayreh.tlaplus." + name, key);
     }
 
-    private static final TextAttributesKey STRING = createAttrKey(
+    public static final TextAttributesKey STRING = createAttrKey(
             "String", DefaultLanguageHighlighterColors.STRING);
-    private static final TextAttributesKey NUMBER = createAttrKey(
+    public static final TextAttributesKey NUMBER = createAttrKey(
             "Number", DefaultLanguageHighlighterColors.NUMBER);
-    private static final TextAttributesKey KEYWORD = createAttrKey(
+    public static final TextAttributesKey KEYWORD = createAttrKey(
             "Keyword", DefaultLanguageHighlighterColors.KEYWORD);
-    private static final TextAttributesKey BLOCK_COMMENT = createAttrKey(
+    public static final TextAttributesKey BLOCK_COMMENT = createAttrKey(
             "BlockComment", DefaultLanguageHighlighterColors.BLOCK_COMMENT);
-    private static final TextAttributesKey LINE_COMMENT = createAttrKey(
+    public static final TextAttributesKey LINE_COMMENT = createAttrKey(
             "LineComment", DefaultLanguageHighlighterColors.LINE_COMMENT);
-    private static final TextAttributesKey PARENTHESIS = createAttrKey(
+    public static final TextAttributesKey PARENTHESIS = createAttrKey(
             "Parenthesis", DefaultLanguageHighlighterColors.PARENTHESES);
-    private static final TextAttributesKey BRACES = createAttrKey(
+    public static final TextAttributesKey BRACES = createAttrKey(
             "Braces", DefaultLanguageHighlighterColors.BRACES);
-    private static final TextAttributesKey BRACKETS = createAttrKey(
+    public static final TextAttributesKey BRACKETS = createAttrKey(
             "Brackets", DefaultLanguageHighlighterColors.BRACKETS);
-    private static final TextAttributesKey COMMA = createAttrKey(
+    public static final TextAttributesKey COMMA = createAttrKey(
             "Comma", DefaultLanguageHighlighterColors.COMMA);
-    private static final TextAttributesKey OPERATOR = createAttrKey(
+    public static final TextAttributesKey OPERATOR = createAttrKey(
             "Operator", DefaultLanguageHighlighterColors.OPERATION_SIGN);
 
     @Override

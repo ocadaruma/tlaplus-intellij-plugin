@@ -1,0 +1,105 @@
+{
+    parserClass='com.mayreh.intellij.plugin.tlc.parser.TLCConfigParser'
+    elementTypeHolderClass='com.mayreh.intellij.plugin.tlc.psi.TLCConfigElementTypes'
+
+    elementTypeClass='com.mayreh.intellij.plugin.tlc.psi.TLCConfigElementType'
+    tokenTypeClass='com.mayreh.intellij.plugin.tlc.psi.TLCConfigTokenType'
+
+    psiClassPrefix='TLCConfig'
+    psiImplClassSuffix='Impl'
+    psiPackage='com.mayreh.intellij.plugin.tlc.psi'
+    psiImplPackage='com.mayreh.intellij.plugin.tlc.psi.impl'
+
+    tokens = [
+        COMMENT_LINE       = 'COMMENT_LINE'
+        COMMENT_BLOCK      = 'COMMENT_BLOCK'
+
+        KEYWORD_CONSTANT           = 'CONSTANT'
+        KEYWORD_CONSTANTS          = 'CONSTANTS'
+        KEYWORD_CONSTRAINT         = 'CONSTRAINT'
+        KEYWORD_CONSTRAINTS        = 'CONSTRAINTS'
+        KEYWORD_ACTION_CONSTRAINT  = 'ACTION_CONSTRAINT'
+        KEYWORD_ACTION_CONSTRAINTS = 'ACTION_CONSTRAINTS'
+        KEYWORD_INVARIANT          = 'INVARIANT'
+        KEYWORD_INVARIANTS         = 'INVARIANTS'
+        KEYWORD_INIT               = 'INIT'
+        KEYWORD_NEXT               = 'NEXT'
+        KEYWORD_VIEW               = 'VIEW'
+        KEYWORD_SYMMETRY           = 'SYMMETRY'
+        KEYWORD_SPECIFICATION      = 'SPECIFICATION'
+        KEYWORD_PROPERTY           = 'PROPERTY'
+        KEYWORD_PROPERTIES         = 'PROPERTIES'
+        KEYWORD_ALIAS              = 'ALIAS'
+        KEYWORD_POSTCONDITION      = 'POSTCONDITION'
+        KEYWORD_CHECK_DEADLOCK     = 'CHECK_DEADLOCK'
+
+        LITERAL_NUMBER     = 'number'
+        LITERAL_STRING     = 'string'
+        LITERAL_TRUE       = 'TRUE'
+        LITERAL_FALSE      = 'FALSE'
+
+        IDENTIFIER         = 'identifier'
+
+        EQ    = '='
+        SUBST = '<-'
+        COMMA = ','
+        LBRACE           = '{'
+        RBRACE           = '}'
+    ]
+}
+
+config ::= statement+
+
+statement ::= singular_statement
+            | check_deadlock_statement
+            | plural_statement
+            | constant_decl
+
+singular_statement ::= ('SPECIFICATION'
+                      | 'INIT'
+                      | 'NEXT'
+                      | 'VIEW'
+                      | 'SYMMETRY'
+                      | 'ALIAS'
+                      | 'POSTCONDITION') 'identifier'
+
+check_deadlock_statement ::= 'CHECK_DEADLOCK' ('TRUE' | 'FALSE')
+
+plural_statement ::= ('CONSTRAINT'
+                    | 'CONSTRAINTS'
+                    | 'ACTION_CONSTRAINT'
+                    | 'ACTION_CONSTRAINTS'
+                    | 'INVARIANT'
+                    | 'INVARIANTS'
+                    | 'PROPERTY'
+                    | 'PROPERTIES') 'identifier'*
+
+constant_decl ::= ('CONSTANT' | 'CONSTANTS') (substitution | assignment)*
+
+substitution ::= 'identifier' '<-' ('identifier' | reserved_keywords)
+
+assignment ::= 'identifier' '=' assignment_value
+
+private assignment_value ::= 'identifier'
+                           | reserved_keywords
+                           | 'number'
+                           | 'string'
+                           | 'TRUE'
+                           | 'FALSE'
+                           | '{' (assignment_value (',' assignment_value)*)? '}'
+
+private reserved_keywords ::= 'SPECIFICATION'
+                            | 'INIT'
+                            | 'NEXT'
+                            | 'VIEW'
+                            | 'SYMMETRY'
+                            | 'CONSTRAINT'
+                            | 'CONSTRAINTS'
+                            | 'ACTION_CONSTRAINT'
+                            | 'ACTION_CONSTRAINTS'
+                            | 'INVARIANT'
+                            | 'INVARIANTS'
+                            | 'PROPERTY'
+                            | 'PROPERTIES'
+                            | 'CONSTANT'
+                            | 'CONSTANTS'
