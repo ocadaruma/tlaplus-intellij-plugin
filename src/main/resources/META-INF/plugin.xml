@@ -65,5 +65,6 @@
         <lang.commenter
           language="TLC config"
           implementationClass="com.mayreh.intellij.plugin.tlc.TLCConfigCommenter"/>
+        <stepsBeforeRunProvider implementation="com.mayreh.intellij.plugin.tlaplus.run.TLCBeforeRunTaskProvider"/>
     </extensions>
 </idea-plugin>

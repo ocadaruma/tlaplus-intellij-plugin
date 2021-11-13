@@ -25,7 +25,6 @@ import com.intellij.execution.util.JavaParametersUtil;
 import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.text.StringUtil;
 import com.mayreh.intellij.plugin.tlaplus.run.ui.TLCOutputConsoleView;
 import com.mayreh.intellij.plugin.tlaplus.run.ui.TLCSettingsEditor;
 import com.mayreh.intellij.plugin.tlaplus.run.ui.TLCTestConsoleProperties;
@@ -60,14 +59,6 @@ public class TLCRunConfiguration extends LocatableConfigurationBase<TLCRunConfig
         options().setFile(value);
     }
 
-    public String getConfigFile() {
-        return options().getConfigFile();
-    }
-
-    public void setConfigFile(String value) {
-        options().setConfigFile(value);
-    }
-
     @Override
     public @NotNull SettingsEditor<? extends RunConfiguration> getConfigurationEditor() {
         return new TLCSettingsEditor();
@@ -95,9 +86,6 @@ public class TLCRunConfiguration extends LocatableConfigurationBase<TLCRunConfig
                 args.add("-tool");
                 args.add("-modelcheck");
                 args.add("-coverage", "1");
-                if (StringUtil.isNotEmpty(getConfigFile())) {
-                    args.add("-config", getConfigFile());
-                }
                 args.add(getFile());
                 return params;
             }

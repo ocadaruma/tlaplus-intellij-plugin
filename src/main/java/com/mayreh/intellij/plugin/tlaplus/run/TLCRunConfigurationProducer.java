@@ -1,5 +1,6 @@
 package com.mayreh.intellij.plugin.tlaplus.run;
 
+import java.util.Collections;
 import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
@@ -13,6 +14,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiManager;
 import com.mayreh.intellij.plugin.tlaplus.TLAplusFile;
+import com.mayreh.intellij.plugin.tlaplus.run.TLCBeforeRunTaskProvider.TLCBeforeRunTask;
 
 public class TLCRunConfigurationProducer extends LazyRunConfigurationProducer<TLCRunConfiguration> {
     @NotNull
@@ -30,6 +32,7 @@ public class TLCRunConfigurationProducer extends LazyRunConfigurationProducer<TL
             configuration.setFile(file.getCanonicalPath());
             configuration.setWorkingDirectory(file.toNioPath().getParent().toString());
             configuration.setName(file.getName());
+            configuration.setBeforeRunTasks(Collections.singletonList(new TLCBeforeRunTask()));
             return true;
         }
         return false;

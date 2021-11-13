@@ -17,20 +17,17 @@ public class TLCSettingsEditor extends SettingsEditor<TLCRunConfiguration> {
     private JPanel panel;
     private LabeledComponent<TextFieldWithBrowseButton> workingDirectoryField;
     private LabeledComponent<TextFieldWithBrowseButton> fileField;
-    private LabeledComponent<TextFieldWithBrowseButton> configFileField;
 
     @Override
     protected void resetEditorFrom(@NotNull TLCRunConfiguration s) {
         workingDirectoryField.getComponent().setText(s.getWorkingDirectory());
         fileField.getComponent().setText(s.getFile());
-        configFileField.getComponent().setText(s.getConfigFile());
     }
 
     @Override
     protected void applyEditorTo(@NotNull TLCRunConfiguration s) throws ConfigurationException {
         s.setWorkingDirectory(workingDirectoryField.getComponent().getText());
         s.setFile(fileField.getComponent().getText());
-        s.setConfigFile(configFileField.getComponent().getText());
     }
 
     @Override
@@ -41,14 +38,11 @@ public class TLCSettingsEditor extends SettingsEditor<TLCRunConfiguration> {
     private void createUIComponents() {
         workingDirectoryField = new LabeledComponent<>();
         fileField = new LabeledComponent<>();
-        configFileField = new LabeledComponent<>();
 
         workingDirectoryField.setComponent(fileChooseComponent(
                 FileChooserDescriptorFactory.createSingleFolderDescriptor()));
         fileField.setComponent(fileChooseComponent(
                 FileChooserDescriptorFactory.createSingleFileDescriptor("tla")));
-        configFileField.setComponent(fileChooseComponent(
-                FileChooserDescriptorFactory.createSingleFileDescriptor("cfg")));
     }
 
     private static TextFieldWithBrowseButton fileChooseComponent(FileChooserDescriptor chooser) {
