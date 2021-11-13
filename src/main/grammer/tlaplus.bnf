@@ -372,12 +372,22 @@ op_decl ::= anon_infix_op
           | clear_indent 'identifier' clear_indent '(' <<comma_list (clear_indent '_')>> clear_indent ')'
           | clear_indent 'identifier'
 
-variable_decl ::= clear_indent ('VARIABLE' | 'VARIABLES') <<comma_list 'identifier'>>
+variable_decl ::= clear_indent ('VARIABLE' | 'VARIABLES') <<comma_list variable_name>>
+variable_name ::= 'identifier'
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.impl.TLAplusNamedElementImpl'
+}
 
 constant_decl ::= clear_indent ('CONSTANT' | 'CONSTANTS') <<comma_list op_decl>>
 
-nonfix_lhs ::= clear_indent 'identifier' (
+nonfix_lhs ::= clear_indent nonfix_lhs_name (
    clear_indent '(' <<comma_list (op_decl | (clear_indent 'identifier'))>> clear_indent ')')?
+nonfix_lhs_name ::= 'identifier'
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.impl.TLAplusNamedElementImpl'
+}
 
 prefix_op_lhs ::= clear_indent prefix_op clear_indent 'identifier'
 
@@ -393,8 +403,13 @@ op_definition ::= (infix_op_lhs
                  | postfix_op_lhs
                  | nonfix_lhs) clear_indent '==' expr
 
-func_definition ::= clear_indent 'identifier'
+func_definition ::= clear_indent func_name
     clear_indent '[' <<comma_list quantifier_bound>> clear_indent ']' clear_indent '==' expr
+func_name ::= 'identifier'
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.impl.TLAplusNamedElementImpl'
+}
 
 private quantifier_bound ::= (clear_indent '<<' <<comma_list (clear_indent 'identifier')>>
     clear_indent '>>' | <<comma_list (clear_indent 'identifier')>>) clear_indent '\in' expr
@@ -409,15 +424,14 @@ private substitution ::= (clear_indent 'identifier'
                         | infix_op_outer
                         | postfix_op) clear_indent '<-' op_suite
 
-private argument ::= expr
-                   | general_prefix_op
-                   | general_infix_op
-                   | general_postfix_op
-
 instance_prefix ::= (clear_indent 'identifier' (
     clear_indent '(' <<comma_list expr>> clear_indent ')')? clear_indent '!')+
 
-private general_identifier ::= instance_prefix? clear_indent 'identifier'
+private general_identifier ::= instance_prefix? clear_indent local_identifier
+local_identifier ::= 'identifier' {
+  implements = "com.mayreh.intellij.plugin.tlaplus.psi.TLAplusReferenceElement"
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.impl.TLAplusLocalIdentifierImplMixin'
+}
 
 private general_prefix_op ::= instance_prefix? prefix_op
 
