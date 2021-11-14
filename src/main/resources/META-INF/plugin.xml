@@ -50,12 +50,14 @@
           implementationClass="com.mayreh.intellij.plugin.tlaplus.run.TLCRunLineMarkerContributor"/>
 
         <!-- TLC config -->
+        <!-- we specify order explicitly because some fileTypes (e.g. TextMate) may detect -->
+        <!-- tlc config as its file type falsely because of iteration-order in FileTypeManagerImpl. -->
         <fileType
           name="TLC config"
           implementationClass="com.mayreh.intellij.plugin.tlc.TLCConfigFileType"
           fieldName="INSTANCE"
-          language="TLC config"/>
-        <fileTypeDetector implementation="com.mayreh.intellij.plugin.tlc.TLCConfigFileType$Detector"/>
+          language="TLC config"
+          order="first"/>
         <lang.parserDefinition
           language="TLC config"
           implementationClass="com.mayreh.intellij.plugin.tlc.TLCConfigParserDefinition"/>
