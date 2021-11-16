@@ -3,10 +3,10 @@ package com.mayreh.intellij.plugin.tlaplus.psi.ext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import com.intellij.extapi.psi.ASTWrapperPsiElement;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
-import com.intellij.util.IncorrectOperationException;
+import com.intellij.psi.search.LocalSearchScope;
+import com.intellij.psi.search.SearchScope;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPsiFactory;
@@ -40,5 +40,15 @@ public abstract class TLAplusNamedElementImpl extends TLAplusElementImpl impleme
     public String getName() {
         PsiElement identifier = getNameIdentifier();
         return identifier != null ? identifier.getText() : super.getName();
+    }
+
+    @Override
+    public @NotNull SearchScope getUseScope() {
+        if (getContext() != null) {
+            if (getContext().getContext() != null) {
+                return new LocalSearchScope(getContext().getContext());
+            }
+        }
+        return super.getUseScope();
     }
 }

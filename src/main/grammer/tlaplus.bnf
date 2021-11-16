@@ -392,8 +392,7 @@ variable_name ::= 'identifier'
 
 constant_decl ::= clear_indent ('CONSTANT' | 'CONSTANTS') <<comma_list op_decl>>
 
-nonfix_lhs ::= clear_indent nonfix_lhs_name (
-   clear_indent '(' <<comma_list op_decl>> clear_indent ')')?
+nonfix_lhs ::= clear_indent nonfix_lhs_name (clear_indent '(' <<comma_list op_decl>> clear_indent ')')?
 
 nonfix_lhs_name ::= 'identifier'
 {

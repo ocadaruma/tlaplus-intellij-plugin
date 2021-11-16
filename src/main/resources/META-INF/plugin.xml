@@ -51,6 +51,9 @@
         <lang.findUsagesProvider
           language="TLA+"
           implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusFindUsagesProvider"/>
+        <lang.refactoringSupport
+          language="TLA+"
+          implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusRefactoringSupportProvider"/>
 
         <!-- TLC config -->
         <!-- we specify order explicitly because some fileTypes (e.g. TextMate) may detect -->
