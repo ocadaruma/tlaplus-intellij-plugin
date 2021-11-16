@@ -48,6 +48,9 @@
         <runLineMarkerContributor
           language="TLA+"
           implementationClass="com.mayreh.intellij.plugin.tlaplus.run.TLCRunLineMarkerContributor"/>
+        <lang.findUsagesProvider
+          language="TLA+"
+          implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusFindUsagesProvider"/>
 
         <!-- TLC config -->
         <!-- we specify order explicitly because some fileTypes (e.g. TextMate) may detect -->
