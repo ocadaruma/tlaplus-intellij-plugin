@@ -393,13 +393,7 @@ variable_name ::= 'identifier'
 constant_decl ::= clear_indent ('CONSTANT' | 'CONSTANTS') <<comma_list op_decl>>
 
 nonfix_lhs ::= clear_indent nonfix_lhs_name (
-   clear_indent '(' <<comma_list ((clear_indent op_arg_name) | op_decl)>> clear_indent ')')?
-
-op_arg_name ::= 'identifier'
-{
-  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
-  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNamedElementImpl'
-}
+   clear_indent '(' <<comma_list op_decl>> clear_indent ')')?
 
 nonfix_lhs_name ::= 'identifier'
 {
