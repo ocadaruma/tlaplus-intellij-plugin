@@ -1,4 +1,4 @@
-package com.mayreh.intellij.plugin.tlaplus.psi.impl;
+package com.mayreh.intellij.plugin.tlaplus.psi.ext;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -11,8 +11,8 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPsiFactory;
 
-public abstract class TLAplusNamedElementImpl extends ASTWrapperPsiElement implements TLAplusNamedElement {
-    public TLAplusNamedElementImpl(@NotNull ASTNode node) {
+public abstract class TLAplusNamedElementImpl extends TLAplusElementImpl implements TLAplusNamedElement {
+    protected TLAplusNamedElementImpl(@NotNull ASTNode node) {
         super(node);
     }
 
@@ -22,7 +22,7 @@ public abstract class TLAplusNamedElementImpl extends ASTWrapperPsiElement imple
     }
 
     @Override
-    public PsiElement setName(@NotNull String name) throws IncorrectOperationException {
+    public PsiElement setName(@NotNull String name) {
         PsiElement identifier = getNameIdentifier();
         if (identifier != null) {
             identifier.replace(new TLAplusPsiFactory(getProject()).createIdentifier(name));

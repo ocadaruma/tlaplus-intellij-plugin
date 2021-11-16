@@ -1,4 +1,4 @@
-package com.mayreh.intellij.plugin.tlaplus.psi;
+package com.mayreh.intellij.plugin.tlaplus.psi.ext;
 
 import org.jetbrains.annotations.Nullable;
 
