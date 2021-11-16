@@ -208,6 +208,8 @@ root ::= module
 module ::= module_header ('EXTENDS' <<comma_list 'identifier'>>)? unit* clear_indent '===='
 {
   pin = 1
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNameContext'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusModuleImplMixin'
 }
 
 private meta comma_list ::= <<param>>(clear_indent ',' <<param>>)*
@@ -418,9 +420,18 @@ op_definition ::= (infix_op_lhs
                  | prefix_op_lhs
                  | postfix_op_lhs
                  | nonfix_lhs) clear_indent '==' expr
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNameContext'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusOpDefinitionImplMixin'
+}
 
 func_definition ::= clear_indent func_name
     clear_indent '[' <<comma_list quantifier_bound>> clear_indent ']' clear_indent '==' expr
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNameContext'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusFuncDefinitionImplMixin'
+}
+
 func_name ::= 'identifier'
 {
   implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
@@ -486,11 +497,15 @@ quantifier_expr ::= clear_indent ('\A' | '\E') (<<comma_list quantifier_bound>>
                                               | <<comma_list (clear_indent 'identifier')>>) clear_indent ':' expr
 {
   pin = 2
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNameContext'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusQuantifierExprImplMixin'
 }
 
 choose_expr ::= clear_indent 'CHOOSE' identifier_or_tuple ((clear_indent '\in' expr)? clear_indent ':' expr)
 {
   pin = 2
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNameContext'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusChooseExprImplMixin'
 }
 
 set_expr ::= clear_indent '{' <<comma_list expr>>? clear_indent '}'
@@ -499,9 +514,17 @@ set_expr ::= clear_indent '{' <<comma_list expr>>? clear_indent '}'
 
 // e.g. { x : x \in some_set /\ x /= 1 }
 set_comprehension ::= clear_indent '{' identifier_or_tuple clear_indent '\in' expr clear_indent ':' expr clear_indent '}'
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNameContext'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusSetComprehensionImplMixin'
+}
 // e.g. { x + 1 : x \in some_set }
 // in this expression, variable binding appears right to the variable-use
 set_comprehension_map ::= clear_indent '{' expr clear_indent ':' <<comma_list quantifier_bound>> clear_indent '}'
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNameContext'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusSetComprehensionMapImplMixin'
+}
 
 apply_argument_expr ::= expr clear_indent '[' <<comma_list expr>> clear_indent ']'
 
@@ -544,6 +567,8 @@ case_expr ::= clear_indent 'CASE' case_arm (clear_indent '[]' case_arm)*
 let_expr ::= clear_indent 'LET' (op_definition | func_definition | module_definition)+ clear_indent 'IN' expr
 {
   pin = 2
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNameContext'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusLetExprImplMixin'
 }
 
 private junc_begin ::= 'JUNCTION_BEGIN' {
