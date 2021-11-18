@@ -12,7 +12,7 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement;
  * Interface for elements that can be considered as "context" (scope).
  * e.g. Module, LET expression,...
  */
-public interface TLAplusNameContext extends PsiElement {
+public interface TLAplusNameContext extends TLAplusElement {
     /**
      * Find the definition of the reference from this context.
      * This method is intended and should be implemented to find the definition from
