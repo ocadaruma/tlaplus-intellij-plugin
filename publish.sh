@@ -8,7 +8,7 @@ set -eu
 cd $(dirname $0)
 
 # Commit released version in gradle.properties and create a tag
-bump_version() {
+commit_version() {
     new_version=$1
 
     sed -i "" -e "s/^version=.*$/version=$new_version/" gradle.properties
@@ -35,5 +35,5 @@ if [ $(git tag | grep "^v$version\$" | wc -l) -ne 0 ]; then
 fi
 
 echo "Publishing $version"
-./gradlew -P snapshot=false -P version="$version" clean publishPlugin
+#./gradlew -P snapshot=false -P version="$version" clean publishPlugin
 commit_version $version
