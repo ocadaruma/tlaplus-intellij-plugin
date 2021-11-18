@@ -205,11 +205,17 @@
 }
 
 root ::= module
-module ::= module_header ('EXTENDS' <<comma_list 'identifier'>>)? unit* clear_indent '===='
+module ::= module_header ('EXTENDS' <<comma_list module_ref>>)? unit* clear_indent '===='
 {
   pin = 1
-  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNameContext'
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusModuleContext'
   mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusModuleImplMixin'
+}
+
+module_ref ::= 'identifier'
+{
+  implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusReferenceElement"
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusModuleRefImplMixin'
 }
 
 private meta comma_list ::= <<param>>(clear_indent ',' <<param>>)*
@@ -434,7 +440,7 @@ func_name ::= 'identifier'
 private quantifier_bound ::= (clear_indent '<<' <<comma_list (clear_indent bound_name)>>
     clear_indent '>>' | <<comma_list (clear_indent bound_name)>>) clear_indent '\in' expr
 
-instance ::= clear_indent 'INSTANCE' clear_indent 'identifier' (clear_indent 'WITH' <<comma_list substitution>>)?
+instance ::= clear_indent 'INSTANCE' clear_indent module_ref (clear_indent 'WITH' <<comma_list substitution>>)?
 {
   pin = 2
 }
@@ -444,20 +450,21 @@ private substitution ::= (clear_indent 'identifier'
                         | infix_op_outer
                         | postfix_op) clear_indent '<-' op_suite
 
-instance_prefix ::= (clear_indent 'identifier' (
+instance_prefix ::= (clear_indent module_ref (
     clear_indent '(' <<comma_list expr>> clear_indent ')')? clear_indent '!')+
 
-private general_identifier ::= instance_prefix? clear_indent unqualified_ident
+general_identifier ::= instance_prefix? clear_indent unqualified_ident
+
 unqualified_ident ::= 'identifier' {
   implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusReferenceElement"
   mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusUnqualifiedIdentImplMixin'
 }
 
-private general_prefix_op ::= instance_prefix? prefix_op
+general_prefix_op ::= instance_prefix? prefix_op
 
-private general_infix_op ::= instance_prefix? infix_op_outer
+general_infix_op ::= instance_prefix? infix_op_outer
 
-private general_postfix_op ::= instance_prefix? postfix_op
+general_postfix_op ::= instance_prefix? postfix_op
 
 module_definition ::= nonfix_lhs clear_indent '==' instance
 

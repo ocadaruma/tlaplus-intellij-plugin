@@ -14,9 +14,9 @@ public abstract class TLAplusQuantifierExprImplMixin extends TLAplusElementImpl 
     }
 
     @Override
-    public @Nullable TLAplusNamedElement findDefinition(TLAplusReferenceElement element) {
+    public @Nullable TLAplusNamedElement findLocalDefinition(TLAplusReferenceElement element) {
         for (TLAplusBoundName boundName : getBoundNameList()) {
-            if (isDefinitionOf(boundName, element, true)) {
+            if (isLocalDefinitionOf(boundName, element, true)) {
                 return boundName;
             }
         }

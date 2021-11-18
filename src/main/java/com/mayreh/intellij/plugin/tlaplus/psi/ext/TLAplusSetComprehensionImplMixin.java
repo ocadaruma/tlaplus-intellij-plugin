@@ -15,9 +15,9 @@ public abstract class TLAplusSetComprehensionImplMixin
     }
 
     @Override
-    public @Nullable TLAplusNamedElement findDefinition(TLAplusReferenceElement element) {
+    public @Nullable TLAplusNamedElement findLocalDefinition(TLAplusReferenceElement element) {
         for (TLAplusBoundName boundName : getBoundNameList()) {
-            if (isDefinitionOf(boundName, element, false)) {
+            if (isLocalDefinitionOf(boundName, element, false)) {
                 return boundName;
             }
         }

@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import com.intellij.lang.ASTNode;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusFuncDefinition;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusLetExpr;
+import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModuleDefinition;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusOpDefinition;
 
@@ -15,17 +16,22 @@ public abstract class TLAplusLetExprImplMixin extends TLAplusElementImpl impleme
     }
 
     @Override
-    public @Nullable TLAplusNamedElement findDefinition(TLAplusReferenceElement element) {
+    public @Nullable TLAplusNamedElement findLocalDefinition(TLAplusReferenceElement element) {
         for (TLAplusOpDefinition opDef : getOpDefinitionList()) {
             if (opDef.getNonfixLhs() != null) {
-                if (isDefinitionOf(opDef.getNonfixLhs().getNonfixLhsName(), element, true)) {
+                if (isLocalDefinitionOf(opDef.getNonfixLhs().getNonfixLhsName(), element, true)) {
                     return opDef.getNonfixLhs().getNonfixLhsName();
                 }
             }
         }
         for (TLAplusFuncDefinition funcDef : getFuncDefinitionList()) {
-            if (isDefinitionOf(funcDef.getFuncName(), element, true)) {
+            if (isLocalDefinitionOf(funcDef.getFuncName(), element, true)) {
                 return funcDef.getFuncName();
+            }
+        }
+        for (TLAplusModuleDefinition moduleDef : getModuleDefinitionList()) {
+            if (isLocalDefinitionOf(moduleDef.getNonfixLhs().getNonfixLhsName(), element, true)) {
+                return moduleDef.getNonfixLhs().getNonfixLhsName();
             }
         }
         return null;

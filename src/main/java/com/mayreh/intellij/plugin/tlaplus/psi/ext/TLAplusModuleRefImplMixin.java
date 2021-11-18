@@ -4,10 +4,10 @@ import org.jetbrains.annotations.NotNull;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiReference;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusUnqualifiedIdent;
+import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModuleRef;
 
-public abstract class TLAplusUnqualifiedIdentImplMixin extends TLAplusElementImpl implements TLAplusUnqualifiedIdent {
-    protected TLAplusUnqualifiedIdentImplMixin(@NotNull ASTNode node) {
+public abstract class TLAplusModuleRefImplMixin extends TLAplusElementImpl implements TLAplusModuleRef {
+    protected TLAplusModuleRefImplMixin(@NotNull ASTNode node) {
         super(node);
     }
 

@@ -42,6 +42,10 @@ public abstract class TLAplusNamedElementImpl extends TLAplusElementImpl impleme
         return identifier != null ? identifier.getText() : super.getName();
     }
 
+    /**
+     * Overriding getUseScope is mandatory to make in-place refactoring works.
+     * refs: https://intellij-support.jetbrains.com/hc/en-us/community/posts/360006918740-How-do-I-enable-in-place-rename-Renaming-via-dialog-works-fine-
+     */
     @Override
     public @NotNull SearchScope getUseScope() {
         if (getContext() != null) {

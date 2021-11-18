@@ -14,10 +14,10 @@ public abstract class TLAplusOpDefinitionImplMixin extends TLAplusElementImpl im
     }
 
     @Override
-    public @Nullable TLAplusNamedElement findDefinition(TLAplusReferenceElement element) {
+    public @Nullable TLAplusNamedElement findLocalDefinition(TLAplusReferenceElement element) {
         if (getNonfixLhs() != null) {
             for (TLAplusOpDecl decl : getNonfixLhs().getOpDeclList()) {
-                if (decl.getOpName() != null && isDefinitionOf(decl.getOpName(), element, true)) {
+                if (decl.getOpName() != null && isLocalDefinitionOf(decl.getOpName(), element, true)) {
                     return decl.getOpName();
                 }
             }
