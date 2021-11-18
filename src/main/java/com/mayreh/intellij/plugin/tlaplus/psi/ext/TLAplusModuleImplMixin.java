@@ -80,6 +80,22 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
 
     @Override
     public @Nullable TLAplusNamedElement findPublicDefinition(String referenceName) {
+        for (TLAplusVariableDecl decl : getVariableDeclList()) {
+            for (TLAplusVariableName variableName : decl.getVariableNameList()) {
+                if (findPublic(decl, variableName, referenceName)) {
+                    return variableName;
+                }
+            }
+        }
+        for (TLAplusConstantDecl decl : getConstantDeclList()) {
+            for (TLAplusOpDecl opDecl : decl.getOpDeclList()) {
+                if (opDecl.getOpName() != null) {
+                    if (findPublic(decl, opDecl.getOpName(), referenceName)) {
+                        return opDecl.getOpName();
+                    }
+                }
+            }
+        }
         for (TLAplusOpDefinition opDef : getOpDefinitionList()) {
             if (opDef.getNonfixLhs() != null) {
                 if (findPublic(opDef, opDef.getNonfixLhs().getNonfixLhsName(), referenceName)) {
@@ -95,6 +111,44 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
         for (TLAplusModuleDefinition moduleDef : getModuleDefinitionList()) {
             if (findPublic(moduleDef, moduleDef.getNonfixLhs().getNonfixLhsName(), referenceName)) {
                 return moduleDef.getNonfixLhs().getNonfixLhsName();
+            }
+        }
+        // Find exported definitions by EXTENDS
+        for (TLAplusModuleRef extend : getModuleRefList()) {
+            String moduleName = extend.getReferenceName();
+            TLAplusModule module = findModule(moduleName);
+            if (module != null) {
+                TLAplusNamedElement definition = module.findPublicDefinition(referenceName);
+                if (definition != null) {
+                    return definition;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public @Nullable TLAplusModule resolveModulePublic(String moduleName) {
+        for (TLAplusModuleDefinition moduleDef : getModuleDefinitionList()) {
+            if (findPublic(moduleDef, moduleDef.getNonfixLhs().getNonfixLhsName(), moduleName)) {
+                TLAplusModuleRef resolvedModuleRef = moduleDef.getInstance().getModuleRef();
+                if (resolvedModuleRef != null) {
+                    TLAplusModule module = findModule(resolvedModuleRef.getReferenceName());
+                    if (module != null) {
+                        return module;
+                    }
+                }
+            }
+        }
+        // Find exported definitions by EXTENDS
+        for (TLAplusModuleRef extend : getModuleRefList()) {
+            String name = extend.getReferenceName();
+            TLAplusModule module = findModule(name);
+            if (module != null) {
+                TLAplusModule resolvedModule = module.resolveModulePublic(moduleName);
+                if (resolvedModule != null) {
+                    return resolvedModule;
+                }
             }
         }
         return null;

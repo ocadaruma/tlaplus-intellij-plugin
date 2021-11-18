@@ -362,7 +362,7 @@ private op_suite ::= prefix_op | infix_op | postfix_op | lambda_expr | expr
 
 op_args ::= clear_indent '(' <<comma_list op_suite>> clear_indent ')'
 
-private no_op_extension ::= clear_indent 'identifier' op_args? ('!' no_op_extension)?
+private no_op_extension ::= clear_indent unqualified_ident op_args? ('!' no_op_extension)?
 
 private reduced_expr ::= no_op_extension
                        | paren_expr
