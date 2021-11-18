@@ -1,8 +1,13 @@
 package com.mayreh.intellij.plugin.tlaplus.parser;
 
-import com.mayreh.intellij.plugin.tlaplus.TLAplusParserTestCaseBase;
+import com.mayreh.intellij.plugin.ParserTestCaseBase;
+import com.mayreh.intellij.plugin.tlaplus.TLAplusParserDefinition;
 
-public class TLAplusParserTest extends TLAplusParserTestCaseBase {
+public class TLAplusParserTest extends ParserTestCaseBase {
+    public TLAplusParserTest() {
+        super("tlaplus/parser/fixtures", "tla", new TLAplusParserDefinition());
+    }
+
     public void test_minimal() {
         doTest();
     }

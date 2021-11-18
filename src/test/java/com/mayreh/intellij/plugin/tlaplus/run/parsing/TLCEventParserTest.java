@@ -26,9 +26,9 @@ public class TLCEventParserTest extends BasePlatformTestCase {
             }
         };
 
-        String output = TestUtils.resourceToString("tlc/fixtures/" + fileName + ".out");
+        String output = TestUtils.resourceToString("tlc/eventparsing/fixtures/" + fileName + ".out");
         output.lines().forEach(parserOuter);
-        String expected = TestUtils.resourceToString("tlc/fixtures/" + fileName + ".txt").trim();
+        String expected = TestUtils.resourceToString("tlc/eventparsing/fixtures/" + fileName + ".txt").trim();
         Assert.assertEquals(expected, events.stream().map(TLCEvent::toString).collect(Collectors.joining("\n")));
     }
 }

@@ -13,7 +13,7 @@ public interface TLAplusModuleContext extends TLAplusNameContext {
     @Nullable TLAplusNamedElement findPublicDefinition(String referenceName);
 
     /**
-     * Find the module from search path (i.e. same directory) by module name.
+     * Find the module from search path (i.e. same directory or standard modules) by module name.
      */
     @Nullable TLAplusModule findModule(String moduleName);
 

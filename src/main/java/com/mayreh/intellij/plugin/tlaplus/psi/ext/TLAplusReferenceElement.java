@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
 
-public interface TLAplusReferenceElement extends PsiElement {
+public interface TLAplusReferenceElement extends TLAplusElement {
     /**
      * Identifier token of this reference
      */

@@ -96,7 +96,7 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
     public @Nullable TLAplusNamedElement findPublicDefinition(String referenceName) {
         for (TLAplusVariableDecl decl : getVariableDeclList()) {
             for (TLAplusVariableName variableName : decl.getVariableNameList()) {
-                if (findPublic(decl, variableName, referenceName)) {
+                if (isPublicDefinitionOf(decl, variableName, referenceName)) {
                     return variableName;
                 }
             }
@@ -104,7 +104,7 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
         for (TLAplusConstantDecl decl : getConstantDeclList()) {
             for (TLAplusOpDecl opDecl : decl.getOpDeclList()) {
                 if (opDecl.getOpName() != null) {
-                    if (findPublic(decl, opDecl.getOpName(), referenceName)) {
+                    if (isPublicDefinitionOf(decl, opDecl.getOpName(), referenceName)) {
                         return opDecl.getOpName();
                     }
                 }
@@ -112,18 +112,18 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
         }
         for (TLAplusOpDefinition opDef : getOpDefinitionList()) {
             if (opDef.getNonfixLhs() != null) {
-                if (findPublic(opDef, opDef.getNonfixLhs().getNonfixLhsName(), referenceName)) {
+                if (isPublicDefinitionOf(opDef, opDef.getNonfixLhs().getNonfixLhsName(), referenceName)) {
                     return opDef.getNonfixLhs().getNonfixLhsName();
                 }
             }
         }
         for (TLAplusFuncDefinition funcDef : getFuncDefinitionList()) {
-            if (findPublic(funcDef, funcDef.getFuncName(), referenceName)) {
+            if (isPublicDefinitionOf(funcDef, funcDef.getFuncName(), referenceName)) {
                 return funcDef.getFuncName();
             }
         }
         for (TLAplusModuleDefinition moduleDef : getModuleDefinitionList()) {
-            if (findPublic(moduleDef, moduleDef.getNonfixLhs().getNonfixLhsName(), referenceName)) {
+            if (isPublicDefinitionOf(moduleDef, moduleDef.getNonfixLhs().getNonfixLhsName(), referenceName)) {
                 return moduleDef.getNonfixLhs().getNonfixLhsName();
             }
         }
@@ -158,7 +158,7 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
     @Override
     public @Nullable TLAplusModule resolveModulePublic(String moduleName) {
         for (TLAplusModuleDefinition moduleDef : getModuleDefinitionList()) {
-            if (findPublic(moduleDef, moduleDef.getNonfixLhs().getNonfixLhsName(), moduleName)) {
+            if (isPublicDefinitionOf(moduleDef, moduleDef.getNonfixLhs().getNonfixLhsName(), moduleName)) {
                 TLAplusModuleRef resolvedModuleRef = moduleDef.getInstance().getModuleRef();
                 if (resolvedModuleRef != null) {
                     TLAplusModule module = findModule(resolvedModuleRef.getReferenceName());
@@ -213,11 +213,11 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
         return PsiTreeUtil.findChildOfType(moduleFile, TLAplusModule.class);
     }
 
-    private static boolean findPublic(
-            PsiElement maybeLocalDefinition,
+    private static boolean isPublicDefinitionOf(
+            PsiElement container,
             TLAplusNamedElement name,
             String referenceName) {
-        if (isLocal(maybeLocalDefinition)) {
+        if (isLocal(container)) {
             return false;
         }
         return Objects.equals(name.getName(), referenceName);

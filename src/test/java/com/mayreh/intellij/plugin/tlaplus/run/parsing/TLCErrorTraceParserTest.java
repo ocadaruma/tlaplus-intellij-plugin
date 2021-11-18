@@ -21,7 +21,7 @@ import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.T
 public class TLCErrorTraceParserTest extends BasePlatformTestCase {
     public void testBasic() {
         Optional<ErrorTraceEvent> result = new TLCErrorTraceParser(getProject()).parse(
-                TestUtils.resourceToString("tlc/fixtures/errortrace/basic.out")
+                TestUtils.resourceToString("tlc/errortrace/fixtures/basic.out")
                          .lines().collect(toList()));
         Assert.assertEquals(new SimpleErrorTrace(
                 2,

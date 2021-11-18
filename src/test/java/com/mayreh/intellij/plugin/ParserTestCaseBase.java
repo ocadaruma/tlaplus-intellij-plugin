@@ -1,13 +1,18 @@
-package com.mayreh.intellij.plugin.tlaplus;
+package com.mayreh.intellij.plugin;
+
+import java.io.IOException;
 
 import org.jetbrains.annotations.NotNull;
 
+import com.intellij.lang.ParserDefinition;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.testFramework.ParsingTestCase;
 
-public abstract class TLAplusParserTestCaseBase extends ParsingTestCase {
-    protected TLAplusParserTestCaseBase() {
-        super("parser/fixtures", "tla", new TLAplusParserDefinition());
+public abstract class ParserTestCaseBase extends ParsingTestCase {
+    protected ParserTestCaseBase(String testDirResourcePath,
+                                 String extension,
+                                 ParserDefinition parserDefinition) {
+        super(testDirResourcePath, extension, parserDefinition);
     }
 
     @Override

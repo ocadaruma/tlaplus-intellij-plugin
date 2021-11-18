@@ -1,9 +1,13 @@
 package com.mayreh.intellij.plugin.tlaplus.lexer;
 
 import com.intellij.lexer.Lexer;
-import com.mayreh.intellij.plugin.tlaplus.TLAplusLexerTestCaseBase;
+import com.mayreh.intellij.plugin.LexerTestCaseBase;
 
-public class TLAplusLexerTest extends TLAplusLexerTestCaseBase {
+public class TLAplusLexerTest extends LexerTestCaseBase {
+    public TLAplusLexerTest() {
+        super("tlaplus/lexer/fixtures", "tla");
+    }
+
     @Override
     protected Lexer createLexer() {
         return new TLAplusLexer(false);

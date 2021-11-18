@@ -46,6 +46,8 @@
         LBRACE           = '{'
         RBRACE           = '}'
     ]
+
+    generateTokenAccessors=true
 }
 
 config ::= statement+

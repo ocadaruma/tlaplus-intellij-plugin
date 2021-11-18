@@ -34,7 +34,7 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
 
     @Override
     public @Nullable PsiElement resolve() {
-        TLAplusModule currentModule = PsiTreeUtil.getParentOfType(getElement(), TLAplusModule.class);
+        TLAplusModule currentModule = getElement().currentModule();
         if (currentModule == null) {
             return null;
         }
