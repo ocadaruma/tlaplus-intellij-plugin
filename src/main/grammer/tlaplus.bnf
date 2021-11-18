@@ -546,7 +546,7 @@ except_expr ::= clear_indent '[' expr clear_indent 'EXCEPT'
                                  | clear_indent '[' <<comma_list expr>> clear_indent ']')+ clear_indent '=' expr)
   >> clear_indent ']'
 
-tuple_expr ::= clear_indent '<<' <<comma_list expr>> clear_indent '>>' { pin = 2 }
+tuple_expr ::= clear_indent '<<' <<comma_list expr>>? clear_indent '>>' { pin = 2 }
 
 cartesian_product_expr ::= expr (clear_indent '\X' expr)+
 
