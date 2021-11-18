@@ -8,10 +8,11 @@
     <em>Features:</em>
     <ul>
     <li>Syntax highlighting</li>
+    <li>Go to definition (Find usages)</li>
     <li>Run TLC</li>
     </ul>
     <br>
-    This plugin is still in early development stage.
+    This plugin is still in early stage.
     ]]></description>
 
     <change-notes><![CDATA[
