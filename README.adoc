@@ -18,7 +18,8 @@ NOTE: This plugin is still in very early stage.
 *** You have to create TLC config file (`.cfg`) manually
 *** TLC parameters are not configurable
 *** Error trace exploration is not supported
-* [ ] (Not yet) Find usages (Go to declaration)
+* [x] Find usages (Go to declaration)
+* [ ] (Not yet) Code completion
 * [ ] (Not yet) PlusCal
 
 == Screenshots
