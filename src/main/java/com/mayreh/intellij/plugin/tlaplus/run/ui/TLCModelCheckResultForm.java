@@ -152,6 +152,7 @@ public class TLCModelCheckResultForm {
                 statusLabel.setForeground(ColorProgressBar.GREEN);
                 statusLabel.setText("Finished");
             }
+            errorTraceTree.expandAll();
         }
         if (event instanceof SimpleErrorTrace) {
             SimpleErrorTrace trace = (SimpleErrorTrace) event;

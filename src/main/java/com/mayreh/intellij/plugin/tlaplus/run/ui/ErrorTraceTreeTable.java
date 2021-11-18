@@ -119,6 +119,12 @@ class ErrorTraceTreeTable extends TreeTable {
         treeTableModel.nodeStructureChanged(treeTableModel.rootNode);
     }
 
+    void expandAll() {
+        for (int i = 0; i < getTree().getRowCount(); i++) {
+            getTree().expandRow(i);
+        }
+    }
+
     private static void renderTraceVariableValue(
             DefaultMutableTreeNode parent,
             TraceVariableValue value) {
