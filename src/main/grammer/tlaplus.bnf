@@ -445,17 +445,24 @@ instance ::= clear_indent 'INSTANCE' clear_indent module_ref (clear_indent 'WITH
   pin = 2
 }
 
-private substitution ::= (clear_indent 'identifier'
+private substitution ::= (clear_indent substituting_ident
                         | prefix_op
                         | infix_op_outer
                         | postfix_op) clear_indent '<-' op_suite
+
+substituting_ident ::= 'identifier'
+{
+  implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusReferenceElement"
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusSubstitutingIdentImplMixin'
+}
 
 instance_prefix ::= (clear_indent module_ref (
     clear_indent '(' <<comma_list expr>> clear_indent ')')? clear_indent '!')+
 
 general_identifier ::= instance_prefix? clear_indent unqualified_ident
 
-unqualified_ident ::= 'identifier' {
+unqualified_ident ::= 'identifier'
+{
   implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusReferenceElement"
   mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusUnqualifiedIdentImplMixin'
 }

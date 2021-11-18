@@ -10,12 +10,14 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReferenceBase;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusGeneralIdentifier;
+import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusInstance;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusInstancePrefix;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModule;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModuleDefinition;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModuleRef;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPsiFactory;
+import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusSubstitutingIdent;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusUnqualifiedIdent;
 
 public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiReferenceBase<T> {
@@ -39,6 +41,17 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
 
         if (getElement() instanceof TLAplusUnqualifiedIdent) {
             return resolveUnqualifiedIdent(currentModule, (TLAplusUnqualifiedIdent) getElement());
+        }
+
+        if (getElement() instanceof TLAplusSubstitutingIdent) {
+            TLAplusSubstitutingIdent ident = (TLAplusSubstitutingIdent) getElement();
+            TLAplusInstance instance = PsiTreeUtil.getParentOfType(ident, TLAplusInstance.class);
+            if (instance != null && instance.getModuleRef() != null) {
+                TLAplusModule module = currentModule.findModule(instance.getModuleRef().getReferenceName());
+                if (module != null) {
+                    return module.findPublicDefinition(ident.getReferenceName());
+                }
+            }
         }
 
         if (getElement() instanceof TLAplusModuleRef) {
@@ -155,6 +168,21 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
                 TLAplusModule resolvedModule = module.resolveModulePublic(moduleRef.getReferenceName());
                 if (resolvedModule != null) {
                     return resolvedModule;
+                }
+            }
+        }
+
+        // Find exported definitions by INSTANCE
+        for (TLAplusInstance instance : currentModule.getInstanceList()) {
+            // Definitions in the module instantiated by INSTANCE only visible
+            // after INSTANCE declaration.
+            if (instance.getTextOffset() <= moduleRef.getTextOffset() && instance.getModuleRef() != null) {
+                TLAplusModule module = currentModule.findModule(instance.getModuleRef().getReferenceName());
+                if (module != null) {
+                    TLAplusModule resolvedModule = module.resolveModulePublic(moduleRef.getReferenceName());
+                    if (resolvedModule != null) {
+                        return resolvedModule;
+                    }
                 }
             }
         }

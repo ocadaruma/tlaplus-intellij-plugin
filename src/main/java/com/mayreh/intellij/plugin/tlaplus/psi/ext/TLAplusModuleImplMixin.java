@@ -14,6 +14,7 @@ import com.intellij.psi.util.PsiUtilCore;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusConstantDecl;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusFuncDefinition;
+import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusInstance;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModule;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModuleDefinition;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModuleRef;
@@ -74,7 +75,20 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
                 }
             }
         }
-        // TODO: Find exported definitions by INSTANCE
+        // Find exported definitions by INSTANCE
+        for (TLAplusInstance instance : getInstanceList()) {
+            // Definitions in the module instantiated by INSTANCE only visible
+            // after INSTANCE declaration.
+            if (instance.getTextOffset() <= element.getTextOffset() && instance.getModuleRef() != null) {
+                TLAplusModule module = findModule(instance.getModuleRef().getReferenceName());
+                if (module != null) {
+                    TLAplusNamedElement definition = module.findPublicDefinition(element.getReferenceName());
+                    if (definition != null) {
+                        return definition;
+                    }
+                }
+            }
+        }
         return null;
     }
 
@@ -124,6 +138,20 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
                 }
             }
         }
+        // Find exported definitions by INSTANCE
+        for (TLAplusInstance instance : getInstanceList()) {
+            if (instance.getModuleRef() != null) {
+                if (!isLocal(instance)) {
+                    TLAplusModule module = findModule(instance.getModuleRef().getReferenceName());
+                    if (module != null) {
+                        TLAplusNamedElement definition = module.findPublicDefinition(referenceName);
+                        if (definition != null) {
+                            return definition;
+                        }
+                    }
+                }
+            }
+        }
         return null;
     }
 
@@ -151,6 +179,20 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
                 }
             }
         }
+        // Find exported definitions by INSTANCE
+        for (TLAplusInstance instance : getInstanceList()) {
+            if (instance.getModuleRef() != null) {
+                if (!isLocal(instance)) {
+                    TLAplusModule module = findModule(instance.getModuleRef().getReferenceName());
+                    if (module != null) {
+                        TLAplusModule resolvedModule = module.resolveModulePublic(moduleName);
+                        if (resolvedModule != null) {
+                            return resolvedModule;
+                        }
+                    }
+                }
+            }
+        }
         return null;
     }
 
@@ -175,10 +217,14 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
             PsiElement maybeLocalDefinition,
             TLAplusNamedElement name,
             String referenceName) {
-        if (maybeLocalDefinition.getPrevSibling() != null &&
-            PsiUtilCore.getElementType(maybeLocalDefinition.getPrevSibling()) == TLAplusElementTypes.KEYWORD_LOCAL) {
+        if (isLocal(maybeLocalDefinition)) {
             return false;
         }
         return Objects.equals(name.getName(), referenceName);
+    }
+
+    private static boolean isLocal(PsiElement maybeLocalDefinition) {
+        PsiElement sibling = PsiTreeUtil.skipWhitespacesAndCommentsBackward(maybeLocalDefinition);
+        return sibling != null && PsiUtilCore.getElementType(sibling) == TLAplusElementTypes.KEYWORD_LOCAL;
     }
 }
