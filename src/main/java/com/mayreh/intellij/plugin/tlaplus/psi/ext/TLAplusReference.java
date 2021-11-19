@@ -160,34 +160,17 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
             }
         }
 
-        // Find exported definitions by EXTENDS
-        for (TLAplusModuleRef extend : currentModule.getModuleRefList()) {
-            String moduleName = extend.getReferenceName();
-            TLAplusModule module = currentModule.findModule(moduleName);
-            if (module != null) {
-                TLAplusModule resolvedModule = module.resolveModulePublic(moduleRef.getReferenceName());
-                if (resolvedModule != null) {
-                    return resolvedModule;
-                }
-            }
+        TLAplusModule result = currentModule.findFromExtends(
+                module -> module.resolveModulePublic(moduleRef.getReferenceName()));
+        if (result != null) {
+            return result;
         }
 
-        // Find exported definitions by INSTANCE
-        for (TLAplusInstance instance : currentModule.getInstanceList()) {
-            // Definitions in the module instantiated by INSTANCE only visible
-            // after INSTANCE declaration.
-            if (instance.getTextOffset() <= moduleRef.getTextOffset() && instance.getModuleRef() != null) {
-                TLAplusModule module = currentModule.findModule(instance.getModuleRef().getReferenceName());
-                if (module != null) {
-                    TLAplusModule resolvedModule = module.resolveModulePublic(moduleRef.getReferenceName());
-                    if (resolvedModule != null) {
-                        return resolvedModule;
-                    }
-                }
-            }
-        }
+        result = currentModule.findFromInstantiation(
+                instance -> instance.getTextOffset() <= moduleRef.getTextOffset(),
+                module -> module.resolveModulePublic(moduleRef.getReferenceName()));
 
-        return null;
+        return result;
     }
 
     private static @Nullable TLAplusNamedElement resolveReferenceLocally(TLAplusReferenceElement element) {

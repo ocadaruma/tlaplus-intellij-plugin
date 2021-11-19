@@ -1,6 +1,9 @@
 package com.mayreh.intellij.plugin.tlaplus.psi.ext;
 
 import java.util.Objects;
+import java.util.function.BiPredicate;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,128 +34,38 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
 
     @Override
     public @Nullable TLAplusNamedElement findLocalDefinition(TLAplusReferenceElement element) {
-        for (TLAplusVariableDecl decl : getVariableDeclList()) {
-            for (TLAplusVariableName variableName : decl.getVariableNameList()) {
-                if (isLocalDefinitionOf(variableName, element, true)) {
-                    return variableName;
-                }
-            }
+        TLAplusNamedElement result = find
+                ((container, name) -> isLocalDefinitionOf(name, element, true));
+        if (result != null) {
+            return result;
         }
-        for (TLAplusOpDefinition opDef : getOpDefinitionList()) {
-            if (opDef.getNonfixLhs() != null) {
-                if (isLocalDefinitionOf(opDef.getNonfixLhs().getNonfixLhsName(), element, true)) {
-                    return opDef.getNonfixLhs().getNonfixLhsName();
-                }
-            }
+        result = findFromExtends(module -> module.findPublicDefinition(element.getReferenceName()));
+        if (result != null) {
+            return result;
         }
-        for (TLAplusFuncDefinition funcDef : getFuncDefinitionList()) {
-            if (isLocalDefinitionOf(funcDef.getFuncName(), element, true)) {
-                return funcDef.getFuncName();
-            }
-        }
-        for (TLAplusConstantDecl decl : getConstantDeclList()) {
-            for (TLAplusOpDecl opDecl : decl.getOpDeclList()) {
-                if (opDecl.getOpName() != null) {
-                    if (isLocalDefinitionOf(opDecl.getOpName(), element, true)) {
-                        return opDecl.getOpName();
-                    }
-                }
-            }
-        }
-        for (TLAplusModuleDefinition moduleDef : getModuleDefinitionList()) {
-            if (isLocalDefinitionOf(moduleDef.getNonfixLhs().getNonfixLhsName(), element, true)) {
-                return moduleDef.getNonfixLhs().getNonfixLhsName();
-            }
-        }
-        // Find exported definitions by EXTENDS
-        for (TLAplusModuleRef extend : getModuleRefList()) {
-            String moduleName = extend.getReferenceName();
-            TLAplusModule module = findModule(moduleName);
-            if (module != null) {
-                TLAplusNamedElement definition = module.findPublicDefinition(element.getReferenceName());
-                if (definition != null) {
-                    return definition;
-                }
-            }
-        }
-        // Find exported definitions by INSTANCE
-        for (TLAplusInstance instance : getInstanceList()) {
-            // Definitions in the module instantiated by INSTANCE only visible
-            // after INSTANCE declaration.
-            if (instance.getTextOffset() <= element.getTextOffset() && instance.getModuleRef() != null) {
-                TLAplusModule module = findModule(instance.getModuleRef().getReferenceName());
-                if (module != null) {
-                    TLAplusNamedElement definition = module.findPublicDefinition(element.getReferenceName());
-                    if (definition != null) {
-                        return definition;
-                    }
-                }
-            }
-        }
-        return null;
+        // Definitions in the module instantiated by INSTANCE only visible
+        // after INSTANCE declaration.
+        result = findFromInstantiation(instance -> instance.getTextOffset() <= element.getTextOffset(),
+                                       module -> module.findPublicDefinition(element.getReferenceName()));
+
+        return result;
     }
 
     @Override
     public @Nullable TLAplusNamedElement findPublicDefinition(String referenceName) {
-        for (TLAplusVariableDecl decl : getVariableDeclList()) {
-            for (TLAplusVariableName variableName : decl.getVariableNameList()) {
-                if (isPublicDefinitionOf(decl, variableName, referenceName)) {
-                    return variableName;
-                }
-            }
+        TLAplusNamedElement result = find
+                ((container, name) -> isPublicDefinitionOf(container, name, referenceName));
+        if (result != null) {
+            return result;
         }
-        for (TLAplusConstantDecl decl : getConstantDeclList()) {
-            for (TLAplusOpDecl opDecl : decl.getOpDeclList()) {
-                if (opDecl.getOpName() != null) {
-                    if (isPublicDefinitionOf(decl, opDecl.getOpName(), referenceName)) {
-                        return opDecl.getOpName();
-                    }
-                }
-            }
+        result = findFromExtends(module -> module.findPublicDefinition(referenceName));
+        if (result != null) {
+            return result;
         }
-        for (TLAplusOpDefinition opDef : getOpDefinitionList()) {
-            if (opDef.getNonfixLhs() != null) {
-                if (isPublicDefinitionOf(opDef, opDef.getNonfixLhs().getNonfixLhsName(), referenceName)) {
-                    return opDef.getNonfixLhs().getNonfixLhsName();
-                }
-            }
-        }
-        for (TLAplusFuncDefinition funcDef : getFuncDefinitionList()) {
-            if (isPublicDefinitionOf(funcDef, funcDef.getFuncName(), referenceName)) {
-                return funcDef.getFuncName();
-            }
-        }
-        for (TLAplusModuleDefinition moduleDef : getModuleDefinitionList()) {
-            if (isPublicDefinitionOf(moduleDef, moduleDef.getNonfixLhs().getNonfixLhsName(), referenceName)) {
-                return moduleDef.getNonfixLhs().getNonfixLhsName();
-            }
-        }
-        // Find exported definitions by EXTENDS
-        for (TLAplusModuleRef extend : getModuleRefList()) {
-            String moduleName = extend.getReferenceName();
-            TLAplusModule module = findModule(moduleName);
-            if (module != null) {
-                TLAplusNamedElement definition = module.findPublicDefinition(referenceName);
-                if (definition != null) {
-                    return definition;
-                }
-            }
-        }
-        // Find exported definitions by INSTANCE
-        for (TLAplusInstance instance : getInstanceList()) {
-            if (instance.getModuleRef() != null) {
-                if (!isLocal(instance)) {
-                    TLAplusModule module = findModule(instance.getModuleRef().getReferenceName());
-                    if (module != null) {
-                        TLAplusNamedElement definition = module.findPublicDefinition(referenceName);
-                        if (definition != null) {
-                            return definition;
-                        }
-                    }
-                }
-            }
-        }
-        return null;
+        result = findFromInstantiation(instance -> !isLocal(instance),
+                                       module -> module.findPublicDefinition(referenceName));
+
+        return result;
     }
 
     @Override
@@ -168,32 +81,16 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
                 }
             }
         }
-        // Find exported definitions by EXTENDS
-        for (TLAplusModuleRef extend : getModuleRefList()) {
-            String name = extend.getReferenceName();
-            TLAplusModule module = findModule(name);
-            if (module != null) {
-                TLAplusModule resolvedModule = module.resolveModulePublic(moduleName);
-                if (resolvedModule != null) {
-                    return resolvedModule;
-                }
-            }
+
+        TLAplusModule result = findFromExtends(module -> module.resolveModulePublic(moduleName));
+        if (result != null) {
+            return result;
         }
-        // Find exported definitions by INSTANCE
-        for (TLAplusInstance instance : getInstanceList()) {
-            if (instance.getModuleRef() != null) {
-                if (!isLocal(instance)) {
-                    TLAplusModule module = findModule(instance.getModuleRef().getReferenceName());
-                    if (module != null) {
-                        TLAplusModule resolvedModule = module.resolveModulePublic(moduleName);
-                        if (resolvedModule != null) {
-                            return resolvedModule;
-                        }
-                    }
-                }
-            }
-        }
-        return null;
+
+        result = findFromInstantiation(instance -> !isLocal(instance),
+                                       module -> module.resolveModulePublic(moduleName));
+
+        return result;
     }
 
     @Override
@@ -211,6 +108,77 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
             return null;
         }
         return PsiTreeUtil.findChildOfType(moduleFile, TLAplusModule.class);
+    }
+
+    private @Nullable TLAplusNamedElement find(BiPredicate<TLAplusElement, TLAplusNamedElement> predicate) {
+        for (TLAplusVariableDecl decl : getVariableDeclList()) {
+            for (TLAplusVariableName variableName : decl.getVariableNameList()) {
+                if (predicate.test(decl, variableName)) {
+                    return variableName;
+                }
+            }
+        }
+        for (TLAplusConstantDecl decl : getConstantDeclList()) {
+            for (TLAplusOpDecl opDecl : decl.getOpDeclList()) {
+                if (opDecl.getOpName() != null) {
+                    if (predicate.test(decl, opDecl.getOpName())) {
+                        return opDecl.getOpName();
+                    }
+                }
+            }
+        }
+        for (TLAplusOpDefinition opDef : getOpDefinitionList()) {
+            if (opDef.getNonfixLhs() != null) {
+                if (predicate.test(opDef, opDef.getNonfixLhs().getNonfixLhsName())) {
+                    return opDef.getNonfixLhs().getNonfixLhsName();
+                }
+            }
+        }
+        for (TLAplusFuncDefinition funcDef : getFuncDefinitionList()) {
+            if (predicate.test(funcDef, funcDef.getFuncName())) {
+                return funcDef.getFuncName();
+            }
+        }
+        for (TLAplusModuleDefinition moduleDef : getModuleDefinitionList()) {
+            if (predicate.test(moduleDef, moduleDef.getNonfixLhs().getNonfixLhsName())) {
+                return moduleDef.getNonfixLhs().getNonfixLhsName();
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    public @Nullable <T> T findFromExtends(Function<TLAplusModule, @Nullable T> finder) {
+        for (TLAplusModuleRef extend : getModuleRefList()) {
+            String moduleName = extend.getReferenceName();
+            TLAplusModule module = findModule(moduleName);
+            if (module != null) {
+                T result = finder.apply(module);
+                if (result != null) {
+                    return result;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public @Nullable <T> T findFromInstantiation(
+            Predicate<TLAplusInstance> requirement,
+            Function<TLAplusModule, @Nullable T> finder) {
+        for (TLAplusInstance instance : getInstanceList()) {
+            if (requirement.test(instance) && instance.getModuleRef() != null) {
+                TLAplusModule module = findModule(instance.getModuleRef().getReferenceName());
+                if (module != null) {
+                    T result = finder.apply(module);
+                    if (result != null) {
+                        return result;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     private static boolean isPublicDefinitionOf(
