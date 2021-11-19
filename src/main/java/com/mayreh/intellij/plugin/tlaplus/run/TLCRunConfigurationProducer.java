@@ -1,5 +1,6 @@
 package com.mayreh.intellij.plugin.tlaplus.run;
 
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Objects;
 
@@ -28,25 +29,37 @@ public class TLCRunConfigurationProducer extends LazyRunConfigurationProducer<TL
                                                     @NotNull ConfigurationContext context,
                                                     @NotNull Ref<PsiElement> sourceElement) {
         VirtualFile file = maybeVirtualFile(context);
-        if (file != null) {
-            configuration.setFile(file.getCanonicalPath());
-            configuration.setWorkingDirectory(file.toNioPath().getParent().toString());
-            configuration.setName(file.getName());
-            configuration.setBeforeRunTasks(Collections.singletonList(new TLCBeforeRunTask()));
-            return true;
+        if (file == null) {
+            return false;
         }
-        return false;
+
+        Path path = file.getFileSystem().getNioPath(file);
+        if (path == null) {
+            return false;
+        }
+
+        configuration.setFile(file.getCanonicalPath());
+        configuration.setWorkingDirectory(path.getParent().toString());
+        configuration.setName(file.getName());
+        configuration.setBeforeRunTasks(Collections.singletonList(new TLCBeforeRunTask()));
+        return true;
     }
 
     @Override
     public boolean isConfigurationFromContext(@NotNull TLCRunConfiguration configuration,
                                               @NotNull ConfigurationContext context) {
         VirtualFile file = maybeVirtualFile(context);
-        if (file != null) {
-            return Objects.equals(file.getCanonicalPath(), configuration.getFile()) &&
-                   Objects.equals(file.toNioPath().getParent().toString(), configuration.getWorkingDirectory());
+        if (file == null) {
+            return false;
         }
-        return false;
+
+        Path path = file.getFileSystem().getNioPath(file);
+        if (path == null) {
+            return false;
+        }
+
+        return Objects.equals(file.getCanonicalPath(), configuration.getFile()) &&
+               Objects.equals(path.getParent().toString(), configuration.getWorkingDirectory());
     }
 
     private VirtualFile maybeVirtualFile(ConfigurationContext context) {

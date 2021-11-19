@@ -1,6 +1,8 @@
 package com.mayreh.intellij.plugin.tlaplus.psi.ext;
 
+import java.net.URL;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -9,11 +11,15 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.intellij.lang.ASTNode;
+import com.intellij.openapi.vfs.VfsUtil;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.psi.util.PsiUtilCore;
+import com.intellij.util.ResourceUtil;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusConstantDecl;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusFuncDefinition;
@@ -28,6 +34,10 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusVariableDecl;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusVariableName;
 
 public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implements TLAplusModule {
+    private static final Set<String> STANDARD_MODULES = Set.of(
+            "Bags", "FiniteSets", "Integers", "Json", "Naturals", "Randomization",
+            "Reals", "RealTime", "Sequences", "TLC", "TLCExt", "Toolbox");
+
     protected TLAplusModuleImplMixin(@NotNull ASTNode node) {
         super(node);
     }
@@ -95,6 +105,11 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
 
     @Override
     public @Nullable TLAplusModule findModule(String moduleName) {
+        TLAplusModule module = findStandardModule(moduleName);
+        if (module != null) {
+            return module;
+        }
+
         PsiFile thisFile = getContainingFile();
         if (thisFile == null) {
             return null;
@@ -194,5 +209,29 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
     private static boolean isLocal(PsiElement maybeLocalDefinition) {
         PsiElement sibling = PsiTreeUtil.skipWhitespacesAndCommentsBackward(maybeLocalDefinition);
         return sibling != null && PsiUtilCore.getElementType(sibling) == TLAplusElementTypes.KEYWORD_LOCAL;
+    }
+
+    private @Nullable TLAplusModule findStandardModule(String moduleName) {
+        if (STANDARD_MODULES.contains(moduleName)) {
+            URL url = ResourceUtil.getResource(getClass().getClassLoader(),
+                                               "tla2sany/StandardModules",
+                                               moduleName + ".tla");
+            if (url == null) {
+                return null;
+            }
+
+            VirtualFile file = VfsUtil.findFileByURL(url);
+            if (file == null) {
+                return null;
+            }
+
+            PsiFile psiFile = PsiManager.getInstance(getProject()).findFile(file);
+            if (psiFile == null) {
+                return null;
+            }
+
+            return PsiTreeUtil.findChildOfType(psiFile, TLAplusModule.class);
+        }
+        return null;
     }
 }
