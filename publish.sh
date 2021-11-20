@@ -35,5 +35,5 @@ if [ $(git tag | grep "^v$version\$" | wc -l) -ne 0 ]; then
 fi
 
 echo "Publishing $version"
-#./gradlew -P snapshot=false -P version="$version" clean publishPlugin
+./gradlew -P snapshot=false -P version="$version" clean publishPlugin
 commit_version $version
