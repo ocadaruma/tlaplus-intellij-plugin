@@ -6,12 +6,22 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.intellij.lang.HelpID;
+import com.intellij.lang.cacheBuilder.DefaultWordsScanner;
+import com.intellij.lang.cacheBuilder.WordsScanner;
 import com.intellij.lang.findUsages.FindUsagesProvider;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.tree.TokenSet;
+import com.mayreh.intellij.plugin.tlaplus.lexer.TLAplusLexer;
+import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement;
 
 public class TLAplusFindUsagesProvider implements FindUsagesProvider {
+    @Override
+    public @Nullable WordsScanner getWordsScanner() {
+        return new TLAplusWordScanner();
+    }
+
     @Override
     public boolean canFindUsagesFor(@NotNull PsiElement psiElement) {
         return psiElement instanceof TLAplusNamedElement;
@@ -39,5 +49,14 @@ public class TLAplusFindUsagesProvider implements FindUsagesProvider {
     @Override
     public @Nls @NotNull String getNodeText(@NotNull PsiElement element, boolean useFullName) {
         return "";
+    }
+
+    static class TLAplusWordScanner extends DefaultWordsScanner {
+        TLAplusWordScanner() {
+            super(new TLAplusLexer(false),
+                  TokenSet.create(TLAplusElementTypes.IDENTIFIER),
+                  TLAplusParserDefinition.COMMENT_TOKENS,
+                  TokenSet.EMPTY);
+        }
     }
 }
