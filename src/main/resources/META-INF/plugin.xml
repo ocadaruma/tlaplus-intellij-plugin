@@ -55,6 +55,10 @@
         <lang.refactoringSupport
           language="TLA+"
           implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusRefactoringSupportProvider"/>
+        <completion.contributor
+          language="TLA+"
+          implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusCompletionContributor"
+          order="first"/>
 
         <!-- TLC config -->
         <!-- we specify order explicitly because some fileTypes (e.g. TextMate) may detect -->

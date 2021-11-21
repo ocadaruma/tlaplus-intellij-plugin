@@ -205,7 +205,7 @@
 }
 
 root ::= module
-module ::= module_header ('EXTENDS' <<comma_list module_ref>>)? unit* clear_indent '===='
+module ::= module_header ('EXTENDS' <<comma_list module_ref>>)? unit_with_recover* clear_indent '===='
 {
   pin = 1
   implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusModuleContext'
@@ -224,6 +224,7 @@ private clear_indent ::= junc_break*
 
 module_header ::= clear_indent 'MODULE_BEGIN' 'identifier' '----'
 {
+  pin = 2
   implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
   mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNamedElementImpl'
 }
@@ -242,6 +243,28 @@ private unit ::= variable_decl
                | theorem
                | module
                | clear_indent '----'
+
+private unit_with_recover ::= !('====' | <<eof>>) unit
+{
+  pin = 1
+  recoverWhile = unit_recover
+}
+private unit_recover ::= !(
+    'VARIABLE'
+  | 'VARIABLES'
+  | 'CONSTANT'
+  | 'CONSTANTS'
+  | 'LOCAL'
+  | 'identifier'
+  | 'INSTANCE'
+  | 'ASSUME'
+  | 'ASSUMPTION'
+  | 'AXIOM'
+  | 'THEOREM'
+  | '===='
+  | '----'
+  | clear_indent
+)
 
 private identifier_or_tuple ::= clear_indent (bound_name | '<<' <<comma_list bound_name>> '>>')
 
@@ -389,14 +412,14 @@ op_name ::= 'identifier'
   mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNamedElementImpl'
 }
 
-variable_decl ::= clear_indent ('VARIABLE' | 'VARIABLES') <<comma_list variable_name>>
+variable_decl ::= clear_indent ('VARIABLE' | 'VARIABLES') <<comma_list variable_name>> { pin = 2 }
 variable_name ::= 'identifier'
 {
   implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
   mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNamedElementImpl'
 }
 
-constant_decl ::= clear_indent ('CONSTANT' | 'CONSTANTS') <<comma_list op_decl>>
+constant_decl ::= clear_indent ('CONSTANT' | 'CONSTANTS') <<comma_list op_decl>> { pin = 2 }
 
 nonfix_lhs ::= clear_indent nonfix_lhs_name (clear_indent '(' <<comma_list op_decl>> clear_indent ')')?
 
