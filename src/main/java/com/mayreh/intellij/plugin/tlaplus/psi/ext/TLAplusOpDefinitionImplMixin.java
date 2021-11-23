@@ -19,12 +19,12 @@ public abstract class TLAplusOpDefinitionImplMixin extends TLAplusElementImpl im
 
     @Override
     public @NotNull Stream<TLAplusNamedElement> localDefinitions(
-            @NotNull TLAplusReferenceElement reference) {
+            @NotNull TLAplusElement placement) {
         if (getNonfixLhs() != null) {
             return getNonfixLhs().getOpDeclList()
                                  .stream()
                                  .map(TLAplusOpDecl::getOpName)
-                                 .filter(name -> name != null && !isForwardReference(reference, name))
+                                 .filter(name -> name != null && !isForwardReference(placement, name))
                                  .map(Function.identity());
         }
         return Stream.empty();

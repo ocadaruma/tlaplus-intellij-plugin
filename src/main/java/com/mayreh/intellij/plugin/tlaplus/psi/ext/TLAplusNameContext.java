@@ -13,11 +13,11 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement;
 public interface TLAplusNameContext extends TLAplusElement {
     /**
      * Returns the stream of definition in this context.
-     * This method is intended and should be implemented to find the definition from
-     * same module locally.
+     * This method is intended and should be implemented to return the definition from
+     * same module as the specified placement locally.
      *
-     * To lookup definitions from other modules by reference name,
+     * To lookup definitions which visible to other modules publicly,
      * you should use {@link TLAplusModuleContext#publicDefinitions()}.
      */
-    @NotNull Stream<TLAplusNamedElement> localDefinitions(@NotNull TLAplusReferenceElement reference);
+    @NotNull Stream<TLAplusNamedElement> localDefinitions(@NotNull TLAplusElement placement);
 }

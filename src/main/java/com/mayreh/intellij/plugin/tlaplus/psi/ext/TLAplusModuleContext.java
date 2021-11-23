@@ -27,7 +27,7 @@ public interface TLAplusModuleContext extends TLAplusNameContext {
     @NotNull Stream<TLAplusModule> modulesFromExtends();
 
     /**
-     * Returns imported modules by instantiation that meets the requiremtn.
+     * Returns imported modules by instantiation that meets the requirement.
      */
     @NotNull Stream<TLAplusModule> modulesFromInstantiation(Predicate<TLAplusInstance> requirement);
 }

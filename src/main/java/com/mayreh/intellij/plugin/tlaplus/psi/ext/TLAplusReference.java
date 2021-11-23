@@ -3,7 +3,6 @@ package com.mayreh.intellij.plugin.tlaplus.psi.ext;
 import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPsiUtils.isLocal;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -41,6 +40,7 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
         return getElement();
     }
 
+    // TODO: Change icons by modules/constants/variables/... etc
     @Override
     public Object @NotNull [] getVariants() {
         TLAplusModule currentModule = getElement().currentModule();
@@ -204,14 +204,14 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
     }
 
     private static @NotNull Stream<TLAplusModule> localModuleVariants(
-            Predicate<TLAplusNamedElement> requirement,
+            Predicate<TLAplusNamedElement> moduleRefNameFilter,
             TLAplusModule currentModule,
-            TLAplusModuleRef moduleRef) {
+            TLAplusElement placement) {
         Stream.Builder<Stream<TLAplusModule>> streams = Stream.builder();
 
         streams.add(
-                localVariants(moduleRef)
-                        .filter(requirement)
+                localVariants(placement)
+                        .filter(moduleRefNameFilter)
                         .flatMap(e -> {
                             if (e.getParent() == null) {
                                 return Stream.empty();
@@ -227,26 +227,29 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
                         }));
 
         streams.add(currentModule.modulesFromExtends()
-                                 .flatMap(m -> publicModuleVariants(m, requirement))
-                                 .filter(m -> requirement.test(m.getModuleHeader())));
+                                 .flatMap(m -> publicModuleVariants(m, moduleRefNameFilter))
+                                 .filter(m -> moduleRefNameFilter.test(m.getModuleHeader())));
 
         streams.add(currentModule.modulesFromInstantiation(
-                                         instance -> instance.getTextOffset() <= moduleRef.getTextOffset())
-                                 .flatMap(m -> publicModuleVariants(m, requirement))
-                                 .filter(m -> requirement.test(m.getModuleHeader())));
+                                         instance -> instance.getTextOffset() <= placement.getTextOffset())
+                                 .flatMap(m -> publicModuleVariants(m, moduleRefNameFilter))
+                                 .filter(m -> moduleRefNameFilter.test(m.getModuleHeader())));
 
         return streams.build().flatMap(Function.identity());
     }
 
-    private static @NotNull Stream<TLAplusNamedElement> localVariants(TLAplusReferenceElement element) {
+    /**
+     * Returns the stream of variants that are available at the placement.
+     */
+    private static @NotNull Stream<TLAplusNamedElement> localVariants(TLAplusElement placement) {
         TLAplusNameContext context = null;
-        if (element.getContext() instanceof TLAplusNameContext) {
-            context = (TLAplusNameContext) element.getContext();
+        if (placement.getContext() instanceof TLAplusNameContext) {
+            context = (TLAplusNameContext) placement.getContext();
         }
 
         Stream.Builder<Stream<TLAplusNamedElement>> streams = Stream.builder();
         while (context != null) {
-            streams.add(context.localDefinitions(element));
+            streams.add(context.localDefinitions(placement));
 
             if (context.getContext() instanceof TLAplusNameContext) {
                 context = (TLAplusNameContext) context.getContext();
@@ -257,9 +260,14 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
         return streams.build().flatMap(Function.identity());
     }
 
+    /**
+     * Return the stream of modules which are visible in the context and meet specified moduleRefNameFilter.
+     * moduleRefNameFilter applies to the reference name that the module is exposed as.
+     * i.e. if we have module definition like `INSTANCE_X == INSTANCE X`, filter applies to `INSTANCE_X` (not X)
+     */
     private static @NotNull Stream<TLAplusModule> publicModuleVariants(
             TLAplusModule context,
-            Predicate<TLAplusNamedElement> requirement) {
+            Predicate<TLAplusNamedElement> moduleRefNameFilter) {
         Stream.Builder<Stream<TLAplusModule>> streams = Stream.builder();
 
         streams.add(context.getModuleDefinitionList()
@@ -268,10 +276,7 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
                                if (isLocal(def)) {
                                    return Stream.empty();
                                }
-                               if (def.getInstance().getModuleRef() == null) {
-                                   return Stream.empty();
-                               }
-                               if (!requirement.test(def.getNonfixLhs().getNonfixLhsName())) {
+                               if (!moduleRefNameFilter.test(def.getNonfixLhs().getNonfixLhsName())) {
                                    return Stream.empty();
                                }
                                if (def.getInstance().getModuleRef() == null) {
@@ -282,20 +287,12 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
                                        .stream();
                            }));
 
-        streams.add(context.getModuleDefinitionList()
-                           .stream()
-                           .filter(def -> !isLocal(def))
-                           .map(def -> def.getInstance().getModuleRef())
-                           .filter(Objects::nonNull)
-                           .map(ref -> context.findModule(ref.getReferenceName()))
-                           .filter(Objects::nonNull));
-
         streams.add(context.modulesFromExtends()
-                           .filter(m -> requirement.test(m.getModuleHeader()))
-                           .flatMap(m -> publicModuleVariants(m, requirement)));
+                           .filter(m -> moduleRefNameFilter.test(m.getModuleHeader()))
+                           .flatMap(m -> publicModuleVariants(m, moduleRefNameFilter)));
         streams.add(context.modulesFromInstantiation(instance -> !isLocal(instance))
-                           .filter(m -> requirement.test(m.getModuleHeader()))
-                           .flatMap(m -> publicModuleVariants(m, requirement)));
+                           .filter(m -> moduleRefNameFilter.test(m.getModuleHeader()))
+                           .flatMap(m -> publicModuleVariants(m, moduleRefNameFilter)));
 
         return streams.build().flatMap(Function.identity());
     }

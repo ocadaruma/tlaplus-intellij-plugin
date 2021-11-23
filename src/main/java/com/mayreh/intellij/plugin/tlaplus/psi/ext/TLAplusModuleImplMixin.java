@@ -7,6 +7,7 @@ import java.net.URL;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiPredicate;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -22,14 +23,10 @@ import com.intellij.psi.PsiManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ResourceUtil;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusFuncDefinition;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusFuncName;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusInstance;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModule;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNonfixLhsName;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusOpDecl;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusOpName;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusVariableName;
 
 public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implements TLAplusModule {
     private static final Set<String> STANDARD_MODULES = Set.of(
@@ -42,34 +39,27 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
 
     @Override
     public @NotNull Stream<TLAplusNamedElement> localDefinitions(
-            @NotNull TLAplusReferenceElement reference) {
-        Stream<TLAplusNamedElement> localNames = definitions(
-                (container, name) -> !isForwardReference(reference, name));
+            @NotNull TLAplusElement placement) {
+        Stream.Builder<Stream<TLAplusNamedElement>> streams = Stream.builder();
 
-        Stream<TLAplusNamedElement> namesFromExtends = modulesFromExtends()
-                .flatMap(TLAplusModuleContext::publicDefinitions);
+        streams.add(definitions((container, name) -> !isForwardReference(placement, name)));
+        streams.add(modulesFromExtends().flatMap(TLAplusModuleContext::publicDefinitions));
+        // Definitions in the module instantiated by INSTANCE only visible
+        // after INSTANCE declaration.
+        streams.add(modulesFromInstantiation(i -> i.getTextOffset() <= placement.getTextOffset())
+                            .flatMap(TLAplusModuleContext::publicDefinitions));
 
-        Stream<TLAplusNamedElement> namesFromInstance =
-                // Definitions in the module instantiated by INSTANCE only visible
-                // after INSTANCE declaration.
-                modulesFromInstantiation(i -> i.getTextOffset() <= reference.getTextOffset())
-                        .flatMap(TLAplusModuleContext::publicDefinitions);
-
-        return Stream.concat(Stream.concat(localNames, namesFromExtends), namesFromInstance);
+        return streams.build().flatMap(Function.identity());
     }
 
     @Override
     public @NotNull Stream<TLAplusNamedElement> publicDefinitions() {
-        Stream<TLAplusNamedElement> names = definitions(
-                (container, name) -> !isLocal(container));
+        Stream.Builder<Stream<TLAplusNamedElement>> streams = Stream.builder();
+        streams.add(definitions((container, name) -> !isLocal(container)));
+        streams.add(modulesFromExtends().flatMap(TLAplusModuleContext::publicDefinitions));
+        streams.add(modulesFromInstantiation(i -> !isLocal(i)).flatMap(TLAplusModuleContext::publicDefinitions));
 
-        Stream<TLAplusNamedElement> namesFromExtends = modulesFromExtends()
-                .flatMap(TLAplusModuleContext::publicDefinitions);
-
-        Stream<TLAplusNamedElement> namesFromInstance =
-                modulesFromInstantiation(i -> !isLocal(i)).flatMap(TLAplusModuleContext::publicDefinitions);
-
-        return Stream.concat(Stream.concat(names, namesFromExtends), namesFromInstance);
+        return streams.build().flatMap(Function.identity());
     }
 
     @Override
@@ -96,35 +86,40 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
 
     private @NotNull Stream<TLAplusNamedElement> definitions(
             BiPredicate<TLAplusElement, TLAplusNamedElement> requirement) {
-        Stream<TLAplusVariableName> variables = getVariableDeclList()
-                .stream()
-                .flatMap(decl -> decl.getVariableNameList()
-                                     .stream()
-                                     .filter(name -> requirement.test(decl, name)));
+        Stream.Builder<Stream<TLAplusNamedElement>> streams = Stream.builder();
 
-        Stream<TLAplusOpName> constants = getConstantDeclList()
-                .stream()
-                .flatMap(decl -> decl.getOpDeclList()
-                                     .stream()
-                                     .map(TLAplusOpDecl::getOpName)
-                                     .filter(name -> requirement.test(decl, name)));
+        streams.add(getVariableDeclList()
+                            .stream()
+                            .flatMap(decl -> decl
+                                    .getVariableNameList()
+                                    .stream()
+                                    .filter(name -> requirement.test(decl, name))));
 
-        Stream<TLAplusNonfixLhsName> ops = getOpDefinitionList()
-                .stream()
-                .filter(def -> def.getNonfixLhs() != null && requirement.test(def, def.getNonfixLhs().getNonfixLhsName()))
-                .map(def -> def.getNonfixLhs().getNonfixLhsName());
+        streams.add(getConstantDeclList()
+                            .stream()
+                            .flatMap(decl -> decl
+                                    .getOpDeclList()
+                                    .stream()
+                                    .map(TLAplusOpDecl::getOpName)
+                                    .filter(name -> requirement.test(decl, name))));
 
-        Stream<TLAplusFuncName> functions = getFuncDefinitionList()
-                .stream()
-                .filter(def -> requirement.test(def, def.getFuncName()))
-                .map(TLAplusFuncDefinition::getFuncName);
+        streams.add(getOpDefinitionList()
+                            .stream()
+                            .filter(def -> def.getNonfixLhs() != null &&
+                                           requirement.test(def, def.getNonfixLhs().getNonfixLhsName()))
+                            .map(def -> def.getNonfixLhs().getNonfixLhsName()));
 
-        Stream<TLAplusNonfixLhsName> modules = getModuleDefinitionList()
-                .stream()
-                .filter(def -> requirement.test(def, def.getNonfixLhs().getNonfixLhsName()))
-                .map(def -> def.getNonfixLhs().getNonfixLhsName());
+        streams.add(getFuncDefinitionList()
+                            .stream()
+                            .filter(def -> requirement.test(def, def.getFuncName()))
+                            .map(TLAplusFuncDefinition::getFuncName));
 
-        return Stream.concat(Stream.concat(Stream.concat(Stream.concat(variables, constants), ops), functions), modules);
+        streams.add(getModuleDefinitionList()
+                            .stream()
+                            .filter(def -> requirement.test(def, def.getNonfixLhs().getNonfixLhsName()))
+                            .map(def -> def.getNonfixLhs().getNonfixLhsName()));
+
+        return streams.build().flatMap(Function.identity());
     }
 
     @Override

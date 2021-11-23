@@ -17,7 +17,7 @@ public abstract class TLAplusSetComprehensionImplMixin
 
     @Override
     public @NotNull Stream<TLAplusNamedElement> localDefinitions(
-            @NotNull TLAplusReferenceElement reference) {
+            @NotNull TLAplusElement placement) {
         return getBoundNameList().stream().map(Function.identity());
     }
 }

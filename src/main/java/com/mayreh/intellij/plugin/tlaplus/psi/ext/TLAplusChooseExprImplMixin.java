@@ -18,10 +18,10 @@ public abstract class TLAplusChooseExprImplMixin extends TLAplusElementImpl impl
 
     @Override
     public @NotNull Stream<TLAplusNamedElement> localDefinitions(
-            @NotNull TLAplusReferenceElement reference) {
+            @NotNull TLAplusElement placement) {
         return getBoundNameList()
                 .stream()
-                .filter(e -> !isForwardReference(reference, e))
+                .filter(e -> !isForwardReference(placement, e))
                 .map(Function.identity());
     }
 }
