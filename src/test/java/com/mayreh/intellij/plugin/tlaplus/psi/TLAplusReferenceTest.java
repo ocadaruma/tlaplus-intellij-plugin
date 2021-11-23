@@ -34,6 +34,17 @@ public class TLAplusReferenceTest extends BasePlatformTestCase {
         Assert.assertNull(reference.resolve());
     }
 
+    public void testInstancePrefix() {
+        PsiReference reference = getReferenceAtCaret(
+                "InstancePrefix_A.tla",
+                "InstancePrefix_B.tla",
+                "InstancePrefix_C.tla");
+
+        TLAplusNonfixLhsName name = assertInstanceOf(reference.resolve(), TLAplusNonfixLhsName.class);
+        Assert.assertEquals("Foo", name.getName());
+        Assert.assertEquals("InstancePrefix_C", name.currentModule().getModuleHeader().getName());
+    }
+
     private PsiReference getReferenceAtCaret(String... fileNames) {
         return myFixture.getReferenceAtCaretPositionWithAssertion(
                 Arrays.stream(fileNames)
