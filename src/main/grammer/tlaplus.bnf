@@ -503,7 +503,7 @@ theorem ::= clear_indent 'THEOREM' expr { pin = 2 }
 
 identifier_expr ::= general_identifier
 
-identifier_args_expr ::= general_identifier clear_indent '(' <<comma_list op_suite>> clear_indent ')'
+identifier_args_expr ::= general_identifier clear_indent '(' <<comma_list op_suite>> clear_indent ')' { pin = 3 }
 
 prefix_op_expr ::= general_prefix_op expr
 

@@ -19,5 +19,5 @@ public interface TLAplusNameContext extends TLAplusElement {
      * To lookup definitions from other modules by reference name,
      * you should use {@link TLAplusModuleContext#publicDefinitions()}.
      */
-    @NotNull Stream<? extends TLAplusNamedElement> localDefinitions(@NotNull TLAplusReferenceElement reference);
+    @NotNull Stream<TLAplusNamedElement> localDefinitions(@NotNull TLAplusReferenceElement reference);
 }

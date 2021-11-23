@@ -22,7 +22,7 @@ public abstract class TLAplusLetExprImplMixin extends TLAplusElementImpl impleme
     }
 
     @Override
-    public @NotNull Stream<? extends TLAplusNamedElement> localDefinitions(
+    public @NotNull Stream<TLAplusNamedElement> localDefinitions(
             @NotNull TLAplusReferenceElement reference) {
         Stream<TLAplusNonfixLhsName> ops = getOpDefinitionList()
                 .stream()

@@ -2,6 +2,7 @@ package com.mayreh.intellij.plugin.tlaplus.psi.ext;
 
 import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPsiUtils.isForwardReference;
 
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.jetbrains.annotations.NotNull;
@@ -17,13 +18,14 @@ public abstract class TLAplusOpDefinitionImplMixin extends TLAplusElementImpl im
     }
 
     @Override
-    public @NotNull Stream<? extends TLAplusNamedElement> localDefinitions(
+    public @NotNull Stream<TLAplusNamedElement> localDefinitions(
             @NotNull TLAplusReferenceElement reference) {
         if (getNonfixLhs() != null) {
             return getNonfixLhs().getOpDeclList()
                                  .stream()
                                  .map(TLAplusOpDecl::getOpName)
-                                 .filter(name -> name != null && !isForwardReference(reference, name));
+                                 .filter(name -> name != null && !isForwardReference(reference, name))
+                                 .map(Function.identity());
         }
         return Stream.empty();
     }

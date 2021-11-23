@@ -2,18 +2,22 @@ package com.mayreh.intellij.plugin.tlaplus.psi.ext;
 
 import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPsiUtils.isLocal;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiReferenceBase;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.ArrayUtilRt;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusGeneralIdentifier;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusInstance;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusInstancePrefix;
@@ -39,13 +43,31 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
 
     @Override
     public Object @NotNull [] getVariants() {
+        TLAplusModule currentModule = getElement().currentModule();
+        if (currentModule == null) {
+            return ArrayUtilRt.EMPTY_OBJECT_ARRAY;
+        }
 
-        List<Object> result = new ArrayList<>();
+        if (getElement() instanceof TLAplusUnqualifiedIdent) {
+            return unqualifiedIdentVariants(currentModule, (TLAplusUnqualifiedIdent) getElement())
+                    .map(PsiNamedElement::getName)
+                    .toArray();
+        }
 
-        result.add("test1");
-        result.add("foooo");
+        if (getElement() instanceof TLAplusSubstitutingIdent) {
+            TLAplusSubstitutingIdent ident = (TLAplusSubstitutingIdent) getElement();
+            TLAplusInstance instance = PsiTreeUtil.getParentOfType(ident, TLAplusInstance.class);
+            if (instance != null && instance.getModuleRef() != null) {
+                TLAplusModule module = currentModule.findModule(instance.getModuleRef().getReferenceName());
+                if (module != null) {
+                    return module.publicDefinitions()
+                                 .map(PsiNamedElement::getName)
+                                 .toArray();
+                }
+            }
+        }
 
-        return result.toArray();
+        return ArrayUtilRt.EMPTY_OBJECT_ARRAY;
     }
 
     @Override
@@ -56,7 +78,10 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
         }
 
         if (getElement() instanceof TLAplusUnqualifiedIdent) {
-            return resolveUnqualifiedIdent(currentModule, (TLAplusUnqualifiedIdent) getElement());
+            return unqualifiedIdentVariants(currentModule, (TLAplusUnqualifiedIdent) getElement())
+                    .filter(name -> getElement().getReferenceName().equals(name.getName()))
+                    .findFirst()
+                    .orElse(null);
         }
 
         if (getElement() instanceof TLAplusSubstitutingIdent) {
@@ -86,7 +111,10 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
 
                 if (index == 0) {
                     // For first moduleReference, it should be resolved locally as like other element.
-                    return resolveReferenceLocally(getElement());
+                    return localVariants(getElement())
+                            .filter(name -> getElement().getReferenceName().equals(name.getName()))
+                            .findFirst()
+                            .orElse(null);
                 }
                 if (index > 0) {
                     // Otherwise, search scope should be narrowed first and should resolve in that scope.
@@ -101,14 +129,17 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
                 }
             } else {
                 // If the module is not inside instance prefix, just resolve as like other element.
-                return resolveReferenceLocally(getElement());
+                return localVariants(getElement())
+                        .filter(name -> getElement().getReferenceName().equals(name.getName()))
+                        .findFirst()
+                        .orElse(null);
             }
         }
 
         return null;
     }
 
-    private @Nullable PsiElement resolveUnqualifiedIdent(
+    private static @NotNull Stream<TLAplusNamedElement> unqualifiedIdentVariants(
             TLAplusModule currentModule, TLAplusUnqualifiedIdent element) {
         TLAplusGeneralIdentifier generalIdentifier = null;
         if (element.getParent() instanceof TLAplusGeneralIdentifier) {
@@ -116,20 +147,18 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
         }
 
         if (generalIdentifier == null || generalIdentifier.getInstancePrefix() == null) {
-            return resolveReferenceLocally(getElement());
+            return localVariants(element);
         }
 
         TLAplusModule resolvedModule = resolveInstancePrefix(
-                currentModule, generalIdentifier.getInstancePrefix().getModuleRefList());
+                currentModule,
+                generalIdentifier.getInstancePrefix().getModuleRefList());
 
         if (resolvedModule == null) {
-            return null;
+            return Stream.empty();
         }
 
-        return resolvedModule.publicDefinitions()
-                             .filter(name -> element.getReferenceName().equals(name.getName()))
-                             .findFirst()
-                             .orElse(null);
+        return resolvedModule.publicDefinitions();
     }
 
     private static @Nullable TLAplusModule resolveInstancePrefix(
@@ -153,9 +182,16 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
                     moduleScope = module;
                     continue;
                 }
-                module = resolveModuleLocally(moduleScope, moduleRef);
+                module = localModuleVariants(name -> moduleRef.getReferenceName().equals(name.getName()),
+                                             moduleScope,
+                                             moduleRef)
+                        .findFirst()
+                        .orElse(null);
             } else {
-                module = resolveModulePublic(moduleScope, moduleRef.getReferenceName());
+                module = publicModuleVariants(moduleScope,
+                                              name -> moduleRef.getReferenceName().equals(name.getName()))
+                        .findFirst()
+                        .orElse(null);
             }
             if (module != null) {
                 moduleScope = module;
@@ -167,56 +203,50 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
         return moduleScope;
     }
 
-    private static @Nullable TLAplusModule resolveModuleLocally(
-            TLAplusModule currentModule, TLAplusModuleRef moduleRef) {
-        TLAplusNamedElement moduleDefName = resolveReferenceLocally(moduleRef);
-        if (moduleDefName != null) {
-            PsiElement element = moduleDefName.getParent();
-            if (element != null) {
-                element = element.getParent();
-            }
-            if (element instanceof TLAplusModuleDefinition) {
-                TLAplusModuleDefinition moduleDefinition = (TLAplusModuleDefinition) element;
-                TLAplusModuleRef resolvedModuleRef = moduleDefinition.getInstance().getModuleRef();
-                if (resolvedModuleRef != null) {
-                    String resolvedModuleName = resolvedModuleRef.getReferenceName();
-                    return currentModule.findModule(resolvedModuleName);
-                }
-            }
-        }
+    private static @NotNull Stream<TLAplusModule> localModuleVariants(
+            Predicate<TLAplusNamedElement> requirement,
+            TLAplusModule currentModule,
+            TLAplusModuleRef moduleRef) {
+        Stream.Builder<Stream<TLAplusModule>> streams = Stream.builder();
 
-        Optional<TLAplusModule> result = currentModule
-                .modulesFromExtends()
-                .map(m -> resolveModulePublic(m, moduleRef.getReferenceName()))
-                .filter(Objects::nonNull)
-                .findFirst();
-        if (result.isPresent()) {
-            return result.get();
-        }
+        streams.add(
+                localVariants(moduleRef)
+                        .filter(requirement)
+                        .flatMap(e -> {
+                            if (e.getParent() == null) {
+                                return Stream.empty();
+                            }
+                            if (!(e.getParent().getParent() instanceof TLAplusModuleDefinition)) {
+                                return Stream.empty();
+                            }
+                            TLAplusModuleDefinition moduleDef = (TLAplusModuleDefinition) e.getParent().getParent();
+                            return Optional.ofNullable(moduleDef.getInstance().getModuleRef())
+                                           .flatMap(ref -> Optional.ofNullable(
+                                                   currentModule.findModule(ref.getReferenceName())))
+                                           .stream();
+                        }));
 
-        result = currentModule
-                .modulesFromInstantiation(
-                        instance -> instance.getTextOffset() <= moduleRef.getTextOffset())
-                .map(m -> resolveModulePublic(m, moduleRef.getReferenceName()))
-                .filter(Objects::nonNull)
-                .findFirst();
+        streams.add(currentModule.modulesFromExtends()
+                                 .flatMap(m -> publicModuleVariants(m, requirement))
+                                 .filter(m -> requirement.test(m.getModuleHeader())));
 
-        return result.orElse(null);
+        streams.add(currentModule.modulesFromInstantiation(
+                                         instance -> instance.getTextOffset() <= moduleRef.getTextOffset())
+                                 .flatMap(m -> publicModuleVariants(m, requirement))
+                                 .filter(m -> requirement.test(m.getModuleHeader())));
+
+        return streams.build().flatMap(Function.identity());
     }
 
-    private static @Nullable TLAplusNamedElement resolveReferenceLocally(TLAplusReferenceElement element) {
+    private static @NotNull Stream<TLAplusNamedElement> localVariants(TLAplusReferenceElement element) {
         TLAplusNameContext context = null;
         if (element.getContext() instanceof TLAplusNameContext) {
             context = (TLAplusNameContext) element.getContext();
         }
+
+        Stream.Builder<Stream<TLAplusNamedElement>> streams = Stream.builder();
         while (context != null) {
-            Optional<? extends TLAplusNamedElement> name =
-                    context.localDefinitions(element)
-                           .filter(e -> element.getReferenceName().equals(e.getName()))
-                           .findFirst();
-            if (name.isPresent()) {
-                return name.get();
-            }
+            streams.add(context.localDefinitions(element));
 
             if (context.getContext() instanceof TLAplusNameContext) {
                 context = (TLAplusNameContext) context.getContext();
@@ -224,35 +254,49 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
                 context = null;
             }
         }
-        return null;
+        return streams.build().flatMap(Function.identity());
     }
 
-    private static @Nullable TLAplusModule resolveModulePublic(TLAplusModule context, String moduleName) {
-        for (TLAplusModuleDefinition moduleDef : context.getModuleDefinitionList()) {
-            if (!isLocal(moduleDef) && moduleName.equals(moduleDef.getNonfixLhs().getNonfixLhsName().getName())) {
-                TLAplusModuleRef resolvedModuleRef = moduleDef.getInstance().getModuleRef();
-                if (resolvedModuleRef != null) {
-                    TLAplusModule module = context.findModule(resolvedModuleRef.getReferenceName());
-                    if (module != null) {
-                        return module;
-                    }
-                }
-            }
-        }
+    private static @NotNull Stream<TLAplusModule> publicModuleVariants(
+            TLAplusModule context,
+            Predicate<TLAplusNamedElement> requirement) {
+        Stream.Builder<Stream<TLAplusModule>> streams = Stream.builder();
 
-        Optional<TLAplusModule> result = context.modulesFromExtends()
-               .map(m -> resolveModulePublic(m, moduleName))
-               .filter(Objects::nonNull)
-               .findFirst();
-        if (result.isPresent()) {
-            return result.get();
-        }
+        streams.add(context.getModuleDefinitionList()
+                           .stream()
+                           .flatMap(def -> {
+                               if (isLocal(def)) {
+                                   return Stream.empty();
+                               }
+                               if (def.getInstance().getModuleRef() == null) {
+                                   return Stream.empty();
+                               }
+                               if (!requirement.test(def.getNonfixLhs().getNonfixLhsName())) {
+                                   return Stream.empty();
+                               }
+                               if (def.getInstance().getModuleRef() == null) {
+                                   return Stream.empty();
+                               }
+                               return Optional.ofNullable(context.findModule(
+                                       def.getInstance().getModuleRef().getReferenceName()))
+                                       .stream();
+                           }));
 
-        result = context.modulesFromInstantiation(instance -> !isLocal(instance))
-                        .map(m -> resolveModulePublic(m, moduleName))
-                        .filter(Objects::nonNull)
-                        .findFirst();
+        streams.add(context.getModuleDefinitionList()
+                           .stream()
+                           .filter(def -> !isLocal(def))
+                           .map(def -> def.getInstance().getModuleRef())
+                           .filter(Objects::nonNull)
+                           .map(ref -> context.findModule(ref.getReferenceName()))
+                           .filter(Objects::nonNull));
 
-        return result.orElse(null);
+        streams.add(context.modulesFromExtends()
+                           .filter(m -> requirement.test(m.getModuleHeader()))
+                           .flatMap(m -> publicModuleVariants(m, requirement)));
+        streams.add(context.modulesFromInstantiation(instance -> !isLocal(instance))
+                           .filter(m -> requirement.test(m.getModuleHeader()))
+                           .flatMap(m -> publicModuleVariants(m, requirement)));
+
+        return streams.build().flatMap(Function.identity());
     }
 }

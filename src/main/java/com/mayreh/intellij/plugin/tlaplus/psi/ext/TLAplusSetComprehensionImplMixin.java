@@ -1,5 +1,6 @@
 package com.mayreh.intellij.plugin.tlaplus.psi.ext;
 
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.jetbrains.annotations.NotNull;
@@ -15,8 +16,8 @@ public abstract class TLAplusSetComprehensionImplMixin
     }
 
     @Override
-    public @NotNull Stream<? extends TLAplusNamedElement> localDefinitions(
+    public @NotNull Stream<TLAplusNamedElement> localDefinitions(
             @NotNull TLAplusReferenceElement reference) {
-        return getBoundNameList().stream();
+        return getBoundNameList().stream().map(Function.identity());
     }
 }

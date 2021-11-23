@@ -2,6 +2,7 @@ package com.mayreh.intellij.plugin.tlaplus.psi.ext;
 
 import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPsiUtils.isForwardReference;
 
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.jetbrains.annotations.NotNull;
@@ -16,10 +17,11 @@ public abstract class TLAplusFuncDefinitionImplMixin extends TLAplusElementImpl 
     }
 
     @Override
-    public @NotNull Stream<? extends TLAplusNamedElement> localDefinitions(
+    public @NotNull Stream<TLAplusNamedElement> localDefinitions(
             @NotNull TLAplusReferenceElement reference) {
         return getBoundNameList()
                 .stream()
-                .filter(e -> !isForwardReference(reference, e));
+                .filter(e -> !isForwardReference(reference, e))
+                .map(Function.identity());
     }
 }

@@ -41,7 +41,7 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
     }
 
     @Override
-    public @NotNull Stream<? extends TLAplusNamedElement> localDefinitions(
+    public @NotNull Stream<TLAplusNamedElement> localDefinitions(
             @NotNull TLAplusReferenceElement reference) {
         Stream<? extends TLAplusNamedElement> localNames = definitions(
                 (container, name) -> !isForwardReference(reference, name));
@@ -83,7 +83,7 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
         if (thisFile == null) {
             return null;
         }
-        PsiDirectory directory = thisFile.getContainingDirectory();
+        PsiDirectory directory = thisFile.getOriginalFile().getContainingDirectory();
         if (directory == null) {
             return null;
         }
