@@ -1,11 +1,14 @@
 package com.mayreh.intellij.plugin.tlaplus.psi.ext;
 
+import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPsiUtils.isForwardReference;
+import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPsiUtils.isLocal;
+
 import java.net.URL;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiPredicate;
-import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,23 +17,18 @@ import com.intellij.lang.ASTNode;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDirectory;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.psi.util.PsiUtilCore;
 import com.intellij.util.ResourceUtil;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusConstantDecl;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusFuncDefinition;
+import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusFuncName;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusInstance;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModule;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModuleDefinition;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModuleRef;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement;
+import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNonfixLhsName;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusOpDecl;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusOpDefinition;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusVariableDecl;
+import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusOpName;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusVariableName;
 
 public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implements TLAplusModule {
@@ -43,64 +41,35 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
     }
 
     @Override
-    public @Nullable TLAplusNamedElement findLocalDefinition(TLAplusReferenceElement element) {
-        TLAplusNamedElement result = find
-                ((container, name) -> isLocalDefinitionOf(name, element, true));
-        if (result != null) {
-            return result;
-        }
-        result = findFromExtends(module -> module.findPublicDefinition(element.getReferenceName()));
-        if (result != null) {
-            return result;
-        }
-        // Definitions in the module instantiated by INSTANCE only visible
-        // after INSTANCE declaration.
-        result = findFromInstantiation(instance -> instance.getTextOffset() <= element.getTextOffset(),
-                                       module -> module.findPublicDefinition(element.getReferenceName()));
+    public @NotNull Stream<? extends TLAplusNamedElement> localDefinitions(
+            @NotNull TLAplusReferenceElement reference) {
+        Stream<? extends TLAplusNamedElement> localNames = definitions(
+                (container, name) -> !isForwardReference(reference, name));
 
-        return result;
+        Stream<TLAplusNamedElement> namesFromExtends = modulesFromExtends()
+                .flatMap(TLAplusModuleContext::publicDefinitions);
+
+        Stream<TLAplusNamedElement> namesFromInstance =
+                // Definitions in the module instantiated by INSTANCE only visible
+                // after INSTANCE declaration.
+                modulesFromInstantiation(i -> i.getTextOffset() <= reference.getTextOffset())
+                        .flatMap(TLAplusModuleContext::publicDefinitions);
+
+        return Stream.concat(Stream.concat(localNames, namesFromExtends), namesFromInstance);
     }
 
     @Override
-    public @Nullable TLAplusNamedElement findPublicDefinition(String referenceName) {
-        TLAplusNamedElement result = find
-                ((container, name) -> isPublicDefinitionOf(container, name, referenceName));
-        if (result != null) {
-            return result;
-        }
-        result = findFromExtends(module -> module.findPublicDefinition(referenceName));
-        if (result != null) {
-            return result;
-        }
-        result = findFromInstantiation(instance -> !isLocal(instance),
-                                       module -> module.findPublicDefinition(referenceName));
+    public @NotNull Stream<TLAplusNamedElement> publicDefinitions() {
+        Stream<? extends TLAplusNamedElement> names = definitions(
+                (container, name) -> !isLocal(container));
 
-        return result;
-    }
+        Stream<TLAplusNamedElement> namesFromExtends = modulesFromExtends()
+                .flatMap(TLAplusModuleContext::publicDefinitions);
 
-    @Override
-    public @Nullable TLAplusModule resolveModulePublic(String moduleName) {
-        for (TLAplusModuleDefinition moduleDef : getModuleDefinitionList()) {
-            if (isPublicDefinitionOf(moduleDef, moduleDef.getNonfixLhs().getNonfixLhsName(), moduleName)) {
-                TLAplusModuleRef resolvedModuleRef = moduleDef.getInstance().getModuleRef();
-                if (resolvedModuleRef != null) {
-                    TLAplusModule module = findModule(resolvedModuleRef.getReferenceName());
-                    if (module != null) {
-                        return module;
-                    }
-                }
-            }
-        }
+        Stream<TLAplusNamedElement> namesFromInstance =
+                modulesFromInstantiation(i -> !isLocal(i)).flatMap(TLAplusModuleContext::publicDefinitions);
 
-        TLAplusModule result = findFromExtends(module -> module.resolveModulePublic(moduleName));
-        if (result != null) {
-            return result;
-        }
-
-        result = findFromInstantiation(instance -> !isLocal(instance),
-                                       module -> module.resolveModulePublic(moduleName));
-
-        return result;
+        return Stream.concat(Stream.concat(names, namesFromExtends), namesFromInstance);
     }
 
     @Override
@@ -125,90 +94,57 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
         return PsiTreeUtil.findChildOfType(moduleFile, TLAplusModule.class);
     }
 
-    private @Nullable TLAplusNamedElement find(BiPredicate<TLAplusElement, TLAplusNamedElement> predicate) {
-        for (TLAplusVariableDecl decl : getVariableDeclList()) {
-            for (TLAplusVariableName variableName : decl.getVariableNameList()) {
-                if (predicate.test(decl, variableName)) {
-                    return variableName;
-                }
-            }
-        }
-        for (TLAplusConstantDecl decl : getConstantDeclList()) {
-            for (TLAplusOpDecl opDecl : decl.getOpDeclList()) {
-                if (opDecl.getOpName() != null) {
-                    if (predicate.test(decl, opDecl.getOpName())) {
-                        return opDecl.getOpName();
-                    }
-                }
-            }
-        }
-        for (TLAplusOpDefinition opDef : getOpDefinitionList()) {
-            if (opDef.getNonfixLhs() != null) {
-                if (predicate.test(opDef, opDef.getNonfixLhs().getNonfixLhsName())) {
-                    return opDef.getNonfixLhs().getNonfixLhsName();
-                }
-            }
-        }
-        for (TLAplusFuncDefinition funcDef : getFuncDefinitionList()) {
-            if (predicate.test(funcDef, funcDef.getFuncName())) {
-                return funcDef.getFuncName();
-            }
-        }
-        for (TLAplusModuleDefinition moduleDef : getModuleDefinitionList()) {
-            if (predicate.test(moduleDef, moduleDef.getNonfixLhs().getNonfixLhsName())) {
-                return moduleDef.getNonfixLhs().getNonfixLhsName();
-            }
-        }
+    private @NotNull Stream<? extends TLAplusNamedElement> definitions(
+            BiPredicate<TLAplusElement, TLAplusNamedElement> requirement) {
+        Stream<TLAplusVariableName> variables = getVariableDeclList()
+                .stream()
+                .flatMap(decl -> decl.getVariableNameList()
+                                     .stream()
+                                     .filter(name -> requirement.test(decl, name)));
 
-        return null;
+        Stream<TLAplusOpName> constants = getConstantDeclList()
+                .stream()
+                .flatMap(decl -> decl.getOpDeclList()
+                                     .stream()
+                                     .map(TLAplusOpDecl::getOpName)
+                                     .filter(name -> requirement.test(decl, name)));
+
+        Stream<TLAplusNonfixLhsName> ops = getOpDefinitionList()
+                .stream()
+                .filter(def -> def.getNonfixLhs() != null && requirement.test(def, def.getNonfixLhs().getNonfixLhsName()))
+                .map(def -> def.getNonfixLhs().getNonfixLhsName());
+
+        Stream<TLAplusFuncName> functions = getFuncDefinitionList()
+                .stream()
+                .filter(def -> requirement.test(def, def.getFuncName()))
+                .map(TLAplusFuncDefinition::getFuncName);
+
+        Stream<TLAplusNonfixLhsName> modules = getModuleDefinitionList()
+                .stream()
+                .filter(def -> requirement.test(def, def.getNonfixLhs().getNonfixLhsName()))
+                .map(def -> def.getNonfixLhs().getNonfixLhsName());
+
+        return Stream.concat(Stream.concat(Stream.concat(Stream.concat(variables, constants), ops), functions), modules);
     }
 
     @Override
-    public @Nullable <T> T findFromExtends(Function<TLAplusModule, @Nullable T> finder) {
-        for (TLAplusModuleRef extend : getModuleRefList()) {
-            String moduleName = extend.getReferenceName();
-            TLAplusModule module = findModule(moduleName);
-            if (module != null) {
-                T result = finder.apply(module);
-                if (result != null) {
-                    return result;
-                }
-            }
-        }
-        return null;
+    public @NotNull Stream<TLAplusModule> modulesFromExtends() {
+        return getModuleRefList()
+                .stream()
+                .map(TLAplusReferenceElement::getReferenceName)
+                .map(this::findModule)
+                .filter(Objects::nonNull);
     }
 
     @Override
-    public @Nullable <T> T findFromInstantiation(
-            Predicate<TLAplusInstance> requirement,
-            Function<TLAplusModule, @Nullable T> finder) {
-        for (TLAplusInstance instance : getInstanceList()) {
-            if (requirement.test(instance) && instance.getModuleRef() != null) {
-                TLAplusModule module = findModule(instance.getModuleRef().getReferenceName());
-                if (module != null) {
-                    T result = finder.apply(module);
-                    if (result != null) {
-                        return result;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
-    private static boolean isPublicDefinitionOf(
-            PsiElement container,
-            TLAplusNamedElement name,
-            String referenceName) {
-        if (isLocal(container)) {
-            return false;
-        }
-        return Objects.equals(name.getName(), referenceName);
-    }
-
-    private static boolean isLocal(PsiElement maybeLocalDefinition) {
-        PsiElement sibling = PsiTreeUtil.skipWhitespacesAndCommentsBackward(maybeLocalDefinition);
-        return sibling != null && PsiUtilCore.getElementType(sibling) == TLAplusElementTypes.KEYWORD_LOCAL;
+    public @NotNull Stream<TLAplusModule> modulesFromInstantiation(
+            Predicate<TLAplusInstance> requirement) {
+        return getInstanceList()
+                .stream()
+                .filter(i -> requirement.test(i) && i.getModuleRef() != null)
+                .map(i -> i.getModuleRef().getReferenceName())
+                .map(this::findModule)
+                .filter(Objects::nonNull);
     }
 
     private @Nullable TLAplusModule findStandardModule(String moduleName) {

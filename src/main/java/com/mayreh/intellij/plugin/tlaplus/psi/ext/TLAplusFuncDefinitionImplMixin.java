@@ -1,10 +1,12 @@
 package com.mayreh.intellij.plugin.tlaplus.psi.ext;
 
+import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPsiUtils.isForwardReference;
+
+import java.util.stream.Stream;
+
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import com.intellij.lang.ASTNode;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusBoundName;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusFuncDefinition;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement;
 
@@ -14,12 +16,10 @@ public abstract class TLAplusFuncDefinitionImplMixin extends TLAplusElementImpl 
     }
 
     @Override
-    public @Nullable TLAplusNamedElement findLocalDefinition(TLAplusReferenceElement element) {
-        for (TLAplusBoundName boundName : getBoundNameList()) {
-            if (isLocalDefinitionOf(boundName, element, true)) {
-                return boundName;
-            }
-        }
-        return null;
+    public @NotNull Stream<? extends TLAplusNamedElement> localDefinitions(
+            @NotNull TLAplusReferenceElement reference) {
+        return getBoundNameList()
+                .stream()
+                .filter(e -> !isForwardReference(reference, e));
     }
 }

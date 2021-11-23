@@ -1,8 +1,9 @@
 package com.mayreh.intellij.plugin.tlaplus.psi.ext;
 
-import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusInstance;
@@ -11,10 +12,9 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement;
 
 public interface TLAplusModuleContext extends TLAplusNameContext {
     /**
-     * Find the definition from this module with taking
-     * visibilities into account. (e.g. "LOCAL" definitions will not be returned)
+     * Returns the stream of public definitions.
      */
-    @Nullable TLAplusNamedElement findPublicDefinition(String referenceName);
+    @NotNull Stream<TLAplusNamedElement> publicDefinitions();
 
     /**
      * Find the module from search path (i.e. same directory or standard modules) by module name.
@@ -22,20 +22,12 @@ public interface TLAplusModuleContext extends TLAplusNameContext {
     @Nullable TLAplusModule findModule(String moduleName);
 
     /**
-     * Resolve module name to {@link TLAplusModule} which is exported publicly from this context.
+     * Returns imported modules by extends.
      */
-    @Nullable TLAplusModule resolveModulePublic(String moduleName);
+    @NotNull Stream<TLAplusModule> modulesFromExtends();
 
     /**
-     * Execute finder in imported modules by extends and return the result if found (i.e. finder returns non-null)
+     * Returns imported modules by instantiation that meets the requiremtn.
      */
-    @Nullable <T> T findFromExtends(Function<TLAplusModule, @Nullable T> finder);
-
-    /**
-     * Execute finder in imported modules by instantiation and return the result if found (i.e. finder returns non-null).
-     * For each instantiation, it's checked if the instantiation meets the requirement.
-     */
-    @Nullable <T> T findFromInstantiation(
-            Predicate<TLAplusInstance> requirement,
-            Function<TLAplusModule, @Nullable T> finder);
+    @NotNull Stream<TLAplusModule> modulesFromInstantiation(Predicate<TLAplusInstance> requirement);
 }

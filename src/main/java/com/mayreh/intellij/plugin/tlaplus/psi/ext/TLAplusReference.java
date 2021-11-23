@@ -1,6 +1,11 @@
 package com.mayreh.intellij.plugin.tlaplus.psi.ext;
 
+import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPsiUtils.isLocal;
+
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -33,6 +38,17 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
     }
 
     @Override
+    public Object @NotNull [] getVariants() {
+
+        List<Object> result = new ArrayList<>();
+
+        result.add("test1");
+        result.add("foooo");
+
+        return result.toArray();
+    }
+
+    @Override
     public @Nullable PsiElement resolve() {
         TLAplusModule currentModule = getElement().currentModule();
         if (currentModule == null) {
@@ -49,7 +65,10 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
             if (instance != null && instance.getModuleRef() != null) {
                 TLAplusModule module = currentModule.findModule(instance.getModuleRef().getReferenceName());
                 if (module != null) {
-                    return module.findPublicDefinition(ident.getReferenceName());
+                    return module.publicDefinitions()
+                                 .filter(name -> ident.getReferenceName().equals(name.getName()))
+                                 .findFirst()
+                                 .orElse(null);
                 }
             }
         }
@@ -74,7 +93,10 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
                     TLAplusModule scope = resolveInstancePrefix(
                             currentModule, instancePrefix.getModuleRefList().subList(0, index));
                     if (scope != null) {
-                        return scope.findPublicDefinition(getElement().getReferenceName());
+                        return scope.publicDefinitions()
+                                    .filter(name -> getElement().getReferenceName().equals(name.getName()))
+                                    .findFirst()
+                                    .orElse(null);
                     }
                 }
             } else {
@@ -104,7 +126,10 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
             return null;
         }
 
-        return resolvedModule.findPublicDefinition(element.getReferenceName());
+        return resolvedModule.publicDefinitions()
+                             .filter(name -> element.getReferenceName().equals(name.getName()))
+                             .findFirst()
+                             .orElse(null);
     }
 
     private static @Nullable TLAplusModule resolveInstancePrefix(
@@ -130,7 +155,7 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
                 }
                 module = resolveModuleLocally(moduleScope, moduleRef);
             } else {
-                module = moduleScope.resolveModulePublic(moduleRef.getReferenceName());
+                module = resolveModulePublic(moduleScope, moduleRef.getReferenceName());
             }
             if (module != null) {
                 moduleScope = module;
@@ -160,17 +185,23 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
             }
         }
 
-        TLAplusModule result = currentModule.findFromExtends(
-                module -> module.resolveModulePublic(moduleRef.getReferenceName()));
-        if (result != null) {
-            return result;
+        Optional<TLAplusModule> result = currentModule
+                .modulesFromExtends()
+                .map(m -> resolveModulePublic(m, moduleRef.getReferenceName()))
+                .filter(Objects::nonNull)
+                .findFirst();
+        if (result.isPresent()) {
+            return result.get();
         }
 
-        result = currentModule.findFromInstantiation(
-                instance -> instance.getTextOffset() <= moduleRef.getTextOffset(),
-                module -> module.resolveModulePublic(moduleRef.getReferenceName()));
+        result = currentModule
+                .modulesFromInstantiation(
+                        instance -> instance.getTextOffset() <= moduleRef.getTextOffset())
+                .map(m -> resolveModulePublic(m, moduleRef.getReferenceName()))
+                .filter(Objects::nonNull)
+                .findFirst();
 
-        return result;
+        return result.orElse(null);
     }
 
     private static @Nullable TLAplusNamedElement resolveReferenceLocally(TLAplusReferenceElement element) {
@@ -179,9 +210,12 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
             context = (TLAplusNameContext) element.getContext();
         }
         while (context != null) {
-            TLAplusNamedElement definition = context.findLocalDefinition(element);
-            if (definition != null) {
-                return definition;
+            Optional<? extends TLAplusNamedElement> name =
+                    context.localDefinitions(element)
+                           .filter(e -> element.getReferenceName().equals(e.getName()))
+                           .findFirst();
+            if (name.isPresent()) {
+                return name.get();
             }
 
             if (context.getContext() instanceof TLAplusNameContext) {
@@ -191,5 +225,34 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
             }
         }
         return null;
+    }
+
+    private static @Nullable TLAplusModule resolveModulePublic(TLAplusModule context, String moduleName) {
+        for (TLAplusModuleDefinition moduleDef : context.getModuleDefinitionList()) {
+            if (!isLocal(moduleDef) && moduleName.equals(moduleDef.getNonfixLhs().getNonfixLhsName().getName())) {
+                TLAplusModuleRef resolvedModuleRef = moduleDef.getInstance().getModuleRef();
+                if (resolvedModuleRef != null) {
+                    TLAplusModule module = context.findModule(resolvedModuleRef.getReferenceName());
+                    if (module != null) {
+                        return module;
+                    }
+                }
+            }
+        }
+
+        Optional<TLAplusModule> result = context.modulesFromExtends()
+               .map(m -> resolveModulePublic(m, moduleName))
+               .filter(Objects::nonNull)
+               .findFirst();
+        if (result.isPresent()) {
+            return result.get();
+        }
+
+        result = context.modulesFromInstantiation(instance -> !isLocal(instance))
+                        .map(m -> resolveModulePublic(m, moduleName))
+                        .filter(Objects::nonNull)
+                        .findFirst();
+
+        return result.orElse(null);
     }
 }

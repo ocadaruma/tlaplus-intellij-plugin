@@ -14,7 +14,6 @@
     psiImplClassSuffix='Impl'
     psiPackage='com.mayreh.intellij.plugin.tlaplus.psi'
     psiImplPackage='com.mayreh.intellij.plugin.tlaplus.psi.impl'
-    psiImplUtilClass='com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPsiImplUtil'
 
     tokens = [
         // outside of the module block
