@@ -43,7 +43,7 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
     @Override
     public @NotNull Stream<TLAplusNamedElement> localDefinitions(
             @NotNull TLAplusReferenceElement reference) {
-        Stream<? extends TLAplusNamedElement> localNames = definitions(
+        Stream<TLAplusNamedElement> localNames = definitions(
                 (container, name) -> !isForwardReference(reference, name));
 
         Stream<TLAplusNamedElement> namesFromExtends = modulesFromExtends()
@@ -60,7 +60,7 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
 
     @Override
     public @NotNull Stream<TLAplusNamedElement> publicDefinitions() {
-        Stream<? extends TLAplusNamedElement> names = definitions(
+        Stream<TLAplusNamedElement> names = definitions(
                 (container, name) -> !isLocal(container));
 
         Stream<TLAplusNamedElement> namesFromExtends = modulesFromExtends()
@@ -94,7 +94,7 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
         return PsiTreeUtil.findChildOfType(moduleFile, TLAplusModule.class);
     }
 
-    private @NotNull Stream<? extends TLAplusNamedElement> definitions(
+    private @NotNull Stream<TLAplusNamedElement> definitions(
             BiPredicate<TLAplusElement, TLAplusNamedElement> requirement) {
         Stream<TLAplusVariableName> variables = getVariableDeclList()
                 .stream()
