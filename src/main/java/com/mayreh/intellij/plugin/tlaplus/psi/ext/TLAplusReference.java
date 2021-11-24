@@ -58,13 +58,23 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
             TLAplusSubstitutingIdent ident = (TLAplusSubstitutingIdent) getElement();
             TLAplusInstance instance = PsiTreeUtil.getParentOfType(ident, TLAplusInstance.class);
             if (instance != null && instance.getModuleRef() != null) {
-                TLAplusModule module = currentModule.findModule(instance.getModuleRef().getReferenceName());
+                TLAplusModule module = currentModule
+                        .availableModules()
+                        .filter(m -> instance.getModuleRef().getReferenceName().equals(m.getModuleHeader().getName()))
+                        .findFirst()
+                        .orElse(null);
                 if (module != null) {
                     return module.publicDefinitions()
                                  .map(PsiNamedElement::getName)
                                  .toArray();
                 }
             }
+        }
+
+        if (getElement() instanceof TLAplusModuleRef) {
+            return currentModule.availableModules()
+                                .flatMap(m -> Optional.ofNullable(m.getModuleHeader().getName()).stream())
+                                .toArray();
         }
 
         return ArrayUtilRt.EMPTY_OBJECT_ARRAY;
@@ -88,7 +98,11 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
             TLAplusSubstitutingIdent ident = (TLAplusSubstitutingIdent) getElement();
             TLAplusInstance instance = PsiTreeUtil.getParentOfType(ident, TLAplusInstance.class);
             if (instance != null && instance.getModuleRef() != null) {
-                TLAplusModule module = currentModule.findModule(instance.getModuleRef().getReferenceName());
+                TLAplusModule module = currentModule
+                        .availableModules()
+                        .filter(m -> instance.getModuleRef().getReferenceName().equals(m.getModuleHeader().getName()))
+                        .findFirst()
+                        .orElse(null);
                 if (module != null) {
                     return module.publicDefinitions()
                                  .filter(name -> ident.getReferenceName().equals(name.getName()))
@@ -100,7 +114,11 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
 
         if (getElement() instanceof TLAplusModuleRef) {
             // If the module is a plain module (i.e. without instantiation), just resolved to its module header.
-            TLAplusModule resolvedModule = currentModule.findModule(getElement().getReferenceName());
+            TLAplusModule resolvedModule = currentModule
+                    .availableModules()
+                    .filter(m -> getElement().getReferenceName().equals(m.getModuleHeader().getName()))
+                    .findFirst()
+                    .orElse(null);
             if (resolvedModule != null) {
                 return resolvedModule.getModuleHeader();
             }
@@ -177,7 +195,11 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
             // without taking visibility into account.
             TLAplusModule module;
             if (i == 0) {
-                module = moduleScope.findModule(moduleRef.getReferenceName());
+                module = moduleScope
+                        .availableModules()
+                        .filter(m -> moduleRef.getReferenceName().equals(m.getModuleHeader().getName()))
+                        .findFirst()
+                        .orElse(null);
                 if (module != null) {
                     moduleScope = module;
                     continue;
@@ -221,8 +243,10 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
                             }
                             TLAplusModuleDefinition moduleDef = (TLAplusModuleDefinition) e.getParent().getParent();
                             return Optional.ofNullable(moduleDef.getInstance().getModuleRef())
-                                           .flatMap(ref -> Optional.ofNullable(
-                                                   currentModule.findModule(ref.getReferenceName())))
+                                           .flatMap(ref -> currentModule.availableModules()
+                                                                        .filter(m -> ref.getReferenceName().equals(
+                                                                                m.getModuleHeader().getName()))
+                                                                        .findFirst())
                                            .stream();
                         }));
 
@@ -282,9 +306,9 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
                                if (def.getInstance().getModuleRef() == null) {
                                    return Stream.empty();
                                }
-                               return Optional.ofNullable(context.findModule(
-                                       def.getInstance().getModuleRef().getReferenceName()))
-                                       .stream();
+                               return context.availableModules()
+                                             .filter(m -> def.getInstance().getModuleRef().getReferenceName()
+                                                             .equals(m.getModuleHeader().getName()));
                            }));
 
         streams.add(context.modulesFromExtends()

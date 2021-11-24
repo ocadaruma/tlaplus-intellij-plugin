@@ -4,7 +4,6 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusInstance;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModule;
@@ -17,9 +16,9 @@ public interface TLAplusModuleContext extends TLAplusNameContext {
     @NotNull Stream<TLAplusNamedElement> publicDefinitions();
 
     /**
-     * Find the module from search path (i.e. same directory or standard modules) by module name.
+     * Returns the stream of modules from search path (i.e. same directory or standard modules)
      */
-    @Nullable TLAplusModule findModule(String moduleName);
+    @NotNull Stream<TLAplusModule> availableModules();
 
     /**
      * Returns imported modules by extends.

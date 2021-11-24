@@ -4,7 +4,8 @@ import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPsiUtils.isForwardRe
 import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPsiUtils.isLocal;
 
 import java.net.URL;
-import java.util.Objects;
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
@@ -12,7 +13,6 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.vfs.VfsUtil;
@@ -63,25 +63,25 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
     }
 
     @Override
-    public @Nullable TLAplusModule findModule(String moduleName) {
-        TLAplusModule module = findStandardModule(moduleName);
-        if (module != null) {
-            return module;
-        }
+    public @NotNull Stream<TLAplusModule> availableModules() {
+        Stream<TLAplusModule> standardModules = standardModules();
 
-        PsiFile thisFile = getContainingFile();
-        if (thisFile == null) {
-            return null;
-        }
-        PsiDirectory directory = thisFile.getOriginalFile().getContainingDirectory();
-        if (directory == null) {
-            return null;
-        }
-        PsiFile moduleFile = directory.findFile(moduleName + ".tla");
-        if (moduleFile == null) {
-            return null;
-        }
-        return PsiTreeUtil.findChildOfType(moduleFile, TLAplusModule.class);
+        Stream<TLAplusModule> modulesInSameDir =
+                Optional.ofNullable(getContainingFile())
+                        .stream()
+                        .flatMap(file -> {
+                            PsiDirectory directory = file.getOriginalFile().getContainingDirectory();
+                            if (directory == null) {
+                                return Stream.empty();
+                            }
+                            return Arrays.stream(directory.getFiles())
+                                         // this file should not be included
+                                         .filter(f -> f.getName().endsWith(".tla") && !f.getName().equals(file.getName()))
+                                         .flatMap(f -> Optional.ofNullable(
+                                                 PsiTreeUtil.findChildOfType(f, TLAplusModule.class)).stream());
+                        });
+
+        return Stream.concat(standardModules, modulesInSameDir);
     }
 
     private @NotNull Stream<TLAplusNamedElement> definitions(
@@ -127,8 +127,7 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
         return getModuleRefList()
                 .stream()
                 .map(TLAplusReferenceElement::getReferenceName)
-                .map(this::findModule)
-                .filter(Objects::nonNull);
+                .flatMap(moduleName -> availableModules().filter(m -> moduleName.equals(m.getModuleHeader().getName())));
     }
 
     @Override
@@ -138,31 +137,30 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
                 .stream()
                 .filter(i -> requirement.test(i) && i.getModuleRef() != null)
                 .map(i -> i.getModuleRef().getReferenceName())
-                .map(this::findModule)
-                .filter(Objects::nonNull);
+                .flatMap(moduleName -> availableModules().filter(m -> moduleName.equals(m.getModuleHeader().getName())));
     }
 
-    private @Nullable TLAplusModule findStandardModule(String moduleName) {
-        if (STANDARD_MODULES.contains(moduleName)) {
-            URL url = ResourceUtil.getResource(getClass().getClassLoader(),
-                                               "tla2sany/StandardModules",
-                                               moduleName + ".tla");
-            if (url == null) {
-                return null;
-            }
-
-            VirtualFile file = VfsUtil.findFileByURL(url);
-            if (file == null) {
-                return null;
-            }
-
-            PsiFile psiFile = PsiManager.getInstance(getProject()).findFile(file);
-            if (psiFile == null) {
-                return null;
-            }
-
-            return PsiTreeUtil.findChildOfType(psiFile, TLAplusModule.class);
-        }
-        return null;
+    private @NotNull Stream<TLAplusModule> standardModules() {
+        return STANDARD_MODULES
+                .stream()
+                .flatMap(moduleName -> {
+                    URL url = ResourceUtil.getResource(
+                            getClass().getClassLoader(),
+                            "tla2sany/StandardModules",
+                            moduleName + ".tla");
+                    if (url == null) {
+                        return Stream.empty();
+                    }
+                    VirtualFile file = VfsUtil.findFileByURL(url);
+                    if (file == null) {
+                        return Stream.empty();
+                    }
+                    PsiFile psiFile = PsiManager.getInstance(getProject()).findFile(file);
+                    if (psiFile == null) {
+                        return Stream.empty();
+                    }
+                    return Optional.ofNullable(PsiTreeUtil.findChildOfType(psiFile, TLAplusModule.class))
+                                   .stream();
+                });
     }
 }
