@@ -1,0 +1,3 @@
+---- MODULE StandardModules ----
+EXTENDS <caret>
+================================
