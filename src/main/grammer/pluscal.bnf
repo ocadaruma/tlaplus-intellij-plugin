@@ -1,0 +1,763 @@
+{
+    parserClass='com.mayreh.intellij.plugin.pluscal.parser.PlusCalParser'
+
+    implements='com.mayreh.intellij.plugin.pluscal.psi.ext.PlusCalElement'
+    extends='com.mayreh.intellij.plugin.pluscal.psi.ext.PlusCalElementImpl'
+
+    elementTypeHolderClass='com.mayreh.intellij.plugin.pluscal.psi.PlusCalElementTypes'
+
+    elementTypeClass='com.mayreh.intellij.plugin.pluscal.psi.PlusCalElementType'
+    tokenTypeClass='com.mayreh.intellij.plugin.pluscal.psi.PlusCalTokenType'
+
+    psiClassPrefix='PlusCal'
+    psiImplClassSuffix='Impl'
+    psiPackage='com.mayreh.intellij.plugin.pluscal.psi'
+    psiImplPackage='com.mayreh.intellij.plugin.pluscal.psi.impl'
+
+    tokens = [
+        // tokens to parse disjunction
+        JUNCTION_BEGIN            = 'JUNCTION_BEGIN'
+        JUNCTION_CONT             = 'JUNCTION_CONT'
+        JUNCTION_BREAK            = 'JUNCTION_BREAK'
+
+        COMMENT_LINE       = 'COMMENT_LINE'
+        COMMENT_BLOCK      = 'COMMENT_BLOCK'
+
+        KEYWORD_ASSUME     = 'ASSUME'
+        KEYWORD_ASSUMPTION = 'ASSUMPTION'
+        KEYWORD_AXIOM      = 'AXIOM'
+        KEYWORD_CASE       = 'CASE'
+        KEYWORD_CHOOSE     = 'CHOOSE'
+        KEYWORD_CONSTANT   = 'CONSTANT'
+        KEYWORD_CONSTANTS  = 'CONSTANTS'
+
+        KEYWORD_ELSE       = 'ELSE'
+        KEYWORD_LOCAL      = 'LOCAL'
+
+        KEYWORD_MODULE     = 'MODULE'
+        KEYWORD_VARIABLE   = 'VARIABLE'
+
+        KEYWORD_EXCEPT     = 'EXCEPT'
+        KEYWORD_OTHER      = 'OTHER'
+        KEYWORD_VARIABLES  = 'VARIABLES'
+
+        KEYWORD_EXTENDS    = 'EXTENDS'
+        KEYWORD_SF_        = 'SF_'
+        KEYWORD_WF_        = 'WF_'
+
+        KEYWORD_IF         = 'IF'
+        KEYWORD_WITH       = 'WITH'
+
+        KEYWORD_IN         = 'IN'
+        KEYWORD_THEN       = 'THEN'
+
+        KEYWORD_INSTANCE   = 'INSTANCE'
+        KEYWORD_THEOREM    = 'THEOREM'
+        KEYWORD_LET        = 'LET'
+        KEYWORD_LAMBDA     = 'LAMBDA'
+
+        LITERAL_NUMBER     = 'number'
+        LITERAL_STRING     = 'string'
+
+        IDENTIFIER         = 'identifier'
+
+        LTUPLE             = '<<'
+        RTUPLE             = '>>'
+        RTUPLEUNDER        = '>>_'
+        COMMA              = ','
+        SEMICOLON          = ';'
+        SEPARATOR          = '----'
+        MODULE_END         = '===='
+        LPAREN             = '('
+        RPAREN             = ')'
+        LBRACKET           = '{'
+        RBRACKET           = '}'
+        LSQBRACKET         = '['
+        RSQBRACKET         = ']'
+        RSQBRACKETUNDER    = ']_'
+        DOT                = '.'
+        COLON              = ':'
+        UNDER              = '_'
+        BANG               = '!'
+        AT                 = '@'
+
+        DEFINE             = '=='
+
+        OP_ENABLED         = 'ENABLED'
+        OP_UNCHANGED       = 'UNCHANGED'
+        OP_POWERSET        = 'SUBSET'
+        OP_DOMAIN          = 'DOMAIN'
+        OP_UNION           = 'UNION'
+        OP_NEG             = '~'
+        OP_SQUARE          = '[]'
+        OP_DIAMOND         = '<>'
+        OP_DASH            = '-'
+        OP_LAND            = '\land'
+        OP_LAND2           = '/\'
+        OP_IN              = '\in'
+        OP_LT              = '<'
+        OP_LTEQ            = '=<'
+        OP_LTLT            = '\ll'
+        OP_PREC            = '\prec'
+        OP_PRECEQ          = '\preceq'
+        OP_SUBSETEQ        = '\subseteq'
+        OP_SUBSET          = '\subset'
+        OP_SQSUBSET        = '\sqsubset'
+        OP_SQSUBSETEQ      = '\sqsubseteq'
+        OP_VBARDASH        = '|-'
+        OP_VBAREQ          = '|='
+        OP_DASHGT          = '->'
+        OP_CAP             = '\cap'
+        OP_SQCAP           = '\sqcap'
+        OP_OPLUS           = '(+)'
+        OP_OMINUS          = '(-)'
+        OP_ODOT            = '(.)'
+        OP_OTIMES          = '(\X)'
+        OP_OSLASH          = '(/)'
+        OP_LOR             = '\lor'
+        OP_LOR2            = '\/'
+        OP_EQUIV           = '<=>'
+        OP_NOTIN           = '\notin'
+        OP_GT              = '>'
+        OP_GTEQ            = '>='
+        OP_GTGT            = '\gg'
+        OP_SUCC            = '\succ'
+        OP_SUCCEQ          = '\succeq'
+        OP_SUPSETEQ        = '\supseteq'
+        OP_SUPSET          = '\supset'
+        OP_SQSUPSET        = '\sqsupset'
+        OP_SQSUPSETEQ      = '\sqsupseteq'
+        OP_DASHVBAR        = '-|'
+        OP_EQVBAR          = '=|'
+        OP_LTDASH          = '<-'
+        OP_CUP             = '\cup'
+        OP_SQCUP           = '\sqcup'
+        OP_UPLUS           = '\uplus'
+        OP_X               = '\X'
+        OP_WR              = '\wr'
+        OP_PROPTO          = '\propto'
+        OP_EQGT            = '=>'
+        OP_EQ              = '='
+        OP_NOTEQ           = '/='
+        OP_TILDEGT         = '~>'
+        OP_DASHPLUSDASHGT  = '-+->'
+        OP_VBARDASHGT      = '|->'
+        OP_DIV             = '\div'
+        OP_CDOT            = '\cdot'
+        OP_CIRC            = '\circ'
+        OP_BULLET          = '\bullet'
+        OP_STAR            = '\star'
+        OP_BIGCIRC         = '\bigcirc'
+        OP_SIM             = '\sim'
+        OP_SIMEQ           = '\simeq'
+        OP_ASYMP           = '\asymp'
+        OP_APPROX          = '\approx'
+        OP_CONG            = '\cong'
+        OP_DOTEQ           = '\doteq'
+        OP_BANGBANG        = '!!'
+        OP_SHARPSHARP      = '##'
+        OP_DOLLAR          = '$'
+        OP_DOLLARDOLLAR    = '$$'
+        OP_PERCENT         = '%'
+        OP_PERCENTPERCENT  = '%%'
+        OP_AMP             = '&'
+        OP_AMPAMP          = '&&'
+        OP_ASTER           = '*'
+        OP_ASTERASTER      = '**'
+        OP_PLUS            = '+'
+        OP_PLUSPLUS        = '++'
+        OP_DASHDASH        = '--'
+        OP_DOTDOT          = '..'
+        OP_DOTDOTDOT       = '...'
+        OP_SLASH           = '/'
+        OP_SLASHSLASH      = '//'
+        OP_COLONCOLONEQ    = '::='
+        OP_COLONEQ         = ':='
+        OP_COLONGT         = ':>'
+        OP_LTCOLON         = '<:'
+        OP_QUERY           = '?'
+        OP_QUERYQUERY      = '??'
+        OP_SUBTRACT        = '\'
+        OP_CARET           = '^'
+        OP_CARETCARET      = '^^'
+        OP_VBAR            = '|'
+        OP_VBARVBAR        = '||'
+        OP_ATAT            = '@@'
+        OP_PRIME           = "'"
+        OP_CARETPLUS       = '^+'
+        OP_CARETASTER      = '^*'
+        OP_CARETSHARP      = '^#'
+        OP_DASHDOT         = '-.' // only used when define '-' prefix operator
+
+        QUANTIFIER_E       = '\E'
+        QUANTIFIER_EE      = '\EE'
+        QUANTIFIER_A       = '\A'
+        QUANTIFIER_AA      = '\AA'
+
+
+        // PlusCal
+        PLUS_CAL_ASSERT    = 'assert'
+        PLUS_CAL_AWAIT     = 'await'
+        PLUS_CAL_BEGIN     = 'begin'
+        PLUS_CAL_CALL      = 'call'
+        PLUS_CAL_DEFINE    = 'define'
+        PLUS_CAL_DO        = 'do'
+        PLUS_CAL_EITHER    = 'either'
+        PLUS_CAL_ELSE      = 'else'
+        PLUS_CAL_ELSIF     = 'elsif'
+        PLUS_CAL_END       = 'end'
+        PLUS_CAL_GOTO      = 'goto'
+        PLUS_CAL_IF        = 'if'
+        PLUS_CAL_MACRO     = 'macro'
+        PLUS_CAL_OR        = 'or'
+        PLUS_CAL_PRINT     = 'print'
+        PLUS_CAL_PROCEDURE = 'procedure'
+        PLUS_CAL_PROCESS   = 'process'
+        PLUS_CAL_RETURN    = 'return'
+        PLUS_CAL_SKIP      = 'skip'
+        PLUS_CAL_THEN      = 'then'
+        PLUS_CAL_VARIABLE  = 'variable'
+        PLUS_CAL_VARIABLES = 'variables'
+        PLUS_CAL_WHEN      = 'when'
+        PLUS_CAL_WHILE     = 'while'
+        PLUS_CAL_WITH      = 'with'
+        PLUS_CAL_FAIR      = 'fair'
+
+        PLUS_CAL_ASSIGN        = ':='
+        PLUS_CAL_CONCAT_ASSIGN = '||'
+
+        PLUS_CAL_ALGORITHM_BEGIN = 'ALGORITHM_BEGIN'
+    ]
+
+    extends('.*_expr') = expr
+    consumeTokenMethod('.*_expr') = "consumeTokenFast"
+    generateTokenAccessors=true
+
+    extraRoot('psyntax') = true
+}
+
+csyntax ::= 'ALGORITHM_BEGIN' name '{'
+              var_decls?
+              definitions?
+              macro*
+              procedure*
+              (compound_stmt | process+) '}'
+
+psyntax ::= 'identifier'
+
+var_decls ::= ('variable' | 'variables') var_decl+
+var_decl ::= variable (('=' | '\in') expr)? (';' | ',')
+
+p_var_decls ::= ('variable' | 'variables') (p_var_decl (';' | ','))+
+p_var_decl ::= variable ('=' expr)?
+
+definitions ::= 'define' '{' defs '}' ';'?
+
+macro ::= 'macro' name '(' <<comma_list variable>>? ')'
+          compound_stmt ';'?
+
+procedure ::= 'procedure' name '(' <<comma_list p_var_decl>>? ')'
+              p_var_decls?
+              compound_stmt ';'?
+
+process ::= ('fair' '+'?)? 'process' '(' name ('=' | '\in') expr ')'
+             var_decls?
+             compound_stmt ';'?
+
+compound_stmt ::= '{' stmt (';' stmt)* ';'? '}'
+
+stmt ::= (label ':' ('+' | '-')?)? (unlabeled_stmt | compound_stmt)
+
+assign ::= lhs ':=' expr ('||' lhs ':=' expr)*
+
+lhs ::= variable (('[' <<comma_list expr>> ']') | '.' field)*
+
+if ::= 'if' '(' expr ')' stmt ('else' stmt)?
+
+while ::= 'while' '(' expr ')' stmt
+
+either ::= 'either' stmt ('or' stmt)+
+
+unlabeled_stmt ::= assign
+                 | if
+                 | while
+                 | either
+                 | with
+                 | await
+                 | print
+                 | assert
+                 | skip
+                 | return
+                 | goto
+                 | call
+                 | macro_call
+
+skip ::= 'skip'
+
+return ::= 'return'
+
+with ::= 'with' '(' variable ('=' | '\in') expr
+       ((';' | ',') variable ('=' | '\in') expr)* (';' | ',')? ')' stmt
+
+await ::= ('await' | 'when') expr
+
+print ::= 'print' expr
+
+assert ::= 'assert' expr
+
+goto ::= 'goto' label
+
+call ::= 'call' macro_call
+
+macro_call ::= name '(' <<comma_list expr>> ')'
+
+variable ::= 'identifier'
+
+field ::= 'identifier'
+
+name ::= 'identifier'
+
+label ::= 'identifier'
+
+
+module ::= module_header ('EXTENDS' <<comma_list module_ref>>)? unit_with_recover* clear_indent '===='
+{
+  pin = 1
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusModuleContext'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusModuleImplMixin'
+}
+
+module_ref ::= 'identifier'
+{
+  implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusReferenceElement"
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusModuleRefImplMixin'
+}
+
+private meta comma_list ::= <<param>>(clear_indent ',' <<param>>)*
+
+private clear_indent ::= junc_break*
+
+module_header ::= clear_indent 'MODULE_BEGIN' 'identifier' '----'
+{
+  pin = 2
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNamedElementImpl'
+}
+
+private unit ::= variable_decl
+               | constant_decl
+               | clear_indent 'LOCAL' op_definition
+               | op_definition
+               | clear_indent 'LOCAL' func_definition
+               | func_definition
+               | clear_indent 'LOCAL' instance
+               | instance
+               | clear_indent 'LOCAL' module_definition
+               | module_definition
+               | assumption
+               | theorem
+               | module
+               | clear_indent '----'
+
+private unit_with_recover ::= !('====' | <<eof>>) unit
+{
+  pin = 1
+  recoverWhile = unit_recover
+}
+private unit_recover ::= !(
+    'VARIABLE'
+  | 'VARIABLES'
+  | 'CONSTANT'
+  | 'CONSTANTS'
+  | 'LOCAL'
+  | 'identifier'
+  | 'INSTANCE'
+  | 'ASSUME'
+  | 'ASSUMPTION'
+  | 'AXIOM'
+  | 'THEOREM'
+  | '===='
+  | '----'
+  | clear_indent
+)
+
+private identifier_or_tuple ::= clear_indent (bound_name | '<<' <<comma_list bound_name>> '>>')
+
+bound_name ::= 'identifier'
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNamedElementImpl'
+}
+
+prefix_op ::= clear_indent (
+              '-'
+            | '~'
+            | '[]'
+            | '<>'
+            | 'DOMAIN'
+            | 'ENABLED'
+            | 'SUBSET'
+            | 'UNCHANGED'
+            | 'UNION')
+
+infix_op ::= clear_indent (
+            '!'
+           | '/='
+           | '##'
+           | '$'
+           | '$$'
+           | '%'
+           | '%%'
+           | '&'
+           | '&&'
+           | '(+)'
+           | '(-)'
+           | '(.)'
+           | '(/)'
+           | '(\X)'
+           | '*'
+           | '**'
+           | '+'
+           | '++'
+           | '-'
+           | '-+->'
+           | '--'
+           | '-|'
+           | '..'
+           | '...'
+           | '/'
+           | '//'
+           | '\land'
+           | '::='
+           | ':='
+           | ':>'
+           | '<'
+           | '<:'
+           | '<=>'
+           | '\notin'
+           | '='
+           | '=<'
+           | '=>'
+           | '=|'
+           | '>'
+           | '>='
+           | '?'
+           | '??'
+           | '@@'
+           | '\'
+           | '\lor'
+           | '^'
+           | '^^'
+           | '|'
+           | '|-'
+           | '|='
+           | '||'
+           | '~>'
+           | '\approx'
+           | '\sqsupseteq'
+           | '\asymp'
+           | '\gg'
+           | '\star'
+           | '\bigcirc'
+           | '\in'
+           | '\prec'
+           | '\subset'
+           | '\bullet'
+           | '\cap'
+           | '\preceq'
+           | '\subseteq'
+           | '\propto'
+           | '\succ'
+           | '\cdot'
+           | '\sim'
+           | '\succeq'
+           | '\circ'
+           | '\ll'
+           | '\simeq'
+           | '\supset'
+           | '\cong'
+           | '\sqcap'
+           | '\supseteq'
+           | '\cup'
+           | '\sqcup'
+           | '\div'
+           | '\sqsubset'
+           | OP_UPLUS  // we can't use token value here since it causes illegal unicode escape in generated source
+           | '\doteq'
+           | '\sqsubseteq'
+           | '\wr'
+           | '\sqsupset')
+
+private infix_op_outer ::= infix_op | <<parseInfixOpLand>> | <<parseInfixOpLor>>
+
+postfix_op ::= clear_indent (
+               '^+'
+             | '^*'
+             | '^#'
+             | "'")
+
+private op_suite ::= prefix_op | infix_op | postfix_op | lambda_expr | expr
+
+op_args ::= clear_indent '(' <<comma_list op_suite>> clear_indent ')'
+
+private no_op_extension ::= clear_indent unqualified_ident op_args? ('!' no_op_extension)?
+
+private reduced_expr ::= no_op_extension
+                       | paren_expr
+                       | set_expr
+                       | functions_expr
+                       | records_expr
+                       | except_expr
+                       | action_expr
+                       | tuple_expr
+
+anon_infix_op ::= clear_indent '_' infix_op_outer clear_indent '_'
+anon_prefix_op ::= prefix_op clear_indent '_'
+anon_postfix_op ::= clear_indent '_' postfix_op
+
+op_decl ::= anon_infix_op
+          | anon_prefix_op
+          | anon_postfix_op
+          | clear_indent op_name clear_indent '(' <<comma_list (clear_indent '_')>> clear_indent ')'
+          | clear_indent op_name
+
+op_name ::= 'identifier'
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNamedElementImpl'
+}
+
+variable_decl ::= clear_indent ('VARIABLE' | 'VARIABLES') <<comma_list variable_name>> { pin = 2 }
+variable_name ::= 'identifier'
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNamedElementImpl'
+}
+
+constant_decl ::= clear_indent ('CONSTANT' | 'CONSTANTS') <<comma_list op_decl>> { pin = 2 }
+
+nonfix_lhs ::= clear_indent nonfix_lhs_name (clear_indent '(' <<comma_list op_decl>> clear_indent ')')?
+
+nonfix_lhs_name ::= 'identifier'
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNamedElementImpl'
+}
+
+prefix_op_lhs ::= clear_indent prefix_op clear_indent 'identifier'
+
+dashdot_op_lhs ::= clear_indent '-.' clear_indent 'identifier'
+
+infix_op_lhs ::= clear_indent 'identifier' infix_op_outer clear_indent 'identifier'
+
+postfix_op_lhs ::= clear_indent 'identifier' postfix_op
+
+op_definition ::= (infix_op_lhs
+                 | dashdot_op_lhs
+                 | prefix_op_lhs
+                 | postfix_op_lhs
+                 | nonfix_lhs) clear_indent '==' expr
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNameContext'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusOpDefinitionImplMixin'
+}
+
+func_definition ::= clear_indent func_name
+    clear_indent '[' <<comma_list quantifier_bound>> clear_indent ']' clear_indent '==' expr
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNameContext'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusFuncDefinitionImplMixin'
+}
+
+func_name ::= 'identifier'
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNamedElementImpl'
+}
+
+private quantifier_bound ::= (clear_indent '<<' <<comma_list (clear_indent bound_name)>>
+    clear_indent '>>' | <<comma_list (clear_indent bound_name)>>) clear_indent '\in' expr
+
+instance ::= clear_indent 'INSTANCE' clear_indent module_ref (clear_indent 'WITH' <<comma_list substitution>>)?
+{
+  pin = 2
+}
+
+private substitution ::= (clear_indent substituting_ident
+                        | prefix_op
+                        | infix_op_outer
+                        | postfix_op) clear_indent '<-' op_suite
+
+substituting_ident ::= 'identifier'
+{
+  implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusReferenceElement"
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusSubstitutingIdentImplMixin'
+}
+
+instance_prefix ::= (clear_indent module_ref (
+    clear_indent '(' <<comma_list expr>> clear_indent ')')? clear_indent '!')+
+
+general_identifier ::= instance_prefix? clear_indent unqualified_ident
+
+unqualified_ident ::= 'identifier'
+{
+  implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusReferenceElement"
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusUnqualifiedIdentImplMixin'
+}
+
+general_prefix_op ::= instance_prefix? prefix_op
+
+general_infix_op ::= instance_prefix? infix_op_outer
+
+general_postfix_op ::= instance_prefix? postfix_op
+
+module_definition ::= nonfix_lhs clear_indent '==' instance
+
+assumption ::= clear_indent ('ASSUME' | 'ASSUMPTION' | 'AXIOM') expr { pin = 2 }
+
+theorem ::= clear_indent 'THEOREM' expr { pin = 2 }
+
+identifier_expr ::= general_identifier
+
+identifier_args_expr ::= general_identifier clear_indent '(' <<comma_list op_suite>> clear_indent ')' { pin = 3 }
+
+prefix_op_expr ::= general_prefix_op expr
+
+infix_op_expr ::= expr general_infix_op expr
+
+field_access_expr ::= expr clear_indent '.' clear_indent 'identifier'
+
+postfix_op_expr ::= expr general_postfix_op
+
+paren_expr ::= clear_indent '(' expr clear_indent ')' { pin = 2 }
+
+lambda_expr ::= clear_indent 'LAMBDA' <<comma_list (clear_indent 'identifier')>> clear_indent ':' expr
+
+temporal_quantifier_expr ::= clear_indent ('\AA' | '\EE') <<comma_list (clear_indent 'identifier')>> clear_indent ':' expr
+{
+  pin = 2
+}
+
+quantifier_expr ::= clear_indent ('\A' | '\E') (<<comma_list quantifier_bound>>
+                                              | <<comma_list (clear_indent 'identifier')>>) clear_indent ':' expr
+{
+  pin = 2
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNameContext'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusQuantifierExprImplMixin'
+}
+
+choose_expr ::= clear_indent 'CHOOSE' identifier_or_tuple ((clear_indent '\in' expr)? clear_indent ':' expr)
+{
+  pin = 2
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNameContext'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusChooseExprImplMixin'
+}
+
+set_expr ::= clear_indent '{' <<comma_list expr>>? clear_indent '}'
+           | set_comprehension
+           | set_comprehension_map
+
+// e.g. { x : x \in some_set /\ x /= 1 }
+set_comprehension ::= clear_indent '{' identifier_or_tuple clear_indent '\in' expr clear_indent ':' expr clear_indent '}'
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNameContext'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusSetComprehensionImplMixin'
+}
+// e.g. { x + 1 : x \in some_set }
+// in this expression, variable binding appears right to the variable-use
+set_comprehension_map ::= clear_indent '{' expr clear_indent ':' <<comma_list quantifier_bound>> clear_indent '}'
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNameContext'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusSetComprehensionMapImplMixin'
+}
+
+apply_argument_expr ::= expr clear_indent '[' <<comma_list expr>> clear_indent ']'
+
+functions_expr ::= clear_indent '[' <<comma_list quantifier_bound>> clear_indent '|->' expr clear_indent ']'
+                 | clear_indent '[' expr clear_indent '->' expr clear_indent ']'
+
+records_expr ::= clear_indent '[' <<comma_list (clear_indent 'identifier' clear_indent '|->' expr)>> clear_indent ']'
+               | clear_indent '[' <<comma_list (clear_indent 'identifier' clear_indent ':' expr)>> clear_indent ']'
+
+except_expr ::= clear_indent '[' expr clear_indent 'EXCEPT'
+  <<comma_list (clear_indent '!' ((clear_indent '.' clear_indent 'identifier')
+                                 | clear_indent '[' <<comma_list expr>> clear_indent ']')+ clear_indent '=' expr)
+  >> clear_indent ']'
+
+tuple_expr ::= clear_indent '<<' <<comma_list expr>>? clear_indent '>>' { pin = 2 }
+
+cartesian_product_expr ::= expr (clear_indent '\X' expr)+
+
+action_expr ::= clear_indent '[' expr clear_indent ']_' reduced_expr
+              | clear_indent '<<' expr clear_indent '>>_' reduced_expr
+
+fairness_expr ::= clear_indent ('WF_' | 'SF_') reduced_expr (clear_indent '(' expr clear_indent ')')?
+{
+  pin = 2
+}
+
+if_expr ::= clear_indent 'IF' expr clear_indent 'THEN' expr clear_indent 'ELSE' expr
+{
+  pin = 2
+}
+
+private case_arm ::= expr clear_indent '->' expr
+
+case_expr ::= clear_indent 'CASE' case_arm (clear_indent '[]' case_arm)*
+    (clear_indent '[]' clear_indent 'OTHER' clear_indent '->' expr)?
+{
+  pin = 2
+}
+
+let_expr ::= clear_indent 'LET' (op_definition | func_definition | module_definition)+ clear_indent 'IN' expr
+{
+  pin = 2
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNameContext'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusLetExprImplMixin'
+}
+
+private junc_begin ::= 'JUNCTION_BEGIN' {
+  consumeTokenMethod = "consumeTokenFast"
+}
+
+private junc_cont ::= 'JUNCTION_CONT' {
+  consumeTokenMethod = "consumeTokenFast"
+}
+
+private junc_break ::= 'JUNCTION_BREAK' {
+  consumeTokenMethod = "consumeTokenFast"
+}
+
+// Junction-arm can be terminated by other tokens than JUNCTION_BREAK like braces, parenthesis
+junction_list_expr ::= (junc_begin '/\' expr (junc_cont '/\' expr)* junc_break?)
+                     | (junc_begin '\/' expr (junc_cont '\/' expr)* junc_break?)
+
+literal_expr ::= clear_indent ('string' | 'number')
+
+at_expr ::= clear_indent '@'
+
+expr ::= if_expr
+       | except_expr
+       | tuple_expr
+       | case_expr
+       | quantifier_expr
+       | temporal_quantifier_expr
+       | choose_expr
+       | let_expr
+       | paren_expr
+       | set_expr
+       | functions_expr
+       | records_expr
+       | infix_op_expr
+       | cartesian_product_expr
+       | prefix_op_expr
+       | postfix_op_expr
+       | at_expr
+       | junction_list_expr
+       | action_expr
+       | fairness_expr
+       | apply_argument_expr
+       | field_access_expr
+       | identifier_args_expr
+       | identifier_expr
+       | literal_expr
