@@ -9,10 +9,9 @@
     <ul>
     <li>Syntax highlighting</li>
     <li>Go to definition (Find usages)</li>
+    <li>Code completion</li>
     <li>Run TLC</li>
     </ul>
-    <br>
-    This plugin is still in early stage.
     ]]></description>
 
     <change-notes><![CDATA[

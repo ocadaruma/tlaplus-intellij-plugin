@@ -8,18 +8,16 @@ Intellij plugin for https://lamport.azurewebsites.net/tla/tla.html[TLA+] formal 
 
 This plugin is heavily inspired by https://github.com/alygin/vscode-tlaplus[TLA+ for Visual Studio Code].
 
-NOTE: This plugin is still in very early stage.
-
 == Features
 
 * [x] Syntax highlighting
 * [x] Run TLC
 ** Current limitations:
-*** You have to create TLC config file (`.cfg`) manually
-*** TLC parameters are not configurable
+*** You have to write TLC config file (`.cfg`) directly instead of GUI like toolbox
+*** TLC's command line args are not configurable
 *** Error trace exploration is not supported
 * [x] Find usages (Go to declaration)
-* [ ] (Not yet) Code completion
+* [x] (Not yet) Code completion
 * [ ] (Not yet) PlusCal
 
 == Screenshots
