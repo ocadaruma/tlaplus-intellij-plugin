@@ -17,7 +17,7 @@ This plugin is heavily inspired by https://github.com/alygin/vscode-tlaplus[TLA+
 *** TLC's command line args are not configurable
 *** Error trace exploration is not supported
 * [x] Find usages (Go to declaration)
-* [x] (Not yet) Code completion
+* [x] Code completion
 * [ ] (Not yet) PlusCal
 
 == Screenshots
