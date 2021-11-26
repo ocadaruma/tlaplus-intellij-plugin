@@ -75,6 +75,7 @@
         RSQBRACKETUNDER    = ']_'
         DOT                = '.'
         COLON              = ':'
+        SEMICOLON          = ';'
         UNDER              = '_'
         BANG               = '!'
         AT                 = '@'
@@ -194,6 +195,37 @@
 
         // TLC
         TLC_ERROR_TRACE_PRIMITIVE = 'tlc_error_trace_primitive'
+
+        // PlusCal
+        PLUS_CAL_KW_ALGORITHM = 'algorithm'
+        PLUS_CAL_KW_ASSERT    = 'assert'
+        PLUS_CAL_KW_AWAIT     = 'await'
+        PLUS_CAL_KW_BEGIN     = 'begin'
+        PLUS_CAL_KW_CALL      = 'call'
+        PLUS_CAL_KW_DEFINE    = 'define'
+        PLUS_CAL_KW_DO        = 'do'
+        PLUS_CAL_KW_EITHER    = 'either'
+        PLUS_CAL_KW_ELSE      = 'else'
+        PLUS_CAL_KW_ELSIF     = 'elsif'
+        PLUS_CAL_KW_END       = 'end'
+        PLUS_CAL_KW_GOTO      = 'goto'
+        PLUS_CAL_KW_IF        = 'if'
+        PLUS_CAL_KW_MACRO     = 'macro'
+        PLUS_CAL_KW_OR        = 'or'
+        PLUS_CAL_KW_PRINT     = 'print'
+        PLUS_CAL_KW_PROCEDURE = 'procedure'
+        PLUS_CAL_KW_PROCESS   = 'process'
+        PLUS_CAL_KW_RETURN    = 'return'
+        PLUS_CAL_KW_SKIP      = 'skip'
+        PLUS_CAL_KW_THEN      = 'then'
+        PLUS_CAL_KW_VARIABLE  = 'variable'
+        PLUS_CAL_KW_VARIABLES = 'variables'
+        PLUS_CAL_KW_WHEN      = 'when'
+        PLUS_CAL_KW_WHILE     = 'while'
+        PLUS_CAL_KW_WITH      = 'with'
+        PLUS_CAL_KW_FAIR      = 'fair'
+
+        PLUS_CAL_ALGORITHM_BEGIN = 'ALGORITHM_BEGIN'
     ]
 
     extends('.*_expr') = expr
@@ -201,6 +233,7 @@
     generateTokenAccessors=true
 
     extraRoot("tlc_error_trace") = true
+    extraRoot("plus_cal_algorithm") = true
 }
 
 root ::= module
@@ -675,3 +708,155 @@ tlc_value ::= tlc_function_value
             | tlc_set_empty_value
             | tlc_record_value
             | tlc_primitive_value
+
+// PlusCal parsing
+// C-Syntax: https://lamport.azurewebsites.net/tla/c-manual.pdf
+// P-Syntax: https://lamport.azurewebsites.net/tla/p-manual.pdf
+plus_cal_algorithm ::= plus_cal_c_syntax | plus_cal_p_syntax
+
+plus_cal_c_syntax ::= 'ALGORITHM_BEGIN' plus_cal_name '{'
+                       plus_cal_var_decls?
+                       plus_cal_definitions_c?
+                       plus_cal_macro_c*
+                       plus_cal_procedure_c*
+                       (plus_cal_compound_stmt | plus_cal_process_c+) '}'
+
+plus_cal_p_syntax ::= 'ALGORITHM_BEGIN' plus_cal_name
+                      plus_cal_var_decls?
+                      plus_cal_definitions_p?
+                      plus_cal_macro_p*
+                      plus_cal_procedure_p*
+                      (plus_cal_algorithm_body_p | plus_cal_process_p+)
+                      'end' 'algorithm'
+
+plus_cal_var_decls ::= clear_indent ('variable' | 'variables') plus_cal_var_decl+
+plus_cal_var_decl ::= plus_cal_variable (clear_indent ('=' | '\in') expr)? clear_indent (';' | ',')
+
+plus_cal_p_var_decls ::= clear_indent ('variable' | 'variables') (plus_cal_p_var_decl clear_indent (';' | ','))+
+plus_cal_p_var_decl ::= plus_cal_variable (clear_indent '=' expr)?
+
+plus_cal_definitions_c ::= clear_indent 'define' clear_indent '{' plus_cal_defs clear_indent '}' clear_indent ';'?
+plus_cal_definitions_p ::= clear_indent 'define' plus_cal_defs clear_indent 'end' clear_indent 'define' clear_indent ';'?
+
+plus_cal_macro_c ::= clear_indent 'macro' plus_cal_name clear_indent '(' <<comma_list plus_cal_variable>>? clear_indent ')'
+          plus_cal_compound_stmt clear_indent ';'?
+plus_cal_macro_p ::= clear_indent 'macro' plus_cal_name clear_indent '(' <<comma_list plus_cal_variable>>? clear_indent ')'
+          plus_cal_algorithm_body_p
+          clear_indent 'end' clear_indent 'macro' clear_indent ';'?
+
+plus_cal_procedure_c ::= clear_indent 'procedure' plus_cal_name clear_indent '(' <<comma_list plus_cal_p_var_decl>>? clear_indent ')'
+              plus_cal_p_var_decls?
+              plus_cal_compound_stmt clear_indent ';'?
+plus_cal_procedure_p ::= clear_indent 'procedure' plus_cal_name clear_indent '(' <<comma_list plus_cal_p_var_decl>>? clear_indent ')'
+              plus_cal_p_var_decls?
+              plus_cal_algorithm_body_p
+              clear_indent 'end' clear_indent 'procedure' clear_indent ';'?
+
+plus_cal_process_c ::= clear_indent ('fair' '+'?)? clear_indent 'process' clear_indent '(' plus_cal_name ('=' | '\in') expr clear_indent ')'
+             plus_cal_var_decls?
+             plus_cal_compound_stmt clear_indent ';'?
+plus_cal_process_p ::= clear_indent ('fair' '+'?)? clear_indent 'process' plus_cal_name clear_indent ('=' | '\in') expr
+             plus_cal_var_decls?
+             plus_cal_algorithm_body_p
+             clear_indent 'end' clear_indent 'process' clear_indent ';'?
+
+plus_cal_compound_stmt ::= clear_indent '{' plus_cal_stmt_c (clear_indent ';' plus_cal_stmt_c)* clear_indent ';'? clear_indent '}'
+plus_cal_algorithm_body_p ::= clear_indent 'begin' plus_cal_stmt_p+
+
+plus_cal_stmt_c ::= (plus_cal_label clear_indent ':' clear_indent ('+' | '-')?)? (plus_cal_unlabeled_stmt_c | plus_cal_compound_stmt)
+plus_cal_stmt_p ::= (plus_cal_label clear_indent ':' clear_indent ('+' | '-')?)? plus_cal_unlabeled_stmt_p
+
+plus_cal_assign ::= plus_cal_lhs clear_indent ':=' expr (clear_indent '||' plus_cal_lhs clear_indent ':=' expr)*
+private plus_cal_assign_p ::= plus_cal_assign clear_indent ';'
+
+plus_cal_lhs ::= plus_cal_variable ((clear_indent '[' <<comma_list expr>> clear_indent ']') | clear_indent '.' plus_cal_field)*
+
+plus_cal_if_c ::= clear_indent 'if' clear_indent '(' expr clear_indent ')' plus_cal_stmt_c (clear_indent 'else' plus_cal_stmt_c)?
+plus_cal_if_p ::= clear_indent 'if' expr clear_indent 'then' plus_cal_stmt_p+
+                 (clear_indent 'elsif' expr clear_indent 'then' plus_cal_stmt_p+)*
+                 (clear_indent 'else' plus_cal_stmt_p+)? clear_indent 'end' clear_indent 'if' clear_indent ';'
+
+plus_cal_while_c ::= clear_indent 'while' clear_indent '(' expr clear_indent ')' plus_cal_stmt_c
+plus_cal_while_p ::= clear_indent 'while' expr clear_indent 'do' plus_cal_stmt_p+ clear_indent 'end' clear_indent 'while' clear_indent ';'
+
+plus_cal_either_c ::= clear_indent 'either' plus_cal_stmt_c (clear_indent 'or' plus_cal_stmt_c)+
+plus_cal_either_p ::= clear_indent 'either' plus_cal_stmt_p+ (clear_indent 'or' plus_cal_stmt_p+)+ clear_indent 'end' clear_indent 'either' clear_indent ';'
+
+plus_cal_unlabeled_stmt_c ::= plus_cal_assign
+                            | plus_cal_if_c
+                            | plus_cal_while_c
+                            | plus_cal_either_c
+                            | plus_cal_with_c
+                            | plus_cal_await
+                            | plus_cal_print
+                            | plus_cal_assert
+                            | plus_cal_skip
+                            | plus_cal_return
+                            | plus_cal_goto
+                            | plus_cal_call
+                            | plus_cal_macro_call
+
+plus_cal_unlabeled_stmt_p ::= plus_cal_assign_p
+                            | plus_cal_if_p
+                            | plus_cal_while_p
+                            | plus_cal_either_p
+                            | plus_cal_with_p
+                            | plus_cal_await_p
+                            | plus_cal_print_p
+                            | plus_cal_assert_p
+                            | plus_cal_skip_p
+                            | plus_cal_return_p
+                            | plus_cal_goto_p
+                            | plus_cal_call
+                            | plus_cal_macro_call_p
+
+plus_cal_skip ::= clear_indent 'skip'
+private plus_cal_skip_p ::= plus_cal_skip clear_indent ';'
+
+plus_cal_return ::= clear_indent 'return'
+private plus_cal_return_p ::= plus_cal_return clear_indent ';'
+
+plus_cal_with_c ::= clear_indent 'with' clear_indent '(' plus_cal_variable clear_indent ('=' | '\in') expr
+       (clear_indent (';' | ',') plus_cal_variable clear_indent ('=' | '\in') expr)* clear_indent (';' | ',')? clear_indent ')' plus_cal_stmt_c
+plus_cal_with_p ::= clear_indent 'with' (plus_cal_variable clear_indent ('=' | '\in') expr clear_indent (';' | ','))+
+                    clear_indent 'do' plus_cal_stmt_p+ clear_indent 'end' clear_indent 'with' clear_indent ';'
+
+plus_cal_await ::= clear_indent ('await' | 'when') expr
+private plus_cal_await_p ::= plus_cal_await clear_indent ';'
+
+plus_cal_print ::= clear_indent 'print' expr
+private plus_cal_print_p ::= plus_cal_print clear_indent ';'
+
+plus_cal_assert ::= clear_indent 'assert' expr
+private plus_cal_assert_p ::= plus_cal_assert clear_indent ';'
+
+plus_cal_goto ::= clear_indent 'goto' plus_cal_label
+private plus_cal_goto_p ::= plus_cal_goto clear_indent ';'
+
+plus_cal_call ::= clear_indent 'call' plus_cal_macro_call
+
+plus_cal_macro_call ::= plus_cal_name clear_indent '(' <<comma_list expr>>? clear_indent ')'
+private plus_cal_macro_call_p ::= plus_cal_macro_call clear_indent ';'
+
+plus_cal_variable ::= clear_indent 'identifier'
+
+plus_cal_field ::= clear_indent 'identifier'
+
+plus_cal_name ::= clear_indent 'identifier'
+
+plus_cal_label ::= clear_indent 'identifier'
+
+plus_cal_defs ::= plus_cal_def*
+
+private plus_cal_def ::= variable_decl
+                       | constant_decl
+                       | clear_indent 'LOCAL' op_definition
+                       | op_definition
+                       | clear_indent 'LOCAL' func_definition
+                       | func_definition
+                       | clear_indent 'LOCAL' instance
+                       | instance
+                       | clear_indent 'LOCAL' module_definition
+                       | module_definition
+                       | assumption
+                       | theorem
