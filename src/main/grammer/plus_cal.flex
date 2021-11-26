@@ -1,12 +1,8 @@
-package com.mayreh.intellij.plugin.tlaplus.lexer;
+package com.mayreh.intellij.plugin.pluscal.lexer;
 
-import com.intellij.lexer.FlexLexer;
-import com.intellij.openapi.util.text.LineColumn;
-import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.TokenType;
-import com.intellij.util.containers.Stack;
-import com.mayreh.intellij.plugin.tlaplus.lexer.JunctionIndentation.Type;
+import com.mayreh.intellij.plugin.tlaplus.lexer.TLAplusFlexLexerBase;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 
 %%
@@ -14,60 +10,33 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 %unicode
 %public
 %class _PlusCalLexer
-%implements FlexLexer
+%extends TLAplusFlexLexerBase
 %function advance
 %type IElementType
 %{
-  private final Stack<JunctionIndentation> zzIndentationStack = new Stack<>(1000);
-  private boolean forHighlighting = false;
-
   public _PlusCalLexer(boolean forHighlighting) {
       this(null);
-      this.forHighlighting = forHighlighting;
+      setForHighlighting(forHighlighting);
   }
 
-  private IElementType clearIndent(IElementType e, int nextState) {
-      if (forHighlighting) {
-          if (yystate() != nextState) {
-              yybegin(nextState);
-          }
-          return e;
-      }
-
-      JunctionIndentation i = zzIndentationStack.isEmpty() ? null : zzIndentationStack.peek();
-      if (i == null) {
-          yybegin(nextState);
-          return e;
-      }
-      zzIndentationStack.pop();
-      yypushback(yylength());
-      yybegin(HANDLE_INDENT);
-      return TLAplusElementTypes.JUNCTION_BREAK;
+  @Override
+  public int stateHandleIndent() {
+      return HANDLE_INDENT;
   }
 
-  private IElementType maybeHandleIndent(IElementType e) {
-      if (forHighlighting) {
-          return e;
-      }
+  @Override
+  public int stateDefault() {
+      return YYINITIAL;
+  }
 
-      JunctionIndentation i = zzIndentationStack.isEmpty() ? null : zzIndentationStack.peek();
-      if (i == null) {
-          if (yystate() == HANDLE_INDENT) {
-              yybegin(YYINITIAL);
-          }
-          return e;
-      }
-      int column = StringUtil.offsetToLineColumn(zzBuffer, zzCurrentPos).column;
-      if (i.column() < column) {
-          if (yystate() == HANDLE_INDENT) {
-              yybegin(YYINITIAL);
-          }
-          return e;
-      }
-      zzIndentationStack.pop();
-      yypushback(yylength());
-      yybegin(HANDLE_INDENT);
-      return TLAplusElementTypes.JUNCTION_BREAK;
+  @Override
+  public CharSequence zzBuffer() {
+      return zzBuffer;
+  }
+
+  @Override
+  public int zzCurrentPos() {
+      return zzCurrentPos;
   }
 %}
 
@@ -182,59 +151,9 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
   "[]"                 { return maybeHandleIndent(TLAplusElementTypes.OP_SQUARE); }
   "<>"                 { return maybeHandleIndent(TLAplusElementTypes.OP_DIAMOND); }
   -                    { return maybeHandleIndent(TLAplusElementTypes.OP_DASH); }
-  "/\\"                {
-        if (forHighlighting) {
-          return TLAplusElementTypes.OP_LAND2;
-        }
-        if (yystate() == HANDLE_INDENT) {
-            yybegin(YYINITIAL);
-            return TLAplusElementTypes.OP_LAND2;
-        }
-        JunctionIndentation i = zzIndentationStack.isEmpty() ? null : zzIndentationStack.peek();
-        int column = StringUtil.offsetToLineColumn(zzBuffer, zzCurrentPos).column;
-        if (i == null || i.column() < column) {
-            zzIndentationStack.push(JunctionIndentation.and(column));
-            yybegin(HANDLE_INDENT);
-            yypushback(yylength());
-            return TLAplusElementTypes.JUNCTION_BEGIN;
-        }
-        if (i.type() == Type.And && i.column() == column) {
-            yybegin(HANDLE_INDENT);
-            yypushback(yylength());
-            return TLAplusElementTypes.JUNCTION_CONT;
-        }
-
-        zzIndentationStack.pop();
-        yypushback(yylength());
-        return TLAplusElementTypes.JUNCTION_BREAK;
-    }
+  "/\\"                { return maybeJunction(TLAplusElementTypes.OP_LAND2); }
   \\land               { return maybeHandleIndent(TLAplusElementTypes.OP_LAND); }
-  "\\/"                {
-        if (forHighlighting) {
-          return TLAplusElementTypes.OP_LOR2;
-        }
-        if (yystate() == HANDLE_INDENT) {
-            yybegin(YYINITIAL);
-            return TLAplusElementTypes.OP_LOR2;
-        }
-        JunctionIndentation i = zzIndentationStack.isEmpty() ? null : zzIndentationStack.peek();
-        int column = StringUtil.offsetToLineColumn(zzBuffer, zzCurrentPos).column;
-        if (i == null || i.column() < column) {
-            zzIndentationStack.push(JunctionIndentation.or(column));
-            yypushback(yylength());
-            yybegin(HANDLE_INDENT);
-            return TLAplusElementTypes.JUNCTION_BEGIN;
-        }
-        if (i.type() == Type.Or && i.column() == column) {
-            yybegin(HANDLE_INDENT);
-            yypushback(yylength());
-            return TLAplusElementTypes.JUNCTION_CONT;
-        }
-
-        zzIndentationStack.pop();
-        yypushback(yylength());
-        return TLAplusElementTypes.JUNCTION_BREAK;
-  }
+  "\\/"                { return maybeJunction(TLAplusElementTypes.OP_LOR2); }
   \\lor                { return maybeHandleIndent(TLAplusElementTypes.OP_LOR); }
   \\in                 { return maybeHandleIndent(TLAplusElementTypes.OP_IN); }
   "<"                  { return maybeHandleIndent(TLAplusElementTypes.OP_LT); }
