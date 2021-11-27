@@ -29,7 +29,35 @@ public interface TokenSets {
             TLAplusElementTypes.KEYWORD_VARIABLES,
             TLAplusElementTypes.KEYWORD_WF_,
             TLAplusElementTypes.KEYWORD_WITH,
-            TLAplusElementTypes.KEYWORD_LAMBDA
+            TLAplusElementTypes.KEYWORD_LAMBDA,
+
+            TLAplusElementTypes.PLUS_CAL_KW_ALGORITHM,
+            TLAplusElementTypes.PLUS_CAL_KW_ASSERT,
+            TLAplusElementTypes.PLUS_CAL_KW_AWAIT,
+            TLAplusElementTypes.PLUS_CAL_KW_BEGIN,
+            TLAplusElementTypes.PLUS_CAL_KW_CALL,
+            TLAplusElementTypes.PLUS_CAL_KW_DEFINE,
+            TLAplusElementTypes.PLUS_CAL_KW_DO,
+            TLAplusElementTypes.PLUS_CAL_KW_EITHER,
+            TLAplusElementTypes.PLUS_CAL_KW_ELSE,
+            TLAplusElementTypes.PLUS_CAL_KW_ELSIF,
+            TLAplusElementTypes.PLUS_CAL_KW_END,
+            TLAplusElementTypes.PLUS_CAL_KW_FAIR,
+            TLAplusElementTypes.PLUS_CAL_KW_GOTO,
+            TLAplusElementTypes.PLUS_CAL_KW_IF,
+            TLAplusElementTypes.PLUS_CAL_KW_MACRO,
+            TLAplusElementTypes.PLUS_CAL_KW_OR,
+            TLAplusElementTypes.PLUS_CAL_KW_PRINT,
+            TLAplusElementTypes.PLUS_CAL_KW_PROCEDURE,
+            TLAplusElementTypes.PLUS_CAL_KW_PROCESS,
+            TLAplusElementTypes.PLUS_CAL_KW_RETURN,
+            TLAplusElementTypes.PLUS_CAL_KW_SKIP,
+            TLAplusElementTypes.PLUS_CAL_KW_THEN,
+            TLAplusElementTypes.PLUS_CAL_KW_VARIABLE,
+            TLAplusElementTypes.PLUS_CAL_KW_VARIABLES,
+            TLAplusElementTypes.PLUS_CAL_KW_WHEN,
+            TLAplusElementTypes.PLUS_CAL_KW_WHILE,
+            TLAplusElementTypes.PLUS_CAL_KW_WITH
     );
 
     TokenSet OPERATORS = TokenSet.create(

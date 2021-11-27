@@ -3,6 +3,7 @@ package com.mayreh.intellij.plugin.tlaplus.lexer;
 import com.intellij.lexer.FlexLexer;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.TokenType;
+import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementType;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 
 %%
@@ -51,7 +52,7 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
   --algorithm {WHITE_SPACE} {IDENTIFIER} {WHITE_SPACE} {
       yybegin(P_SYNTAX);
   }
-  <<EOF>> { yybegin(TERMINATED); return TLAplusElementTypes.COMMENT_PLUS_CAL; }
+  <<EOF>> { yybegin(TERMINATED); return TLAplusElementType.COMMENT_PLUS_CAL; }
   [^] {}
 }
 
@@ -63,10 +64,10 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
      cSyntaxBraceNestLevel--;
      if (cSyntaxBraceNestLevel == 0) {
          yybegin(TERMINATED);
-         return TLAplusElementTypes.COMMENT_PLUS_CAL;
+         return TLAplusElementType.COMMENT_PLUS_CAL;
      }
   }
-  <<EOF>> { yybegin(TERMINATED); return TLAplusElementTypes.COMMENT_PLUS_CAL; }
+  <<EOF>> { yybegin(TERMINATED); return TLAplusElementType.COMMENT_PLUS_CAL; }
   [^] {}
 }
 
@@ -75,9 +76,9 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
   "(*"          { zzNestedBlockCommentLevel = 0; yybegin(IN_BLOCK_COMMENT_P); yypushback(2); }
   end {WHITE_SPACE} algorithm {
       yybegin(TERMINATED);
-      return TLAplusElementTypes.COMMENT_PLUS_CAL;
+      return TLAplusElementType.COMMENT_PLUS_CAL;
   }
-  <<EOF>> { yybegin(TERMINATED); return TLAplusElementTypes.COMMENT_PLUS_CAL; }
+  <<EOF>> { yybegin(TERMINATED); return TLAplusElementType.COMMENT_PLUS_CAL; }
   [^] {}
 }
 
@@ -89,7 +90,7 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
           yybegin(C_SYNTAX);
       }
   }
-  <<EOF>> { yybegin(TERMINATED); return TLAplusElementTypes.COMMENT_PLUS_CAL; }
+  <<EOF>> { yybegin(TERMINATED); return TLAplusElementType.COMMENT_PLUS_CAL; }
   [^]     {}
 }
 
@@ -101,7 +102,7 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
           yybegin(P_SYNTAX);
       }
   }
-  <<EOF>> { yybegin(TERMINATED); return TLAplusElementTypes.COMMENT_PLUS_CAL; }
+  <<EOF>> { yybegin(TERMINATED); return TLAplusElementType.COMMENT_PLUS_CAL; }
   [^]     {}
 }
 

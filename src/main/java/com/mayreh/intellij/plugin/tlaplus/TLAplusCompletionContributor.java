@@ -21,6 +21,7 @@ import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.psi.util.PsiUtilCore;
 import com.intellij.util.ProcessingContext;
+import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementType;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModule;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModuleHeader;
@@ -54,7 +55,7 @@ public class TLAplusCompletionContributor extends CompletionContributor implemen
     static class Patterns<T extends PsiElement> extends Capture<T> {
         private static final TokenSet SKIP_TOKENS = TokenSet.create(
                 TLAplusElementTypes.COMMENT,
-                TLAplusElementTypes.COMMENT_PLUS_CAL,
+                TLAplusElementType.COMMENT_PLUS_CAL,
                 TokenType.WHITE_SPACE);
 
         protected Patterns(Class<T> aClass) {

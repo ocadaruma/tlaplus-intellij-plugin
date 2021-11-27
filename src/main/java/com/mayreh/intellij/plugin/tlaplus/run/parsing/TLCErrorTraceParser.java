@@ -25,8 +25,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.intellij.lang.ASTNode;
+import com.intellij.lang.PsiBuilder;
+import com.intellij.lang.PsiBuilderFactory;
 import com.intellij.lang.PsiParser;
-import com.intellij.lang.impl.PsiBuilderImpl;
 import com.intellij.lexer.Lexer;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.tree.IElementType;
@@ -116,15 +117,9 @@ public class TLCErrorTraceParser {
     private List<TraceVariable> parseVariables(String text) {
         PsiParser parser = PARSER_DEFINITION.createParser(null);
         Lexer lexer = PARSER_DEFINITION.createLexer(null);
-        PsiBuilderImpl builder = new PsiBuilderImpl(
-                project,
-                null,
-                PARSER_DEFINITION,
-                lexer,
-                null,
-                text,
-                null,
-                null);
+
+        PsiBuilder builder = PsiBuilderFactory.getInstance().createBuilder(
+                PARSER_DEFINITION, lexer, text);
         ASTNode node = parser.parse(TLC_ERROR_TRACE, builder);
         ASTNode traceNode = node.findChildByType(
                 TokenSet.create(SINGLE_VARIABLE_TRACE, MULTIPLE_VARIABLE_TRACE));
