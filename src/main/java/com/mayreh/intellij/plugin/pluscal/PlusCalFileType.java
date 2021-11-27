@@ -5,12 +5,11 @@ import javax.swing.Icon;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nls.Capitalization;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.fileTypes.LanguageFileType;
 
-public class PlusCalFileType extends LanguageFileType {
+public final class PlusCalFileType extends LanguageFileType {
     public static final PlusCalFileType INSTANCE = new PlusCalFileType();
 
     private PlusCalFileType() {
@@ -33,7 +32,7 @@ public class PlusCalFileType extends LanguageFileType {
     }
 
     @Override
-    public @Nullable Icon getIcon() {
+    public Icon getIcon() {
         return AllIcons.FileTypes.Any_type;
     }
 }

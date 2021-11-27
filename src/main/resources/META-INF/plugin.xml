@@ -78,5 +78,19 @@
           language="TLC config"
           implementationClass="com.mayreh.intellij.plugin.tlc.TLCConfigCommenter"/>
         <stepsBeforeRunProvider implementation="com.mayreh.intellij.plugin.tlaplus.run.TLCBeforeRunTaskProvider"/>
+
+        <!-- PlusCal -->
+        <lang.parserDefinition
+          language="PlusCal"
+          implementationClass="com.mayreh.intellij.plugin.pluscal.PlusCalParserDefinition"/>
+        <fileType
+          name="PlusCal"
+          implementationClass="com.mayreh.intellij.plugin.pluscal.PlusCalFileType"
+          fieldName="INSTANCE"
+          language="PlusCal"/>
+        <lang.syntaxHighlighterFactory
+          language="PlusCal"
+          implementationClass="com.mayreh.intellij.plugin.pluscal.PlusCalSyntaxHighlighterFactory"/>
+        <multiHostInjector implementation="com.mayreh.intellij.plugin.pluscal.PlusCalLanguageInjector"/>
     </extensions>
 </idea-plugin>

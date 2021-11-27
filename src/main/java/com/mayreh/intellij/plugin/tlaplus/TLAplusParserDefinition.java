@@ -14,14 +14,13 @@ import com.intellij.psi.tree.IFileElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.mayreh.intellij.plugin.tlaplus.lexer.TLAplusLexer;
 import com.mayreh.intellij.plugin.tlaplus.parser.TLAplusParser;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementType;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 
 public class TLAplusParserDefinition implements ParserDefinition {
     public static final IFileElementType FILE = new IFileElementType(TLAplusLanguage.INSTANCE);
     public static final TokenSet COMMENT_TOKENS = TokenSet.create(
             TLAplusElementTypes.COMMENT,
-            TLAplusElementType.COMMENT_PLUS_CAL);
+            TLAplusElementTypes.COMMENT_PLUS_CAL);
     public static final TokenSet STRING_LITERAL = TokenSet.create(TLAplusElementTypes.LITERAL_STRING);
 
     @Override
@@ -61,6 +60,6 @@ public class TLAplusParserDefinition implements ParserDefinition {
 
     @Override
     public PsiFile createFile(FileViewProvider viewProvider) {
-        return new TLAplusFile(viewProvider);
+        return new TLAplusFile(viewProvider, TLAplusLanguage.INSTANCE);
     }
 }
