@@ -15,8 +15,10 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 %type IElementType
 %{
   private int cSyntaxBraceNestLevel = 0;
+  private int zzNestedBlockCommentLevel = 0;
 %}
 
+%state ALGORITHM_BEGIN
 %state P_SYNTAX
 %state C_SYNTAX
 %state IN_BLOCK_COMMENT_C
@@ -28,34 +30,38 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
 
 %%
 <YYINITIAL> {
-  --fair {WHITE_SPACE} algorithm {WHITE_SPACE} {IDENTIFIER} {WHITE_SPACE} "{" {
-      cSyntaxBraceNestLevel = 0;
+  --fair | --algorithm {
       yypushback(yylength());
+      yybegin(ALGORITHM_BEGIN);
+  }
+  [^] { return TLAplusElementTypes.IGNORED; }
+}
+<ALGORITHM_BEGIN> {
+  --fair {WHITE_SPACE} algorithm {WHITE_SPACE} {IDENTIFIER} {WHITE_SPACE}? "{" {
+      cSyntaxBraceNestLevel = 1;
       yybegin(C_SYNTAX);
   }
-  --algorithm {WHITE_SPACE} {IDENTIFIER} {WHITE_SPACE} "{" {
-      cSyntaxBraceNestLevel = 0;
-      yypushback(yylength());
+  --algorithm {WHITE_SPACE} {IDENTIFIER} {WHITE_SPACE}? "{" {
+      cSyntaxBraceNestLevel = 1;
       yybegin(C_SYNTAX);
   }
   --fair {WHITE_SPACE} algorithm {WHITE_SPACE} {IDENTIFIER} {WHITE_SPACE} {
-      yypushback(yylength());
       yybegin(P_SYNTAX);
   }
   --algorithm {WHITE_SPACE} {IDENTIFIER} {WHITE_SPACE} {
-      yypushback(yylength());
       yybegin(P_SYNTAX);
   }
-  [^] { return TLAplusElementTypes.IGNORED; }
+  <<EOF>> { yybegin(TERMINATED); return TLAplusElementTypes.COMMENT_PLUS_CAL; }
+  [^] {}
 }
 
 <C_SYNTAX> {
   \\"*"[^\r\n]* {}
-  "(*"          { yybegin(IN_BLOCK_COMMENT_C); yypushback(2); }
+  "(*"          { zzNestedBlockCommentLevel = 0; yybegin(IN_BLOCK_COMMENT_C); yypushback(2); }
   "{"           { cSyntaxBraceNestLevel++; }
   "}"           {
      cSyntaxBraceNestLevel--;
-     if (cSyntaxBraceNestLevel < 1) {
+     if (cSyntaxBraceNestLevel == 0) {
          yybegin(TERMINATED);
          return TLAplusElementTypes.COMMENT_PLUS_CAL;
      }
@@ -66,7 +72,7 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
 
 <P_SYNTAX> {
   \\"*"[^\r\n]* {}
-  "(*"          { yybegin(IN_BLOCK_COMMENT_P); yypushback(2); }
+  "(*"          { zzNestedBlockCommentLevel = 0; yybegin(IN_BLOCK_COMMENT_P); yypushback(2); }
   end {WHITE_SPACE} algorithm {
       yybegin(TERMINATED);
       return TLAplusElementTypes.COMMENT_PLUS_CAL;
@@ -76,13 +82,25 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
 }
 
 <IN_BLOCK_COMMENT_C> {
-  "*)"    { yybegin(C_SYNTAX); }
+  "(*"    { zzNestedBlockCommentLevel++; }
+  "*)"    {
+      zzNestedBlockCommentLevel--;
+      if (zzNestedBlockCommentLevel == 0) {
+          yybegin(C_SYNTAX);
+      }
+  }
   <<EOF>> { yybegin(TERMINATED); return TLAplusElementTypes.COMMENT_PLUS_CAL; }
   [^]     {}
 }
 
 <IN_BLOCK_COMMENT_P> {
-  "*)"    { yybegin(P_SYNTAX); }
+  "(*"    { zzNestedBlockCommentLevel++; }
+  "*)"    {
+      zzNestedBlockCommentLevel--;
+      if (zzNestedBlockCommentLevel == 0) {
+          yybegin(P_SYNTAX);
+      }
+  }
   <<EOF>> { yybegin(TERMINATED); return TLAplusElementTypes.COMMENT_PLUS_CAL; }
   [^]     {}
 }

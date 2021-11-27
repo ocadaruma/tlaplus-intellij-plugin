@@ -14,6 +14,7 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 %type IElementType
 %{
   private int zzNestedModuleLevel = 0;
+  private int zzNestedBlockCommentLevel = 0;
 
   public _TLAplusLexer(boolean forHighlighting) {
       this(null);
@@ -244,7 +245,7 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
 
   // comments
   \\"*"[^\r\n]* { return TLAplusElementTypes.COMMENT_LINE; }
-  "(*"          { yybegin(IN_BLOCK_COMMENT); yypushback(2); }
+  "(*"          { zzNestedBlockCommentLevel = 0; yybegin(IN_BLOCK_COMMENT); yypushback(2); }
 
   {WHITE_SPACE}+ { return TokenType.WHITE_SPACE; }
   {SEPARATOR}    { return clearIndent(TLAplusElementTypes.SEPARATOR, IN_MODULE); }
@@ -261,7 +262,14 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
 }
 
 <IN_BLOCK_COMMENT> {
-  "*)"    { yybegin(IN_MODULE); return TLAplusElementTypes.COMMENT_BLOCK; }
+  "(*"    { zzNestedBlockCommentLevel++; }
+  "*)"    {
+      zzNestedBlockCommentLevel--;
+      if (zzNestedBlockCommentLevel == 0) {
+          yybegin(IN_MODULE);
+          return TLAplusElementTypes.COMMENT_BLOCK;
+      }
+  }
   <<EOF>> { yybegin(YYINITIAL); return TLAplusElementTypes.COMMENT_BLOCK; }
   [^]     {}
 }
