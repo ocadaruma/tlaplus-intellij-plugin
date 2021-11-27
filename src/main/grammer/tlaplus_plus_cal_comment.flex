@@ -34,7 +34,7 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
       yypushback(yylength());
       yybegin(ALGORITHM_BEGIN);
   }
-  [^] { return TLAplusElementTypes.IGNORED; }
+  [^] { return TLAplusElementTypes.COMMENT; }
 }
 <ALGORITHM_BEGIN> {
   --fair {WHITE_SPACE} algorithm {WHITE_SPACE} {IDENTIFIER} {WHITE_SPACE}? "{" {
@@ -106,7 +106,7 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
 }
 
 <TERMINATED> {
-  [^]     { return TLAplusElementTypes.IGNORED; }
+  [^]     { return TLAplusElementTypes.COMMENT; }
 }
 
 // catch all

@@ -10,15 +10,13 @@ public class TLAplusLexer extends LayeredLexer {
     public TLAplusLexer(boolean forHighlighting) {
         super(new MergingLexerAdapter(
                 new FlexAdapter(new _TLAplusLexer(forHighlighting)),
-                TokenSet.create(TLAplusElementTypes.IGNORED)));
+                TokenSet.create(TLAplusElementTypes.COMMENT)));
 
         registerLayer(
                 new MergingLexerAdapter(
                         new FlexAdapter(
                                 new _TLAplusPlusCalCommentLexer(null)),
-                        TokenSet.create(TLAplusElementTypes.IGNORED)),
-                TLAplusElementTypes.IGNORED,
-                TLAplusElementTypes.COMMENT_LINE,
-                TLAplusElementTypes.COMMENT_BLOCK);
+                        TokenSet.create(TLAplusElementTypes.COMMENT)),
+                TLAplusElementTypes.COMMENT);
     }
 }

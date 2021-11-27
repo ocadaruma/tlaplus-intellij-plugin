@@ -29,8 +29,6 @@ public class TLAplusSyntaxHighlighter extends SyntaxHighlighterBase {
             "Keyword", DefaultLanguageHighlighterColors.KEYWORD);
     public static final TextAttributesKey BLOCK_COMMENT = createAttrKey(
             "BlockComment", DefaultLanguageHighlighterColors.BLOCK_COMMENT);
-    public static final TextAttributesKey LINE_COMMENT = createAttrKey(
-            "LineComment", DefaultLanguageHighlighterColors.LINE_COMMENT);
     public static final TextAttributesKey PARENTHESIS = createAttrKey(
             "Parenthesis", DefaultLanguageHighlighterColors.PARENTHESES);
     public static final TextAttributesKey BRACES = createAttrKey(
@@ -64,14 +62,8 @@ public class TLAplusSyntaxHighlighter extends SyntaxHighlighterBase {
         if (tokenType.equals(TLAplusElementTypes.LITERAL_NUMBER)) {
             return pack(NUMBER);
         }
-        if (tokenType.equals(TLAplusElementTypes.COMMENT_BLOCK)) {
+        if (tokenType.equals(TLAplusElementTypes.COMMENT)) {
             return pack(BLOCK_COMMENT);
-        }
-        if (tokenType.equals(TLAplusElementTypes.IGNORED)) {
-            return pack(BLOCK_COMMENT);
-        }
-        if (tokenType.equals(TLAplusElementTypes.COMMENT_LINE)) {
-            return pack(LINE_COMMENT);
         }
         if (tokenType.equals(TLAplusElementTypes.LPAREN) || tokenType.equals(TLAplusElementTypes.RPAREN)) {
             return pack(PARENTHESIS);

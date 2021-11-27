@@ -58,15 +58,15 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
   {IDENTIFIER}     { return TLCConfigElementTypes.IDENTIFIER; }
 
   // comments
-  \\"*"[^\r\n]* { return TLCConfigElementTypes.COMMENT_LINE; }
+  \\"*"[^\r\n]* { return TLCConfigElementTypes.COMMENT; }
   "(*"          { yybegin(IN_BLOCK_COMMENT); yypushback(2); }
 
   {WHITE_SPACE}+   { return TokenType.WHITE_SPACE; }
 }
 
 <IN_BLOCK_COMMENT> {
-  "*)"    { yybegin(YYINITIAL); return TLCConfigElementTypes.COMMENT_BLOCK; }
-  <<EOF>> { yybegin(YYINITIAL); return TLCConfigElementTypes.COMMENT_BLOCK; }
+  "*)"    { yybegin(YYINITIAL); return TLCConfigElementTypes.COMMENT; }
+  <<EOF>> { yybegin(YYINITIAL); return TLCConfigElementTypes.COMMENT; }
   [^]     {}
 }
 

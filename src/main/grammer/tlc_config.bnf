@@ -11,8 +11,7 @@
     psiImplPackage='com.mayreh.intellij.plugin.tlc.psi.impl'
 
     tokens = [
-        COMMENT_LINE       = 'COMMENT_LINE'
-        COMMENT_BLOCK      = 'COMMENT_BLOCK'
+        COMMENT       = 'COMMENT'
 
         KEYWORD_CONSTANT           = 'CONSTANT'
         KEYWORD_CONSTANTS          = 'CONSTANTS'

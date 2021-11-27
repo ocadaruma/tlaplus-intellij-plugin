@@ -16,16 +16,13 @@
     psiImplPackage='com.mayreh.intellij.plugin.tlaplus.psi.impl'
 
     tokens = [
-        // outside of the module block
-        IGNORED            = 'IGNORED'
-
         // tokens to parse disjunction
         JUNCTION_BEGIN            = 'JUNCTION_BEGIN'
         JUNCTION_CONT             = 'JUNCTION_CONT'
         JUNCTION_BREAK            = 'JUNCTION_BREAK'
 
-        COMMENT_LINE       = 'COMMENT_LINE'
-        COMMENT_BLOCK      = 'COMMENT_BLOCK'
+        COMMENT            = 'COMMENT'
+        // PlusCal comment block
         COMMENT_PLUS_CAL   = 'COMMENT_PLUS_CAL'
 
         MODULE_BEGIN       = 'MODULE_BEGIN'

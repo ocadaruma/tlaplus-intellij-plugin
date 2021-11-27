@@ -59,7 +59,7 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
     yybegin(IN_MODULE);
     return TLAplusElementTypes.MODULE_BEGIN;
   }
-  [^] { return TLAplusElementTypes.IGNORED; }
+  [^] { return TLAplusElementTypes.COMMENT; }
 }
 
 <IN_MODULE, HANDLE_INDENT> {
@@ -244,7 +244,7 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
   {IDENTIFIER} { return maybeHandleIndent(TLAplusElementTypes.IDENTIFIER); }
 
   // comments
-  \\"*"[^\r\n]* { return TLAplusElementTypes.COMMENT_LINE; }
+  \\"*"[^\r\n]* { return TLAplusElementTypes.COMMENT; }
   "(*"          { zzNestedBlockCommentLevel = 0; yybegin(IN_BLOCK_COMMENT); yypushback(2); }
 
   {WHITE_SPACE}+ { return TokenType.WHITE_SPACE; }
@@ -267,15 +267,15 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
       zzNestedBlockCommentLevel--;
       if (zzNestedBlockCommentLevel == 0) {
           yybegin(IN_MODULE);
-          return TLAplusElementTypes.COMMENT_BLOCK;
+          return TLAplusElementTypes.COMMENT;
       }
   }
-  <<EOF>> { yybegin(YYINITIAL); return TLAplusElementTypes.COMMENT_BLOCK; }
+  <<EOF>> { yybegin(YYINITIAL); return TLAplusElementTypes.COMMENT; }
   [^]     {}
 }
 
 <TERMINATED> {
-  [^]     { return TLAplusElementTypes.IGNORED; }
+  [^]     { return TLAplusElementTypes.COMMENT; }
 }
 
 // catch all

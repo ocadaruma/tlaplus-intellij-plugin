@@ -53,10 +53,8 @@ public class TLAplusCompletionContributor extends CompletionContributor implemen
 
     static class Patterns<T extends PsiElement> extends Capture<T> {
         private static final TokenSet SKIP_TOKENS = TokenSet.create(
-                TLAplusElementTypes.COMMENT_LINE,
-                TLAplusElementTypes.COMMENT_BLOCK,
+                TLAplusElementTypes.COMMENT,
                 TLAplusElementTypes.COMMENT_PLUS_CAL,
-                TLAplusElementTypes.IGNORED,
                 TokenType.WHITE_SPACE);
 
         protected Patterns(Class<T> aClass) {

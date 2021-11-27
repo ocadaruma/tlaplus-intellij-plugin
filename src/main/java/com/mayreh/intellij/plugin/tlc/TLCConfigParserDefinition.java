@@ -18,9 +18,7 @@ import com.mayreh.intellij.plugin.tlc.psi.TLCConfigElementTypes;
 
 public class TLCConfigParserDefinition implements ParserDefinition {
     public static final IFileElementType FILE = new IFileElementType(TLCConfigLanguage.INSTANCE);
-    public static final TokenSet COMMENT_TOKENS = TokenSet.create(
-            TLCConfigElementTypes.COMMENT_LINE,
-            TLCConfigElementTypes.COMMENT_BLOCK);
+    public static final TokenSet COMMENT_TOKENS = TokenSet.create(TLCConfigElementTypes.COMMENT);
     public static final TokenSet STRING_LITERAL = TokenSet.create(TLCConfigElementTypes.LITERAL_STRING);
 
     @Override

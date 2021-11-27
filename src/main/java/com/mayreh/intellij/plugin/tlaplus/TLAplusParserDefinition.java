@@ -19,10 +19,8 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 public class TLAplusParserDefinition implements ParserDefinition {
     public static final IFileElementType FILE = new IFileElementType(TLAplusLanguage.INSTANCE);
     public static final TokenSet COMMENT_TOKENS = TokenSet.create(
-            TLAplusElementTypes.COMMENT_LINE,
-            TLAplusElementTypes.COMMENT_BLOCK,
-            TLAplusElementTypes.COMMENT_PLUS_CAL,
-            TLAplusElementTypes.IGNORED);
+            TLAplusElementTypes.COMMENT,
+            TLAplusElementTypes.COMMENT_PLUS_CAL);
     public static final TokenSet STRING_LITERAL = TokenSet.create(TLAplusElementTypes.LITERAL_STRING);
 
     @Override

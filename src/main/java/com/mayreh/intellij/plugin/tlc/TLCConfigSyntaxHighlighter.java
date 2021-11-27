@@ -24,11 +24,8 @@ public class TLCConfigSyntaxHighlighter extends SyntaxHighlighterBase {
         if (tokenType.equals(TLCConfigElementTypes.LITERAL_NUMBER)) {
             return pack(TLAplusSyntaxHighlighter.NUMBER);
         }
-        if (tokenType.equals(TLCConfigElementTypes.COMMENT_BLOCK)) {
+        if (tokenType.equals(TLCConfigElementTypes.COMMENT)) {
             return pack(TLAplusSyntaxHighlighter.BLOCK_COMMENT);
-        }
-        if (tokenType.equals(TLCConfigElementTypes.COMMENT_LINE)) {
-            return pack(TLAplusSyntaxHighlighter.LINE_COMMENT);
         }
         if (tokenType.equals(TLCConfigElementTypes.LBRACE) || tokenType.equals(TLCConfigElementTypes.RBRACE)) {
             return pack(TLAplusSyntaxHighlighter.BRACES);
