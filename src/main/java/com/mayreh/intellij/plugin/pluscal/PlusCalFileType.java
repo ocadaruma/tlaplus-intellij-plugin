@@ -9,6 +9,9 @@ import org.jetbrains.annotations.NotNull;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.fileTypes.LanguageFileType;
 
+/**
+ * Defining file type is necessary to make syntax-highlighting on injected language works
+ */
 public final class PlusCalFileType extends LanguageFileType {
     public static final PlusCalFileType INSTANCE = new PlusCalFileType();
 

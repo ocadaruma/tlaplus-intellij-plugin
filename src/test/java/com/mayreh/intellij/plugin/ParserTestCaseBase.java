@@ -1,7 +1,5 @@
 package com.mayreh.intellij.plugin;
 
-import java.io.IOException;
-
 import org.jetbrains.annotations.NotNull;
 
 import com.intellij.lang.ParserDefinition;
@@ -11,8 +9,8 @@ import com.intellij.testFramework.ParsingTestCase;
 public abstract class ParserTestCaseBase extends ParsingTestCase {
     protected ParserTestCaseBase(String testDirResourcePath,
                                  String extension,
-                                 ParserDefinition parserDefinition) {
-        super(testDirResourcePath, extension, parserDefinition);
+                                 ParserDefinition... parserDefinitions) {
+        super(testDirResourcePath, extension, parserDefinitions);
     }
 
     @Override

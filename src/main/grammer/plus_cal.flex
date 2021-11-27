@@ -49,7 +49,7 @@ WHITE_SPACE = " " | \t | \f | \R
 IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
 
 %%
-<YYINITIAL> {
+<YYINITIAL, HANDLE_INDENT> {
   --algorithm | (--fair {WHITE_SPACE} algorithm) {
     return TLAplusElementTypes.PLUS_CAL_ALGORITHM_BEGIN;
   }
