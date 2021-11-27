@@ -1,5 +1,5 @@
 FILE
-  PsiComment(COMMENT_LINE)('\* comment')
+  PsiComment(COMMENT)('\* comment')
   PsiWhiteSpace('\n')
   TLCConfigStatementImpl(STATEMENT)
     TLCConfigConstantDeclImpl(CONSTANT_DECL)

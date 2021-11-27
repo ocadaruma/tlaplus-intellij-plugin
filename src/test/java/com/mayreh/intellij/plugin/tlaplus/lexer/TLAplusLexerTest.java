@@ -40,4 +40,8 @@ public class TLAplusLexerTest extends LexerTestCaseBase {
     public void test_fairness() {
         doTest();
     }
+
+    public void test_PlusCalCSyntaxComment() {
+        doTest();
+    }
 }

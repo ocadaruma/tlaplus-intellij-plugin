@@ -1,4 +1,4 @@
-COMMENT_LINE ('\* comment')
+COMMENT ('\* comment')
 WHITE_SPACE ('\n')
 CONSTANT ('CONSTANT')
 WHITE_SPACE (' ')

@@ -1,4 +1,7 @@
+-------- MODULE PlusCalCSyntaxComment --------
+X == 1
 (*
+xxx
 --algorithm Euclid {
   variables u = 24;
             v \in 1 .. N;
@@ -12,6 +15,8 @@
     };
     print <<24, v_init, "have gcd", v>>
   }
-
-abde
+}
+yyy
 *)
+Y == 2
+==============================================
