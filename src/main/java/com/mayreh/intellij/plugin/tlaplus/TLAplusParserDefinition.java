@@ -21,6 +21,7 @@ public class TLAplusParserDefinition implements ParserDefinition {
     public static final TokenSet COMMENT_TOKENS = TokenSet.create(
             TLAplusElementTypes.COMMENT_LINE,
             TLAplusElementTypes.COMMENT_BLOCK,
+            TLAplusElementTypes.COMMENT_PLUS_CAL,
             TLAplusElementTypes.IGNORED);
     public static final TokenSet STRING_LITERAL = TokenSet.create(TLAplusElementTypes.LITERAL_STRING);
 

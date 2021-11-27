@@ -55,6 +55,7 @@ public class TLAplusCompletionContributor extends CompletionContributor implemen
         private static final TokenSet SKIP_TOKENS = TokenSet.create(
                 TLAplusElementTypes.COMMENT_LINE,
                 TLAplusElementTypes.COMMENT_BLOCK,
+                TLAplusElementTypes.COMMENT_PLUS_CAL,
                 TLAplusElementTypes.IGNORED,
                 TokenType.WHITE_SPACE);
 

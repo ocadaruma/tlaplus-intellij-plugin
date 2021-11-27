@@ -26,6 +26,7 @@
 
         COMMENT_LINE       = 'COMMENT_LINE'
         COMMENT_BLOCK      = 'COMMENT_BLOCK'
+        COMMENT_PLUS_CAL   = 'COMMENT_PLUS_CAL'
 
         MODULE_BEGIN       = 'MODULE_BEGIN'
 
