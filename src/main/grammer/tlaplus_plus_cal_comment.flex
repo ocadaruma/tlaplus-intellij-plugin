@@ -29,10 +29,12 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
 %%
 <YYINITIAL> {
   --fair {WHITE_SPACE} algorithm {WHITE_SPACE} {IDENTIFIER} {WHITE_SPACE} "{" {
+      cSyntaxBraceNestLevel = 0;
       yypushback(yylength());
       yybegin(C_SYNTAX);
   }
   --algorithm {WHITE_SPACE} {IDENTIFIER} {WHITE_SPACE} "{" {
+      cSyntaxBraceNestLevel = 0;
       yypushback(yylength());
       yybegin(C_SYNTAX);
   }
@@ -58,30 +60,30 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
          return TLAplusElementTypes.COMMENT_PLUS_CAL;
      }
   }
-  <<EOF>> { yybegin(YYINITIAL); return TLAplusElementTypes.COMMENT_PLUS_CAL; }
+  <<EOF>> { yybegin(TERMINATED); return TLAplusElementTypes.COMMENT_PLUS_CAL; }
   [^] {}
 }
 
 <P_SYNTAX> {
   \\"*"[^\r\n]* {}
   "(*"          { yybegin(IN_BLOCK_COMMENT_P); yypushback(2); }
-  end {WHITE_SPACE} algotighm {
+  end {WHITE_SPACE} algorithm {
       yybegin(TERMINATED);
       return TLAplusElementTypes.COMMENT_PLUS_CAL;
   }
-  <<EOF>> { yybegin(YYINITIAL); return TLAplusElementTypes.COMMENT_PLUS_CAL; }
+  <<EOF>> { yybegin(TERMINATED); return TLAplusElementTypes.COMMENT_PLUS_CAL; }
   [^] {}
 }
 
 <IN_BLOCK_COMMENT_C> {
   "*)"    { yybegin(C_SYNTAX); }
-  <<EOF>> { yybegin(YYINITIAL); return TLAplusElementTypes.COMMENT_PLUS_CAL; }
+  <<EOF>> { yybegin(TERMINATED); return TLAplusElementTypes.COMMENT_PLUS_CAL; }
   [^]     {}
 }
 
 <IN_BLOCK_COMMENT_P> {
   "*)"    { yybegin(P_SYNTAX); }
-  <<EOF>> { yybegin(YYINITIAL); return TLAplusElementTypes.COMMENT_PLUS_CAL; }
+  <<EOF>> { yybegin(TERMINATED); return TLAplusElementTypes.COMMENT_PLUS_CAL; }
   [^]     {}
 }
 
