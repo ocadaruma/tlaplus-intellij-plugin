@@ -18,7 +18,7 @@ This plugin is heavily inspired by https://github.com/alygin/vscode-tlaplus[TLA+
 *** Error trace exploration is not supported
 * [x] Find usages (Go to declaration)
 * [x] Code completion
-* [ ] (Not yet) PlusCal
+* [x] PlusCal (Translate into TLA+)
 
 == Screenshots
 

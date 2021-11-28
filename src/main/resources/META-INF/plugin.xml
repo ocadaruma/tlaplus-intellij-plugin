@@ -10,6 +10,7 @@
     <li>Syntax highlighting</li>
     <li>Go to definition (Find usages)</li>
     <li>Code completion</li>
+    <li>PlusCal syntax support (Translate into TLA+)</li>
     <li>Run TLC</li>
     </ul>
     ]]></description>
