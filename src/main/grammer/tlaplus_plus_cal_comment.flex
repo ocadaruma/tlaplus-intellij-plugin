@@ -37,18 +37,18 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
   [^] { return TLAplusElementTypes.COMMENT; }
 }
 <ALGORITHM_BEGIN> {
-  --fair {WHITE_SPACE} algorithm {WHITE_SPACE} {IDENTIFIER} {WHITE_SPACE}? "{" {
+  --fair {WHITE_SPACE}+ algorithm {WHITE_SPACE}+ {IDENTIFIER} {WHITE_SPACE}* "{" {
       cSyntaxBraceNestLevel = 1;
       yybegin(C_SYNTAX);
   }
-  --algorithm {WHITE_SPACE} {IDENTIFIER} {WHITE_SPACE}? "{" {
+  --algorithm {WHITE_SPACE}+ {IDENTIFIER} {WHITE_SPACE}* "{" {
       cSyntaxBraceNestLevel = 1;
       yybegin(C_SYNTAX);
   }
-  --fair {WHITE_SPACE} algorithm {WHITE_SPACE} {IDENTIFIER} {WHITE_SPACE} {
+  --fair {WHITE_SPACE}+ algorithm {WHITE_SPACE}+ {IDENTIFIER} {
       yybegin(P_SYNTAX);
   }
-  --algorithm {WHITE_SPACE} {IDENTIFIER} {WHITE_SPACE} {
+  --algorithm {WHITE_SPACE}+ {IDENTIFIER} {
       yybegin(P_SYNTAX);
   }
   <<EOF>> { yybegin(TERMINATED); return TLAplusElementTypes.COMMENT_PLUS_CAL; }

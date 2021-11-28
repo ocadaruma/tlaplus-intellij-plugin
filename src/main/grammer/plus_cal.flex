@@ -50,7 +50,7 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
 
 %%
 <YYINITIAL, HANDLE_INDENT> {
-  --algorithm | (--fair {WHITE_SPACE} algorithm) {
+  --algorithm | (--fair {WHITE_SPACE}+ algorithm) {
     return TLAplusElementTypes.PLUS_CAL_ALGORITHM_BEGIN;
   }
 
