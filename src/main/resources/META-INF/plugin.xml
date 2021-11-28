@@ -59,6 +59,8 @@
           implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusCompletionContributor"
           order="first"/>
 
+        <notificationGroup id="TLA+ plugin" displayType="BALLOON"/>
+
         <!-- TLC config -->
         <!-- we specify order explicitly because some fileTypes (e.g. TextMate) may detect -->
         <!-- tlc config as its file type falsely because of iteration-order in FileTypeManagerImpl. -->
@@ -93,4 +95,13 @@
           implementationClass="com.mayreh.intellij.plugin.pluscal.PlusCalSyntaxHighlighterFactory"/>
         <multiHostInjector implementation="com.mayreh.intellij.plugin.pluscal.PlusCalLanguageInjector"/>
     </extensions>
+
+    <actions>
+        <action id="com.mayreh.TranslatePlusCal"
+                class="com.mayreh.intellij.plugin.tlaplus.ide.actions.PlusCalTranslateAction"
+                text="Translate PlusCal"
+                description="Translate PlusCal algorithm into TLA+">
+            <add-to-group group-id="CodeMenu" anchor="last"/>
+        </action>
+    </actions>
 </idea-plugin>

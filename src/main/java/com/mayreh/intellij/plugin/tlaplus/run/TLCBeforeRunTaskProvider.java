@@ -18,6 +18,8 @@ import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.command.WriteCommandAction;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.io.StreamUtil;
 import com.intellij.openapi.util.text.StringUtil;
@@ -74,15 +76,15 @@ public class TLCBeforeRunTaskProvider extends BeforeRunTaskProvider<TLCBeforeRun
             String modulePath = ((TLCRunConfiguration) configuration).getFile();
             if (StringUtil.isNotEmpty(modulePath)) {
                 ApplicationManager.getApplication().invokeAndWait(() -> {
-                    ApplicationManager.getApplication().runWriteAction(() -> {
+                    WriteCommandAction.runWriteCommandAction(environment.getProject(), (Computable<Void>) () -> {
                         VirtualFile moduleFile = VirtualFileManager
                                 .getInstance().findFileByNioPath(Paths.get(modulePath));
                         if (moduleFile == null || moduleFile.getParent() == null) {
-                            return;
+                            return null;
                         }
                         String configFile = moduleFile.getNameWithoutExtension() + ".cfg";
                         if (moduleFile.getParent().findChild(configFile) != null) {
-                            return;
+                            return null;
                         }
                         try {
                             VirtualFile file = moduleFile.getParent().createChildData(task, configFile);
@@ -90,6 +92,7 @@ public class TLCBeforeRunTaskProvider extends BeforeRunTaskProvider<TLCBeforeRun
                         } catch (IOException e) {
                             throw new UncheckedIOException(e);
                         }
+                        return null;
                     });
                 });
             }
