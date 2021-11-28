@@ -16,6 +16,7 @@ import com.intellij.patterns.ElementPattern;
 import com.intellij.patterns.PatternCondition;
 import com.intellij.patterns.PsiElementPattern.Capture;
 import com.intellij.patterns.TreeElementPattern;
+import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.TokenType;
 import com.intellij.psi.tree.TokenSet;
@@ -28,10 +29,12 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModuleHeader;
 public class TLAplusCompletionContributor extends CompletionContributor implements DumbAware {
     public TLAplusCompletionContributor() {
         extend(CompletionType.BASIC,
-               psiElement().withParent(psiElement(TLAplusModule.class)),
+               psiElement().withParent(psiElement(TLAplusModule.class))
+                           .andNot(psiElement(PsiComment.class)),
                new KeywordCompletionProvider("LOCAL", "VARIABLE", "VARIABLES", "CONSTANT", "CONSTANTS", "INSTANCE", "THEOREM", "ASSUME", "ASSUMPTION", "AXIOM"));
         extend(CompletionType.BASIC,
-               tlaplusElement().afterSibling2(psiElement(TLAplusModuleHeader.class)),
+               tlaplusElement().afterSibling2(psiElement(TLAplusModuleHeader.class))
+                               .andNot(psiElement(PsiComment.class)),
                new KeywordCompletionProvider("EXTENDS"));
     }
 

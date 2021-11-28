@@ -56,8 +56,7 @@
           implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusRefactoringSupportProvider"/>
         <completion.contributor
           language="TLA+"
-          implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusCompletionContributor"
-          order="first"/>
+          implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusCompletionContributor"/>
 
         <notificationGroup id="TLA+ plugin" displayType="BALLOON"/>
 
@@ -93,6 +92,13 @@
         <lang.syntaxHighlighterFactory
           language="PlusCal"
           implementationClass="com.mayreh.intellij.plugin.pluscal.PlusCalSyntaxHighlighterFactory"/>
+        <!-- We register PlusCalCompletionContributor as TLA+ language's completion contributor -->
+        <!-- as all element types of PlusCal languages are associated to TLA+ language (see TLAplusElementType) -->
+        <!-- because we use same BNF for them, and it's natural as TLA+ definitions, expressions can be embedded -->
+        <!-- in PlusCal algorithm. -->
+        <completion.contributor
+          language="TLA+"
+          implementationClass="com.mayreh.intellij.plugin.pluscal.PlusCalCompletionContributor"/>
         <multiHostInjector implementation="com.mayreh.intellij.plugin.pluscal.PlusCalLanguageInjector"/>
     </extensions>
 
