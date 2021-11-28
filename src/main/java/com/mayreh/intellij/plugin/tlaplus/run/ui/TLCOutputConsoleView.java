@@ -66,7 +66,7 @@ public class TLCOutputConsoleView implements ConsoleView, HelpIdProvider {
                 this.processHandler = processHandler;
                 listener = new ProcessAdapter() {
                     private TLCEventParser currentParser = TLCEventParser.create(
-                            consoleView.resultPanel, consoleView.console().getProject());
+                            consoleView.resultPanel);
                     @Override
                     public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
                         ApplicationManager.getApplication().invokeLater(

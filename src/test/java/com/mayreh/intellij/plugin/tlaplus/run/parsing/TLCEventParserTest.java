@@ -19,7 +19,7 @@ public class TLCEventParserTest extends BasePlatformTestCase {
     private void doTest(String fileName) {
         List<TLCEvent> events = new ArrayList<>();
         Consumer<String> parserOuter = new Consumer<>() {
-            private TLCEventParser parser = TLCEventParser.create(events::add, getProject());
+            private TLCEventParser parser = TLCEventParser.create(events::add);
             @Override
             public void accept(String s) {
                 parser = parser.addLine(s);

@@ -29,7 +29,6 @@ import com.intellij.lang.PsiBuilder;
 import com.intellij.lang.PsiBuilderFactory;
 import com.intellij.lang.PsiParser;
 import com.intellij.lexer.Lexer;
-import com.intellij.openapi.project.Project;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.tree.TokenSet;
 import com.intellij.util.Range;
@@ -46,9 +45,6 @@ import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.T
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.TraceVariableValue;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.UnknownValue;
 
-import lombok.RequiredArgsConstructor;
-
-@RequiredArgsConstructor
 public class TLCErrorTraceParser {
     private static final Pattern ERROR_TRACE_PATTERN = Pattern.compile(
             "(\\d+): <(\\w+) line (\\d+), col (\\d+) to line (\\d+), col (\\d+) of module (\\w+)>");
@@ -57,8 +53,6 @@ public class TLCErrorTraceParser {
     private static final Pattern BACK_TO_STATE_PATTERN = Pattern.compile(
             "(\\d+): Back to state: <(\\w+) line (\\d+), col (\\d+) to line (\\d+), col (\\d+) of module (\\w+)>");
     private static final TLCErrorTraceParserDefinition PARSER_DEFINITION = new TLCErrorTraceParserDefinition();
-
-    private final Project project;
 
     public Optional<ErrorTraceEvent> parse(List<String> lines) {
         if (lines.isEmpty()) {

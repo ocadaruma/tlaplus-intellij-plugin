@@ -13,7 +13,6 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.intellij.openapi.project.Project;
 import com.intellij.util.Range;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.CheckingLiveness;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.CheckingLivenessFinal;
@@ -57,8 +56,8 @@ public abstract class TLCEventParser {
      */
     public abstract TLCEventParser addLine(String line);
 
-    public static TLCEventParser create(TLCEventListener listener, Project project) {
-        return new Default(listener, project);
+    public static TLCEventParser create(TLCEventListener listener) {
+        return new Default(listener);
     }
 
     public void notifyProcessExit(int exitCode) {
@@ -66,11 +65,9 @@ public abstract class TLCEventParser {
     }
 
     protected final TLCEventListener listener;
-    protected final Project project;
 
-    protected TLCEventParser(TLCEventListener listener, Project project) {
+    protected TLCEventParser(TLCEventListener listener) {
         this.listener = listener;
-        this.project = project;
     }
 
     protected Optional<TLCMessage> parseStartMessage(String line) {
@@ -92,8 +89,8 @@ public abstract class TLCEventParser {
     }
 
     static class Default extends TLCEventParser {
-        Default(TLCEventListener listener, Project project) {
-            super(listener, project);
+        Default(TLCEventListener listener) {
+            super(listener);
         }
 
         @Override
@@ -104,63 +101,63 @@ public abstract class TLCEventParser {
                     return new MultilineTextParser<>(
                             // unboxing msg.severity() here is safe because non-null is ensured by
                             // `interestedSeverities.contains(msg.severity())` above
-                            listener, project, lines -> Optional.of(ErrorParser.parse(msg.severity(), lines)));
+                            listener, lines -> Optional.of(ErrorParser.parse(msg.severity(), lines)));
                 }
                 switch (msg.code()) {
                     case EC.TLC_MODE_MC:
-                        return new MultilineTextParser<>(listener, project, lines -> Optional.of(new MC(lines)));
+                        return new MultilineTextParser<>(listener, lines -> Optional.of(new MC(lines)));
                     case EC.TLC_SANY_START:
-                        return new SANYEventParser(listener, project);
+                        return new SANYEventParser(listener);
                     case EC.TLC_STARTING:
                         return new MultilineTextParser<>(
-                                listener, project, lines -> maybeMatch(DATETIME_PATTERN, String.join(" ", lines))
+                                listener, lines -> maybeMatch(DATETIME_PATTERN, String.join(" ", lines))
                                 .map(matcher -> new TLCStart(
                                         LocalDateTime.parse(matcher.group(1), DATETIME_FORMAT))));
                     case EC.TLC_CHECKPOINT_START:
                         return new MultilineTextParser<>(
-                                listener, project, ignore -> Optional.of(CheckpointStart.INSTANCE));
+                                listener, ignore -> Optional.of(CheckpointStart.INSTANCE));
                     case EC.TLC_COMPUTING_INIT:
                     case EC.TLC_COMPUTING_INIT_PROGRESS:
                         return new MultilineTextParser<>(
-                                listener, project, ignore -> Optional.of(InitialStatesComputing.INSTANCE));
+                                listener, ignore -> Optional.of(InitialStatesComputing.INSTANCE));
                     case EC.TLC_INIT_GENERATED1:
                     case EC.TLC_INIT_GENERATED2:
                     case EC.TLC_INIT_GENERATED3:
                     case EC.TLC_INIT_GENERATED4:
-                        return new MultilineTextParser<>(listener, project, ProgressParser::parseInit);
+                        return new MultilineTextParser<>(listener, ProgressParser::parseInit);
                     case EC.TLC_CHECKING_TEMPORAL_PROPS:
-                        return new MultilineTextParser<>(listener, project, lines -> {
+                        return new MultilineTextParser<>(listener, lines -> {
                             if (String.join(" ", lines).contains("complete")) {
                                 return Optional.of(CheckingLivenessFinal.INSTANCE);
                             }
                             return Optional.of(CheckingLiveness.INSTANCE);
                         });
                     case EC.TLC_PROGRESS_STATS:
-                        return new MultilineTextParser<>(listener, project, ProgressParser::parse);
+                        return new MultilineTextParser<>(listener, ProgressParser::parse);
                     case EC.TLC_COVERAGE_INIT:
                         return new MultilineTextParser<>(
-                                listener, project, lines -> CoverageItemParser.parse(lines).map(CoverageInit::new));
+                                listener, lines -> CoverageItemParser.parse(lines).map(CoverageInit::new));
                     case EC.TLC_COVERAGE_NEXT:
                         return new MultilineTextParser<>(
-                                listener, project, lines -> CoverageItemParser.parse(lines).map(CoverageNext::new));
+                                listener, lines -> CoverageItemParser.parse(lines).map(CoverageNext::new));
                     case EC.TLC_STATE_PRINT1:
                     case EC.TLC_STATE_PRINT2:
                     case EC.TLC_STATE_PRINT3:
                     case EC.TLC_BACK_TO_STATE:
                         return new MultilineTextParser<>(
-                                listener, project, lines -> new TLCErrorTraceParser(project).parse(lines));
+                                listener, lines -> new TLCErrorTraceParser().parse(lines));
                     case EC.TLC_SUCCESS:
                         return new MultilineTextParser<>(
-                                listener, project, lines -> maybeMatch(SUCCESS_PATTERN, String.join(" ", lines))
+                                listener, lines -> maybeMatch(SUCCESS_PATTERN, String.join(" ", lines))
                                 .map(matcher -> new TLCSuccess(Double.valueOf(matcher.group(1)))));
                     case EC.TLC_FINISHED:
                         return new MultilineTextParser<>(
-                                listener, project, lines -> maybeMatch(FINISH_PATTERN, String.join(" ", lines))
+                                listener, lines -> maybeMatch(FINISH_PATTERN, String.join(" ", lines))
                                 .map(matcher -> new TLCFinished(
                                         Duration.ofMillis(Long.valueOf(matcher.group(1))),
                                         LocalDateTime.parse(matcher.group(2), DATETIME_FORMAT))));
                     default:
-                        return new Other(listener, project);
+                        return new Other(listener);
                 }
             }).orElseGet(() -> {
                 listener.onEvent(new TLCEvent.TextEvent(line));
@@ -170,15 +167,15 @@ public abstract class TLCEventParser {
     }
 
     private abstract static class StatefulParser extends TLCEventParser {
-        StatefulParser(TLCEventListener listener, Project project) {
-            super(listener, project);
+        StatefulParser(TLCEventListener listener) {
+            super(listener);
         }
 
         @Override
         public TLCEventParser addLine(String line) {
             if (parseEndMessage(line)) {
                 finish();
-                return new Default(listener, project);
+                return new Default(listener);
             } else {
                 processLine(line);
                 return this;
@@ -194,9 +191,8 @@ public abstract class TLCEventParser {
         private final List<String> lines = new ArrayList<>();
 
         MultilineTextParser(TLCEventListener listener,
-                            Project project,
                             Function<List<String>, Optional<T>> createEvent) {
-            super(listener, project);
+            super(listener);
             this.createEvent = createEvent;
         }
 
@@ -217,8 +213,8 @@ public abstract class TLCEventParser {
     }
 
     static class Other extends StatefulParser {
-        Other(TLCEventListener listener, Project project) {
-            super(listener, project);
+        Other(TLCEventListener listener) {
+            super(listener);
         }
 
         @Override
