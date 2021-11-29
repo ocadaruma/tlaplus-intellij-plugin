@@ -572,12 +572,13 @@ set_expr ::= clear_indent '{' <<comma_list expr>>? clear_indent '}'
            | set_comprehension
            | set_comprehension_map
 
-// e.g. { x : x \in some_set /\ x /= 1 }
+// e.g. { x \in some_set : x /= 1 }
 set_comprehension ::= clear_indent '{' identifier_or_tuple clear_indent '\in' expr clear_indent ':' expr clear_indent '}'
 {
   implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNameContext'
   mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusSetComprehensionImplMixin'
 }
+// e.g. { x + 1 : x \in some_set }
 // e.g. { x + 1 : x \in some_set }
 // in this expression, variable binding appears right to the variable-use
 set_comprehension_map ::= clear_indent '{' expr clear_indent ':' <<comma_list quantifier_bound>> clear_indent '}'

@@ -60,11 +60,15 @@ public interface TokenSets {
             TLAplusElementTypes.PLUS_CAL_KW_WITH
     );
 
-    TokenSet OPERATORS = TokenSet.create(
-            TLAplusElementTypes.OP_ENABLED,
-            TLAplusElementTypes.OP_UNCHANGED,
-            TLAplusElementTypes.OP_POWERSET,
+    TokenSet NONSYMBOL_OPERATORS = TokenSet.create(
             TLAplusElementTypes.OP_DOMAIN,
+            TLAplusElementTypes.OP_ENABLED,
+            TLAplusElementTypes.OP_POWERSET,
+            TLAplusElementTypes.OP_UNCHANGED,
+            TLAplusElementTypes.OP_UNION
+    );
+
+    TokenSet OPERATORS = TokenSet.create(
             TLAplusElementTypes.OP_NEG,
             TLAplusElementTypes.OP_SQUARE,
             TLAplusElementTypes.OP_DIAMOND,

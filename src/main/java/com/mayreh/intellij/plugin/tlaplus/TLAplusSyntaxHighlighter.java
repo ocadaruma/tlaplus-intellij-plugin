@@ -80,6 +80,9 @@ public class TLAplusSyntaxHighlighter extends SyntaxHighlighterBase {
         if (TokenSets.OPERATORS.contains(tokenType)) {
             return pack(OPERATOR);
         }
+        if (TokenSets.NONSYMBOL_OPERATORS.contains(tokenType)) {
+            return pack(KEYWORD);
+        }
         if (TokenSets.KEYWORDS.contains(tokenType)) {
             return pack(KEYWORD);
         }

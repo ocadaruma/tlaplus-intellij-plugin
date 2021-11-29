@@ -133,6 +133,7 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
   // operators
   "ENABLED"            { return maybeHandleIndent(TLAplusElementTypes.OP_ENABLED); }
   "UNCHANGED"          { return maybeHandleIndent(TLAplusElementTypes.OP_UNCHANGED); }
+  "UNION"              { return maybeHandleIndent(TLAplusElementTypes.OP_UNION); }
   "SUBSET"             { return maybeHandleIndent(TLAplusElementTypes.OP_POWERSET); }
   "DOMAIN"             { return maybeHandleIndent(TLAplusElementTypes.OP_DOMAIN); }
   "~" | \\neg | \\lnot { return maybeHandleIndent(TLAplusElementTypes.OP_NEG); }
