@@ -14,4 +14,23 @@ public class StringUtil {
         }
         return sw.toString();
     }
+
+    /**
+     * Get column from the offset inside the text.
+     *
+     * This should be faster than {@link com.intellij.openapi.util.text.StringUtil#offsetToLineColumn} which
+     * traverses text from the beginning.
+     */
+    public static int offsetToColumn(@NotNull CharSequence text, int offset) {
+        if (offset >= text.length()) {
+            return -1;
+        }
+
+        // this should work even for \r\n
+        int newlineOffset = com.intellij.openapi.util.text.StringUtil.lastIndexOf(text, '\n', 0, offset);
+        if (newlineOffset < 0) {
+            return offset;
+        }
+        return offset - (newlineOffset + 1);
+    }
 }
