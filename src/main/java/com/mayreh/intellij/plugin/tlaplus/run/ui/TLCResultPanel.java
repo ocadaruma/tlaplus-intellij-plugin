@@ -94,7 +94,7 @@ public class TLCResultPanel extends JPanel implements TLCEventListener, Disposab
     }
 
     private OnePixelSplitter createSplitter() {
-        OnePixelSplitter splitter = new OnePixelSplitter(splitVertically(), SPLITTER_PROPERTY, 0.5f);
+        OnePixelSplitter splitter = new OnePixelSplitter(splitVertically(), SPLITTER_PROPERTY, 0.6f);
         splitter.setHonorComponentsMinimumSize(true);
         return splitter;
     }

@@ -58,7 +58,9 @@
         <completion.contributor
           language="TLA+"
           implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusCompletionContributor"/>
-
+        <lang.braceMatcher
+          language="TLA+"
+          implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusBraceMatcher"/>
         <notificationGroup id="TLA+ plugin" displayType="BALLOON"/>
 
         <!-- TLC config -->
@@ -101,6 +103,10 @@
           language="TLA+"
           implementationClass="com.mayreh.intellij.plugin.pluscal.PlusCalCompletionContributor"/>
         <multiHostInjector implementation="com.mayreh.intellij.plugin.pluscal.PlusCalLanguageInjector"/>
+        <!-- Reuse same brace matcher as TLA+ -->
+        <lang.braceMatcher
+          language="PlusCal"
+          implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusBraceMatcher"/>
     </extensions>
 
     <actions>
