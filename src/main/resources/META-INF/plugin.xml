@@ -61,6 +61,9 @@
         <lang.braceMatcher
           language="TLA+"
           implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusBraceMatcher"/>
+        <lang.quoteHandler
+          language="TLA+"
+          implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusQuoteHandler"/>
         <notificationGroup id="TLA+ plugin" displayType="BALLOON"/>
 
         <!-- TLC config -->

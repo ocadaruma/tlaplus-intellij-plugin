@@ -107,7 +107,7 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
   [0-9]+ | [0-9]+ "." [0-9]+ | \\[bB][01]+ | \\[oO][0-7]+ | \\[hH][0-9a-fA-F]+ {
     return maybeHandleIndent(TLAplusElementTypes.LITERAL_NUMBER);
   }
-  \" ([^\\\"\r\n\t] | \\[^\r\n\t])* \" { return maybeHandleIndent(TLAplusElementTypes.LITERAL_STRING); }
+  \" ([^\\\"\r\n\t] | \\[^\r\n\t])* \"? { return maybeHandleIndent(TLAplusElementTypes.LITERAL_STRING); }
 
   // symbols
   "<<"  { return maybeHandleIndent(TLAplusElementTypes.LTUPLE); }
