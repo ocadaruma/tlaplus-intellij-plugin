@@ -55,7 +55,6 @@ public class PlusCalTranslateAction extends DumbAwareAction {
                             StringUtil.joinLines(result.getErrors()),
                             NotificationType.ERROR);
             Notifications.Bus.notify(notification, project);
-//            result.getErrors()
         }
     }
 
