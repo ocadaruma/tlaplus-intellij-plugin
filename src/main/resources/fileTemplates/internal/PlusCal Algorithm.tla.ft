@@ -1,0 +1,7 @@
+---- MODULE ${NAME} ----
+(*--algorithm ${NAME}
+begin
+    skip;
+end algorithm
+*)
+====

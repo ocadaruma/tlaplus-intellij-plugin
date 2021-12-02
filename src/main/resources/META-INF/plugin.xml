@@ -33,6 +33,8 @@
           fieldName="INSTANCE"
           language="TLA+"
           extensions="tla"/>
+        <internalFileTemplate name="TLA+ Spec"/>
+        <internalFileTemplate name="PlusCal Algorithm"/>
         <lang.parserDefinition
           language="TLA+"
           implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusParserDefinition"/>
@@ -127,6 +129,10 @@
                 text="Translate PlusCal"
                 description="Translate PlusCal algorithm into TLA+">
             <add-to-group group-id="CodeMenu" anchor="last"/>
+        </action>
+        <action id="com.mayreh.NewTLAplusFile"
+                class="com.mayreh.intellij.plugin.tlaplus.ide.actions.TLAplusCreateFileAction">
+            <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFile"/>
         </action>
     </actions>
 </idea-plugin>
