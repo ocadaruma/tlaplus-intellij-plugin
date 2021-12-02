@@ -84,6 +84,12 @@
         <lang.commenter
           language="TLC config"
           implementationClass="com.mayreh.intellij.plugin.tlc.TLCConfigCommenter"/>
+        <lang.braceMatcher
+          language="TLC config"
+          implementationClass="com.mayreh.intellij.plugin.tlc.TLCConfigBraceMatcher"/>
+        <lang.quoteHandler
+          language="TLC config"
+          implementationClass="com.mayreh.intellij.plugin.tlc.TLCConfigQuoteHandler"/>
         <stepsBeforeRunProvider implementation="com.mayreh.intellij.plugin.tlaplus.run.TLCBeforeRunTaskProvider"/>
 
         <!-- PlusCal -->
@@ -110,6 +116,9 @@
         <lang.braceMatcher
           language="PlusCal"
           implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusBraceMatcher"/>
+        <lang.quoteHandler
+          language="PlusCal"
+          implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusQuoteHandler"/>
     </extensions>
 
     <actions>
