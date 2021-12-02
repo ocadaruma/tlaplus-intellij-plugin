@@ -15,4 +15,8 @@ public class PlusCalParserTest extends ParserTestCaseBase {
     public void test_HyperEuclid_C() {
         doTest();
     }
+
+    public void test_With() {
+        doTest();
+    }
 }

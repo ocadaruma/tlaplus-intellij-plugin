@@ -721,7 +721,7 @@ plus_cal_c_syntax ::= 'ALGORITHM_BEGIN' plus_cal_name '{'
                        (plus_cal_compound_stmt | plus_cal_process_c+) '}'
 
 plus_cal_p_syntax ::= 'ALGORITHM_BEGIN' plus_cal_name
-                      plus_cal_var_decls?
+                      plus_cal_p_var_decls?
                       plus_cal_definitions_p?
                       plus_cal_macro_p*
                       plus_cal_procedure_p*
@@ -734,7 +734,7 @@ plus_cal_var_decls ::= clear_indent ('variable' | 'variables') plus_cal_var_decl
 }
 plus_cal_var_decl ::= plus_cal_variable (clear_indent ('=' | '\in') expr)? clear_indent (';' | ',')
 
-plus_cal_p_var_decls ::= clear_indent ('variable' | 'variables') (plus_cal_p_var_decl clear_indent (';' | ','))+
+plus_cal_p_var_decls ::= clear_indent ('variable' | 'variables') (plus_cal_p_var_decl clear_indent (stmt_termination | ','))+
 {
   pin = 2
 }
@@ -796,7 +796,7 @@ plus_cal_assign ::= plus_cal_lhs clear_indent ':=' expr (clear_indent '||' plus_
 {
   pin = 3
 }
-private plus_cal_assign_p ::= plus_cal_assign clear_indent ';'
+private plus_cal_assign_p ::= plus_cal_assign clear_indent (';' | &stmt_termination)
 
 plus_cal_lhs ::= plus_cal_variable ((clear_indent '[' <<comma_list expr>> clear_indent ']') | clear_indent '.' plus_cal_field)*
 
@@ -806,7 +806,7 @@ plus_cal_if_c ::= clear_indent 'if' clear_indent '(' expr clear_indent ')' plus_
 }
 plus_cal_if_p ::= clear_indent 'if' expr clear_indent 'then' plus_cal_stmt_p+
                  (clear_indent 'elsif' expr clear_indent 'then' plus_cal_stmt_p+)*
-                 (clear_indent 'else' plus_cal_stmt_p+)? clear_indent 'end' clear_indent 'if' clear_indent ';'
+                 (clear_indent 'else' plus_cal_stmt_p+)? clear_indent 'end' clear_indent 'if' clear_indent stmt_termination
 {
   pin = 2
 }
@@ -815,7 +815,7 @@ plus_cal_while_c ::= clear_indent 'while' clear_indent '(' expr clear_indent ')'
 {
   pin = 2
 }
-plus_cal_while_p ::= clear_indent 'while' expr clear_indent 'do' plus_cal_stmt_p+ clear_indent 'end' clear_indent 'while' clear_indent ';'
+plus_cal_while_p ::= clear_indent 'while' expr clear_indent 'do' plus_cal_stmt_p+ clear_indent 'end' clear_indent 'while' clear_indent stmt_termination
 {
   pin = 2
 }
@@ -824,7 +824,7 @@ plus_cal_either_c ::= clear_indent 'either' plus_cal_stmt_c (clear_indent 'or' p
 {
   pin = 2
 }
-plus_cal_either_p ::= clear_indent 'either' plus_cal_stmt_p+ (clear_indent 'or' plus_cal_stmt_p+)+ clear_indent 'end' clear_indent 'either' clear_indent ';'
+plus_cal_either_p ::= clear_indent 'either' plus_cal_stmt_p+ (clear_indent 'or' plus_cal_stmt_p+)+ clear_indent 'end' clear_indent 'either' clear_indent stmt_termination
 {
   pin = 2
 }
@@ -858,38 +858,38 @@ plus_cal_unlabeled_stmt_p ::= plus_cal_assign_p
                             | plus_cal_macro_call_p
 
 plus_cal_skip ::= clear_indent 'skip' { pin = 2 }
-private plus_cal_skip_p ::= plus_cal_skip clear_indent ';'
+private plus_cal_skip_p ::= plus_cal_skip clear_indent stmt_termination
 
 plus_cal_return ::= clear_indent 'return' { pin = 2 }
-private plus_cal_return_p ::= plus_cal_return clear_indent ';'
+private plus_cal_return_p ::= plus_cal_return clear_indent stmt_termination
 
 plus_cal_with_c ::= clear_indent 'with' clear_indent '(' plus_cal_variable clear_indent ('=' | '\in') expr
-       (clear_indent (';' | ',') plus_cal_variable clear_indent ('=' | '\in') expr)* clear_indent (';' | ',')? clear_indent ')' plus_cal_stmt_c
+       (clear_indent (stmt_termination | ',') plus_cal_variable clear_indent ('=' | '\in') expr)* clear_indent (';' | ',')? clear_indent ')' plus_cal_stmt_c
 {
   pin = 2
 }
-plus_cal_with_p ::= clear_indent 'with' (plus_cal_variable clear_indent ('=' | '\in') expr clear_indent (';' | ','))+
-                    clear_indent 'do' plus_cal_stmt_p+ clear_indent 'end' clear_indent 'with' clear_indent ';'
+plus_cal_with_p ::= clear_indent 'with' (plus_cal_variable clear_indent ('=' | '\in') expr clear_indent (stmt_termination | ','))+
+                    clear_indent 'do' plus_cal_stmt_p+ clear_indent 'end' clear_indent 'with' clear_indent stmt_termination
 {
   pin = 2
 }
 
 plus_cal_await ::= clear_indent ('await' | 'when') expr { pin = 2 }
-private plus_cal_await_p ::= plus_cal_await clear_indent ';'
+private plus_cal_await_p ::= plus_cal_await clear_indent stmt_termination
 
 plus_cal_print ::= clear_indent 'print' expr { pin = 2 }
-private plus_cal_print_p ::= plus_cal_print clear_indent ';'
+private plus_cal_print_p ::= plus_cal_print clear_indent stmt_termination
 
 plus_cal_assert ::= clear_indent 'assert' expr { pin = 2 }
-private plus_cal_assert_p ::= plus_cal_assert clear_indent ';'
+private plus_cal_assert_p ::= plus_cal_assert clear_indent stmt_termination
 
 plus_cal_goto ::= clear_indent 'goto' plus_cal_label { pin = 2 }
-private plus_cal_goto_p ::= plus_cal_goto clear_indent ';'
+private plus_cal_goto_p ::= plus_cal_goto clear_indent stmt_termination
 
 plus_cal_call ::= clear_indent 'call' plus_cal_macro_call { pin = 2 }
 
 plus_cal_macro_call ::= plus_cal_name clear_indent '(' <<comma_list expr>>? clear_indent ')'
-private plus_cal_macro_call_p ::= plus_cal_macro_call clear_indent ';'
+private plus_cal_macro_call_p ::= plus_cal_macro_call clear_indent stmt_termination
 
 plus_cal_variable ::= clear_indent 'identifier'
 
@@ -913,3 +913,8 @@ private plus_cal_def ::= variable_decl
                        | module_definition
                        | assumption
                        | theorem
+
+// https://lamport.azurewebsites.net/tla/p-manual.pdf
+// > Any “;” prescribed in the grammar may be omitted if it immediately precedes any of the following reserved words.
+// > begin do else elsif end macro or procedure process
+private stmt_termination ::= ';' | &('begin' | 'do' | 'else' | 'elsif' | 'end' | 'macro' | 'or' | 'procedure' | 'process')
