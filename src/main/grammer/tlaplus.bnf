@@ -738,7 +738,7 @@ plus_cal_p_var_decls ::= clear_indent ('variable' | 'variables') (plus_cal_p_var
 {
   pin = 2
 }
-plus_cal_p_var_decl ::= plus_cal_variable (clear_indent '=' expr)?
+plus_cal_p_var_decl ::= plus_cal_variable (clear_indent ('=' | '\in') expr)?
 
 plus_cal_definitions_c ::= clear_indent 'define' clear_indent '{' plus_cal_defs clear_indent '}' clear_indent ';'?
 {
