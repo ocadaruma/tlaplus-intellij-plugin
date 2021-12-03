@@ -119,9 +119,13 @@ class ErrorTraceTreeTable extends TreeTable {
         treeTableModel.nodeStructureChanged(treeTableModel.rootNode);
     }
 
-    void expandAll() {
+    void expandStates() {
+        // NOTE: getTree().getRowCount() may change during iteration due to expanding row
         for (int i = 0; i < getTree().getRowCount(); i++) {
-            getTree().expandRow(i);
+            // Only expand direct child of the root (i.e. each state's roots) for better readability
+            if (getTree().getPathForRow(i).getPathCount() == 2) {
+                getTree().expandRow(i);
+            }
         }
     }
 
