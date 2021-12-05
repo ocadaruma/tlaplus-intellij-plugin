@@ -15,6 +15,9 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
 import com.intellij.openapi.progress.util.ColorProgressBar;
@@ -83,6 +86,24 @@ public class TLCModelCheckResultForm {
         errorTraceTree = new ErrorTraceTreeTable();
         errorTracePanel.add(errorTraceTree.getTableHeader(), BorderLayout.NORTH);
         errorTracePanel.add(errorTraceTree, BorderLayout.CENTER);
+
+        List<JTable> tables = Arrays.asList(errorsTable, statesTable, coverageTable, errorTraceTree);
+        ListSelectionListener selectionListener = new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                for (JTable table : tables) {
+                    ListSelectionModel model = table.getSelectionModel();
+                    if (e.getSource() != model) {
+                        model.removeListSelectionListener(this);
+                        model.clearSelection();
+                        model.addListSelectionListener(this);
+                    }
+                }
+            }
+        };
+        for (JTable table : tables) {
+            table.getSelectionModel().addListSelectionListener(selectionListener);
+        }
     }
 
     public void onEvent(TLCEvent event) {
@@ -276,6 +297,7 @@ public class TLCModelCheckResultForm {
     public static class SimpleTable extends JBTable {
         public SimpleTable(TableModel model) {
             super(model);
+            setCellSelectionEnabled(true);
         }
 
         @Override
