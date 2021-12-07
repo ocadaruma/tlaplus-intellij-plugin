@@ -177,9 +177,12 @@ public class TLCModelCheckResultForm {
         }
         if (event instanceof SimpleErrorTrace) {
             SimpleErrorTrace trace = (SimpleErrorTrace) event;
+            // NOTE: We should not use character < or > here because
+            // default JTree's transfer handler (javax.swing.plaf.basic.BasicTreeUI.TreeTransferHandler) embeds it inside
+            // <html> tag, which could cause corrupted html
             StateRootNode parent =
                     new StateRootNode(String.format(
-                            "%d: <%s(%s):%d:%d>",
+                            "%d. %s:%s:%d:%d",
                             trace.number(),
                             trace.module(),
                             trace.action(),
@@ -190,14 +193,14 @@ public class TLCModelCheckResultForm {
         if (event instanceof SpecialErrorTrace) {
             SpecialErrorTrace trace = (SpecialErrorTrace) event;
             StateRootNode parent =
-                    new StateRootNode(String.format("%d: <%s>", trace.number(), trace.type()));
+                    new StateRootNode(String.format("%d. %s", trace.number(), trace.type()));
             errorTraceTree.addState(parent, trace.variables());
         }
         if (event instanceof BackToStateErrorTrace) {
             BackToStateErrorTrace trace = (BackToStateErrorTrace) event;
             StateRootNode parent =
                     new StateRootNode(String.format(
-                            "%d: Back to state <%s(%s):%d:%d>",
+                            "%d. Back to state %s:%s:%d:%d",
                             trace.number(),
                             trace.module(),
                             trace.action(),

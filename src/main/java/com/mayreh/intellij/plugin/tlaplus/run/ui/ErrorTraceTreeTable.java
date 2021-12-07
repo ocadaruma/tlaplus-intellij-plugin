@@ -1,13 +1,8 @@
 package com.mayreh.intellij.plugin.tlaplus.run.ui;
 
-import java.awt.Component;
 import java.util.List;
 
-import javax.swing.JTable;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.TableCellRenderer;
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreePath;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -22,45 +17,29 @@ import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.S
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.TraceVariable;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.TraceVariableValue;
 
-@SuppressWarnings({"rawtypes", "unchecked"})
+@SuppressWarnings("rawtypes")
 class ErrorTraceTreeTable extends TreeTable {
     private final ErrorTraceModel treeTableModel;
 
     static class ErrorTraceModel extends ListTreeTableModel {
         private final DefaultMutableTreeNode rootNode;
-        private final ColumnInfo[] columns;
 
         ErrorTraceModel(DefaultMutableTreeNode rootNode, ColumnInfo[] columns) {
             super(rootNode, columns);
             this.rootNode = rootNode;
-            this.columns = columns;
         }
 
         ErrorTraceModel() {
             this(new DefaultMutableTreeNode("ROOT"), new ColumnInfo[]{
                     new TreeColumnInfo("Name"),
-                    new TreeColumnInfo("Value") {
+                    new ColumnInfo("Value") {
+                        @Nullable
                         @Override
-                        public @Nullable TableCellRenderer getRenderer(Object o) {
-                            return new DefaultTableCellRenderer() {
-                                @Override
-                                public Component getTableCellRendererComponent(
-                                        JTable table,
-                                        Object value,
-                                        boolean isSelected,
-                                        boolean hasFocus,
-                                        int row,
-                                        int column) {
-                                    Component component = super.getTableCellRendererComponent(
-                                            table, value, isSelected, hasFocus, row, column);
-                                    if (o instanceof TraceVariableNode) {
-                                        setValue(((TraceVariableNode) o).value.asString());
-                                    } else {
-                                        setValue("");
-                                    }
-                                    return component;
-                                }
-                            };
+                        public Object valueOf(Object o) {
+                            if (o instanceof TraceVariableNode) {
+                                return ((TraceVariableNode) o).value.asString();
+                            }
+                            return null;
                         }
                     }
             });
@@ -93,17 +72,6 @@ class ErrorTraceTreeTable extends TreeTable {
 
     ErrorTraceTreeTable() {
         this(new ErrorTraceModel());
-    }
-
-    @Override
-    public TableCellRenderer getCellRenderer(int row, int column) {
-        TreePath treePath = getTree().getPathForRow(row);
-        if (treePath == null) {
-            return super.getCellRenderer(row, column);
-        }
-        Object node = treePath.getLastPathComponent();
-        TableCellRenderer renderer = treeTableModel.columns[column].getRenderer(node);
-        return renderer == null ? super.getCellRenderer(row, column) : renderer;
     }
 
     /**

@@ -86,7 +86,7 @@ public class TLCErrorTraceParser {
         if (matcher.find()) {
             return Optional.of(new SpecialErrorTrace(
                     Integer.parseInt(matcher.group(1)),
-                    matcher.group(2),
+                    matcher.group(2).trim(),
                     variables));
         }
         matcher = BACK_TO_STATE_PATTERN.matcher(firstLine);
