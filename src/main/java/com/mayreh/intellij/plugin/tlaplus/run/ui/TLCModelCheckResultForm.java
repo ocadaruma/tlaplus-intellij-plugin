@@ -44,10 +44,16 @@ import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCFinished;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCStart;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCSuccess;
 import com.mayreh.intellij.plugin.tlaplus.run.ui.ErrorTraceTreeTable.StateRootNode;
+import com.mayreh.intellij.plugin.tlaplus.run.ui.TLCCoverageTable.TLCCoverageTableModel;
 
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
 public class TLCModelCheckResultForm {
     private static final DateTimeFormatter DATETIME_FORMAT =
             DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss");
+
+    private final TLCTestConsoleProperties properties;
 
     private JPanel panel;
     private JLabel statusLabel;
@@ -82,7 +88,7 @@ public class TLCModelCheckResultForm {
         statesTablePanel.add(statesTable, BorderLayout.CENTER);
 
         coverageTableModel = new TLCCoverageTableModel();
-        JTable coverageTable = new TLCCoverageTable(coverageTableModel);
+        JTable coverageTable = new TLCCoverageTable(coverageTableModel, properties.module());
         coverageTablePanel.add(coverageTable.getTableHeader(), BorderLayout.NORTH);
         coverageTablePanel.add(coverageTable, BorderLayout.CENTER);
 

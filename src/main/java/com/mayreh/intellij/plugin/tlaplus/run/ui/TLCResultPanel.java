@@ -83,7 +83,7 @@ public class TLCResultPanel extends JPanel implements TLCEventListener, Disposab
         rightPanel.add(actionToolbar.getComponent(), BorderLayout.EAST);
         splitter.setSecondComponent(rightPanel);
 
-        modelCheckResultForm = new TLCModelCheckResultForm();
+        modelCheckResultForm = new TLCModelCheckResultForm(properties);
         modelCheckResultForm.initUI();
         leftPane.setViewportView(modelCheckResultForm.component());
     }
