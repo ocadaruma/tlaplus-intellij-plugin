@@ -1,6 +1,7 @@
 package com.mayreh.intellij.plugin.tlaplus.run.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -18,7 +19,9 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 
 import com.intellij.openapi.progress.util.ColorProgressBar;
 import com.intellij.ui.AnimatedIcon;
@@ -56,7 +59,7 @@ public class TLCModelCheckResultForm {
     private JPanel errorsPanel;
     private JPanel errorTracePanel;
     private StatesTableModel statesTableModel;
-    private CoverageTableModel coverageTableModel;
+    private TLCCoverageTableModel coverageTableModel;
     private TableModel errorsTableModel;
 
     // We want to set statusLabel from exitCode=0 event only when
@@ -78,8 +81,8 @@ public class TLCModelCheckResultForm {
         statesTablePanel.add(statesTable.getTableHeader(), BorderLayout.NORTH);
         statesTablePanel.add(statesTable, BorderLayout.CENTER);
 
-        coverageTableModel = new CoverageTableModel("Module", "Action", "Total", "Distinct");
-        JTable coverageTable = new SimpleTable(coverageTableModel);
+        coverageTableModel = new TLCCoverageTableModel();
+        JTable coverageTable = new TLCCoverageTable(coverageTableModel);
         coverageTablePanel.add(coverageTable.getTableHeader(), BorderLayout.NORTH);
         coverageTablePanel.add(coverageTable, BorderLayout.CENTER);
 
@@ -88,6 +91,7 @@ public class TLCModelCheckResultForm {
         errorTracePanel.add(errorTraceTree, BorderLayout.CENTER);
 
         List<JTable> tables = Arrays.asList(errorsTable, statesTable, coverageTable, errorTraceTree);
+        // Make cell-selection exclusive among all tables (which should be familiar behavior)
         ListSelectionListener selectionListener = new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -225,27 +229,6 @@ public class TLCModelCheckResultForm {
         }
     }
 
-    private static class CoverageTableModel extends TableModel {
-        CoverageTableModel(String... headers) {
-            super(headers);
-        }
-
-        public void addRow(CoverageItem coverage) {
-            addRow(Arrays.asList(
-                    coverage.module(),
-                    coverage.action(),
-                    String.valueOf(coverage.total()),
-                    String.valueOf(coverage.distinct())
-            ));
-        }
-
-        public void clearRows() {
-            while (getRowCount() > 0) {
-                removeRow(0);
-            }
-        }
-    }
-
     private static class StatesTableModel extends TableModel {
         StatesTableModel(String... headers) {
             super(headers);
@@ -306,6 +289,20 @@ public class TLCModelCheckResultForm {
         @Override
         public Dimension getPreferredScrollableViewportSize() {
             return new Dimension(getPreferredSize().width, getRowHeight() * getRowCount());
+        }
+
+        @Override
+        public TableCellRenderer getCellRenderer(int row, int column) {
+            return new DefaultTableCellRenderer() {
+                @Override
+                public Component getTableCellRendererComponent(
+                        JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                    Component component = super.getTableCellRendererComponent(
+                            table, value, isSelected, hasFocus, row, column);
+                    setBorder(noFocusBorder);
+                    return component;
+                }
+            };
         }
     }
 }
