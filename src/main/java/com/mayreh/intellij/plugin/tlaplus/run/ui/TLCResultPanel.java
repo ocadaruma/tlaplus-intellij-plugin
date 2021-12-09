@@ -112,10 +112,10 @@ public class TLCResultPanel extends JPanel implements TLCEventListener, Disposab
 
     @Override
     public void onEvent(TLCEvent event) {
-        if (event instanceof TLCEvent.TextEvent) {
-            consoleView.print(((TLCEvent.TextEvent) event).text(), ConsoleViewContentType.NORMAL_OUTPUT);
-        } else {
-            modelCheckResultForm.onEvent(event);
-        }
+        modelCheckResultForm.onEvent(event);
+    }
+
+    public void printInConsole(String line) {
+        consoleView.print(line, ConsoleViewContentType.NORMAL_OUTPUT);
     }
 }

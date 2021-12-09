@@ -70,7 +70,10 @@ public class TLCOutputConsoleView implements ConsoleView, HelpIdProvider {
                     @Override
                     public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
                         ApplicationManager.getApplication().invokeLater(
-                                () -> currentParser = currentParser.addLine(event.getText()));
+                                () -> {
+                                    consoleView.resultPanel.printInConsole(event.getText());
+                                    currentParser = currentParser.addLine(event.getText());
+                                });
                     }
 
                     @Override
@@ -107,7 +110,7 @@ public class TLCOutputConsoleView implements ConsoleView, HelpIdProvider {
                 properties.getProject(),
                 GlobalSearchScope.allScope(properties.getProject()),
                 false,
-                true);
+                false);
         properties.setConsole(this);
 
         Disposer.register(this, properties);
