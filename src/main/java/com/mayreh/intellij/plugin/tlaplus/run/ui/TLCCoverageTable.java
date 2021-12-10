@@ -25,12 +25,9 @@ import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.JBUI.Borders;
 import com.intellij.util.ui.UIUtil;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModule;
-import com.mayreh.intellij.plugin.tlaplus.run.parsing.SourceLocation;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.CoverageItem;
 
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
-import lombok.experimental.Accessors;
 
 class TLCCoverageTable extends JBTable {
     private final TLCCoverageTableModel tableModel;
@@ -65,17 +62,17 @@ class TLCCoverageTable extends JBTable {
 
         @Override
         public void mouseClicked(MouseEvent e) {
-            ActionLocation loc = actionTag(e);
-            if (loc != null && e.getClickCount() == 1) {
+            ActionFormula formula = actionTag(e);
+            if (formula != null && e.getClickCount() == 1) {
                 Optional.ofNullable(table.module)
                         .flatMap(module -> {
-                            if (loc.module.equals(module.getModuleHeader().getName())) {
+                            if (formula.module().equals(module.getModuleHeader().getName())) {
                                 return Optional.ofNullable(module.getContainingFile())
                                                .flatMap(file -> Optional.ofNullable(file.getVirtualFile()))
                                                .map(file -> Pair.pair(module, file));
                             }
                             return module.availableModules()
-                                         .filter(m -> loc.module.equals(m.getModuleHeader().getName()))
+                                         .filter(m -> formula.module().equals(m.getModuleHeader().getName()))
                                          .findFirst()
                                          .flatMap(m -> Optional
                                                  .ofNullable(m.getContainingFile())
@@ -85,7 +82,7 @@ class TLCCoverageTable extends JBTable {
                         .ifPresent(pair -> {
                             new OpenFileDescriptor(
                                     pair.first.getProject(),
-                                    pair.second, loc.location.line(), loc.location.col()
+                                    pair.second, formula.location().line(), formula.location().col()
                             ).navigate(true);
                         });
             }
@@ -100,7 +97,7 @@ class TLCCoverageTable extends JBTable {
             }
         }
 
-        private @Nullable ActionLocation actionTag(MouseEvent e) {
+        private @Nullable ActionFormula actionTag(MouseEvent e) {
             int row = table.rowAtPoint(e.getPoint());
             int column = table.columnAtPoint(e.getPoint());
 
@@ -115,8 +112,8 @@ class TLCCoverageTable extends JBTable {
                         table, table.getValueAt(row, column), false, false, row, column);
                 Object tag = ((CoverageTableCellRenderer) renderer).getFragmentTagAt(
                         e.getX() - table.getCellRect(row, column, false).x);
-                if (tag instanceof ActionLocation) {
-                    return (ActionLocation) tag;
+                if (tag instanceof ActionFormula) {
+                    return (ActionFormula) tag;
                 }
             }
             return null;
@@ -151,7 +148,7 @@ class TLCCoverageTable extends JBTable {
         public void addRow(CoverageItem coverage) {
             addRow(new Vector<>(Arrays.asList(
                     coverage.module(),
-                    new ActionLocation(coverage.module(), coverage.action(), coverage.range().getFrom()),
+                    new ActionFormula(coverage.module(), coverage.action(), coverage.range().getFrom()),
                     coverage.total(),
                     coverage.distinct()
             )));
@@ -169,8 +166,8 @@ class TLCCoverageTable extends JBTable {
         @Override
         public Object getValueAt(int row, int column) {
             Object value = rawValueAt(row, column);
-            if (value instanceof ActionLocation) {
-                return ((ActionLocation) value).action();
+            if (value instanceof ActionFormula) {
+                return ((ActionFormula) value).action();
             }
             return value;
         }
@@ -182,14 +179,6 @@ class TLCCoverageTable extends JBTable {
         public Object rawValueAt(int row, int column) {
             return dataVector.elementAt(row).elementAt(column);
         }
-    }
-
-    @Value
-    @Accessors(fluent = true)
-    static class ActionLocation {
-        String module;
-        String action;
-        SourceLocation location;
     }
 
     @RequiredArgsConstructor
@@ -205,12 +194,12 @@ class TLCCoverageTable extends JBTable {
             final int attributes;
             final String text;
             final Object tag;
-            if (rawValue instanceof ActionLocation) {
-                ActionLocation loc = (ActionLocation) rawValue;
+            if (rawValue instanceof ActionFormula) {
+                ActionFormula formula = (ActionFormula) rawValue;
                 tag = rawValue;
                 unselectedForeground = JBUI.CurrentTheme.Link.Foreground.ENABLED;
                 attributes = SimpleTextAttributes.REGULAR_ATTRIBUTES.getStyle() | SimpleTextAttributes.STYLE_UNDERLINE;
-                text = loc.action;
+                text = formula.action();
             } else {
                 tag = null;
                 unselectedForeground = table.getForeground();

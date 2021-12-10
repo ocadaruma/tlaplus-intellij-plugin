@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.swing.JTree;
-import javax.swing.table.TableCellRenderer;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.jetbrains.annotations.NotNull;
@@ -33,7 +32,6 @@ import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.S
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.TraceVariable;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.TraceVariableValue;
 import com.mayreh.intellij.plugin.tlaplus.run.ui.ErrorTraceTreeTable.ErrorTraceCellRenderer.TextFragment;
-import com.mayreh.intellij.plugin.tlaplus.run.ui.TLCCoverageTable.ActionLocation;
 
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -97,14 +95,14 @@ class ErrorTraceTreeTable extends TreeTable {
                 fragments.add(new TextFragment(trace.number() + ". ", null));
                 fragments.add(new TextFragment(
                         String.format("%s:%s", trace.module(), trace.action()),
-                        new ActionLocation(trace.module(), trace.action(), trace.range().getFrom())));
+                        new ActionFormula(trace.module(), trace.action(), trace.range().getFrom())));
             }
             if (errorTraceEvent instanceof BackToStateErrorTrace) {
                 BackToStateErrorTrace trace = (BackToStateErrorTrace) errorTraceEvent;
                 fragments.add(new TextFragment(trace.number() + ". Back to state ", null));
                 fragments.add(new TextFragment(
                         String.format("%s:%s", trace.module(), trace.action()),
-                        new ActionLocation(trace.module(), trace.action(), trace.range().getFrom())));
+                        new ActionFormula(trace.module(), trace.action(), trace.range().getFrom())));
             }
             return fragments;
         }
@@ -153,12 +151,6 @@ class ErrorTraceTreeTable extends TreeTable {
                 getTree().expandRow(i);
             }
         }
-    }
-
-    @Override
-    public TableCellRenderer getCellRenderer(int row, int column) {
-        TableCellRenderer renderer = super.getCellRenderer(row, column);
-        return renderer;
     }
 
     @Override
@@ -227,7 +219,7 @@ class ErrorTraceTreeTable extends TreeTable {
             for (TextFragment fragment : fragments) {
                 final Color unselectedForeground;
                 final int attributes;
-                if (fragment.actionLocation != null) {
+                if (fragment.actionFormula != null) {
                     unselectedForeground = JBUI.CurrentTheme.Link.Foreground.ENABLED;
                     attributes = SimpleTextAttributes.REGULAR_ATTRIBUTES.getStyle() | SimpleTextAttributes.STYLE_UNDERLINE;
                 } else {
@@ -242,7 +234,7 @@ class ErrorTraceTreeTable extends TreeTable {
                     foreground = unselectedForeground;
                 }
 
-                append(fragment.text, new SimpleTextAttributes(attributes, foreground), fragment.actionLocation);
+                append(fragment.text, new SimpleTextAttributes(attributes, foreground), fragment.actionFormula);
             }
 
             // common
@@ -254,7 +246,7 @@ class ErrorTraceTreeTable extends TreeTable {
         @Accessors(fluent = true)
         static class TextFragment {
             String text;
-            @Nullable ActionLocation actionLocation;
+            @Nullable ActionFormula actionFormula;
         }
     }
 }
