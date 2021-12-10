@@ -1,21 +1,43 @@
 package com.mayreh.intellij.plugin.tlaplus.run.ui;
 
+import java.awt.Color;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import javax.swing.JTree;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.tree.DefaultMutableTreeNode;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import com.intellij.ui.ColoredTreeCellRenderer;
+import com.intellij.ui.SimpleTextAttributes;
 import com.intellij.ui.treeStructure.treetable.ListTreeTableModel;
 import com.intellij.ui.treeStructure.treetable.TreeColumnInfo;
 import com.intellij.ui.treeStructure.treetable.TreeTable;
+import com.intellij.ui.treeStructure.treetable.TreeTableCellRenderer;
+import com.intellij.ui.treeStructure.treetable.TreeTableModel;
 import com.intellij.util.ui.ColumnInfo;
+import com.intellij.util.ui.JBUI;
+import com.intellij.util.ui.JBUI.Borders;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.BackToStateErrorTrace;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.FunctionValue;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.RecordValue;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.SequenceValue;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.SetValue;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.SimpleErrorTrace;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.SpecialErrorTrace;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.TraceVariable;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.TraceVariableValue;
+import com.mayreh.intellij.plugin.tlaplus.run.ui.ErrorTraceTreeTable.ErrorTraceCellRenderer.TextFragment;
+import com.mayreh.intellij.plugin.tlaplus.run.ui.TLCCoverageTable.ActionLocation;
+
+import lombok.RequiredArgsConstructor;
+import lombok.Value;
+import lombok.experimental.Accessors;
 
 @SuppressWarnings("rawtypes")
 class ErrorTraceTreeTable extends TreeTable {
@@ -47,8 +69,44 @@ class ErrorTraceTreeTable extends TreeTable {
     }
 
     static class StateRootNode extends DefaultMutableTreeNode {
-        StateRootNode(String value) {
-            super(value);
+        private final List<TextFragment> textRepresentation;
+
+        StateRootNode(ErrorTraceEvent errorTraceEvent) {
+            this(textRepresentation(errorTraceEvent));
+        }
+
+        private StateRootNode(List<TextFragment> textRepresentation) {
+            // We call super to set DefaultMutableTreeNode's userObject to make
+            // copy&paste works
+            super(textRepresentation.stream().map(TextFragment::text).collect(Collectors.joining()));
+            this.textRepresentation = textRepresentation;
+        }
+
+        private static List<TextFragment> textRepresentation(ErrorTraceEvent errorTraceEvent) {
+            List<TextFragment> fragments = new ArrayList<>();
+
+            // NOTE: We should not use character < or > for cell value because
+            // default JTree's transfer handler (javax.swing.plaf.basic.BasicTreeUI.TreeTransferHandler) embeds it inside
+            // <html> tag, which could cause corrupted html
+            if (errorTraceEvent instanceof SpecialErrorTrace) {
+                SpecialErrorTrace trace = (SpecialErrorTrace) errorTraceEvent;
+                fragments.add(new TextFragment(String.format("%d. %s", trace.number(), trace.type()), null));
+            }
+            if (errorTraceEvent instanceof SimpleErrorTrace) {
+                SimpleErrorTrace trace = (SimpleErrorTrace) errorTraceEvent;
+                fragments.add(new TextFragment(trace.number() + ". ", null));
+                fragments.add(new TextFragment(
+                        String.format("%s:%s", trace.module(), trace.action()),
+                        new ActionLocation(trace.module(), trace.action(), trace.range().getFrom())));
+            }
+            if (errorTraceEvent instanceof BackToStateErrorTrace) {
+                BackToStateErrorTrace trace = (BackToStateErrorTrace) errorTraceEvent;
+                fragments.add(new TextFragment(trace.number() + ". Back to state ", null));
+                fragments.add(new TextFragment(
+                        String.format("%s:%s", trace.module(), trace.action()),
+                        new ActionLocation(trace.module(), trace.action(), trace.range().getFrom())));
+            }
+            return fragments;
         }
     }
 
@@ -97,6 +155,19 @@ class ErrorTraceTreeTable extends TreeTable {
         }
     }
 
+    @Override
+    public TableCellRenderer getCellRenderer(int row, int column) {
+        TableCellRenderer renderer = super.getCellRenderer(row, column);
+        return renderer;
+    }
+
+    @Override
+    public TreeTableCellRenderer createTableRenderer(TreeTableModel treeTableModel) {
+        TreeTableCellRenderer renderer = super.createTableRenderer(treeTableModel);
+        renderer.setCellRenderer(new ErrorTraceCellRenderer(this));
+        return renderer;
+    }
+
     private static void renderTraceVariableValue(
             DefaultMutableTreeNode parent,
             TraceVariableValue value) {
@@ -132,6 +203,58 @@ class ErrorTraceTreeTable extends TreeTable {
                 parent.add(node);
                 renderTraceVariableValue(node, entry.value());
             }
+        }
+    }
+
+    @RequiredArgsConstructor
+    static class ErrorTraceCellRenderer extends ColoredTreeCellRenderer {
+        private final TreeTable treeTable;
+
+        @Override
+        public void customizeCellRenderer(
+                @NotNull JTree tree,
+                Object value,
+                boolean selected,
+                boolean expanded,
+                boolean leaf,
+                int row,
+                boolean hasFocus) {
+            if (!(value instanceof StateRootNode)) {
+                append(value == null ? "" : value.toString());
+                return;
+            }
+            List<TextFragment> fragments = ((StateRootNode) value).textRepresentation;
+            for (TextFragment fragment : fragments) {
+                final Color unselectedForeground;
+                final int attributes;
+                if (fragment.actionLocation != null) {
+                    unselectedForeground = JBUI.CurrentTheme.Link.Foreground.ENABLED;
+                    attributes = SimpleTextAttributes.REGULAR_ATTRIBUTES.getStyle() | SimpleTextAttributes.STYLE_UNDERLINE;
+                } else {
+                    unselectedForeground = treeTable.getForeground();
+                    attributes = SimpleTextAttributes.REGULAR_ATTRIBUTES.getStyle();
+                }
+
+                final Color foreground;
+                if (selected) {
+                    foreground = treeTable.getSelectionForeground();
+                } else {
+                    foreground = unselectedForeground;
+                }
+
+                append(fragment.text, new SimpleTextAttributes(attributes, foreground), fragment.actionLocation);
+            }
+
+            // common
+            setFont(tree.getFont());
+            setBorder(Borders.empty());
+        }
+
+        @Value
+        @Accessors(fluent = true)
+        static class TextFragment {
+            String text;
+            @Nullable ActionLocation actionLocation;
         }
     }
 }
