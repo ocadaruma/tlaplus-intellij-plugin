@@ -92,7 +92,7 @@ public class TLCModelCheckResultForm {
         coverageTablePanel.add(coverageTable.getTableHeader(), BorderLayout.NORTH);
         coverageTablePanel.add(coverageTable, BorderLayout.CENTER);
 
-        errorTraceTree = new ErrorTraceTreeTable();
+        errorTraceTree = new ErrorTraceTreeTable(properties.module());
         errorTracePanel.add(errorTraceTree.getTableHeader(), BorderLayout.NORTH);
         errorTracePanel.add(errorTraceTree, BorderLayout.CENTER);
 

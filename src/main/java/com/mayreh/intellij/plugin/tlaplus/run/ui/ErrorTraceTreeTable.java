@@ -1,26 +1,30 @@
 package com.mayreh.intellij.plugin.tlaplus.run.ui;
 
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.intellij.ui.ColoredTreeCellRenderer;
+import com.intellij.ui.SimpleColoredComponent;
 import com.intellij.ui.SimpleTextAttributes;
 import com.intellij.ui.treeStructure.treetable.ListTreeTableModel;
 import com.intellij.ui.treeStructure.treetable.TreeColumnInfo;
 import com.intellij.ui.treeStructure.treetable.TreeTable;
-import com.intellij.ui.treeStructure.treetable.TreeTableCellRenderer;
-import com.intellij.ui.treeStructure.treetable.TreeTableModel;
 import com.intellij.util.ui.ColumnInfo;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.JBUI.Borders;
+import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModule;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.BackToStateErrorTrace;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.FunctionValue;
@@ -120,14 +124,45 @@ class ErrorTraceTreeTable extends TreeTable {
         }
     }
 
-    ErrorTraceTreeTable(ErrorTraceModel treeTableModel) {
+    ErrorTraceTreeTable(ErrorTraceModel treeTableModel,
+                        @Nullable TLAplusModule module) {
         super(treeTableModel);
         this.treeTableModel = treeTableModel;
         setRootVisible(false);
+        setTreeCellRenderer(new ErrorTraceCellRenderer(this));
+        ActionFormulaLinkListener mouseListener = new ActionFormulaLinkListener(module) {
+            // Taken from com.intellij.execution.services.ServiceViewTreeLinkMouseListener
+            @Override
+            protected @Nullable ActionFormula taggedActionFormula(MouseEvent e) {
+                TreePath path = getTree().getPathForLocation(e.getX(), e.getY());
+                if (path == null) {
+                    return null;
+                }
+                Rectangle rect = getTree().getPathBounds(path);
+                if (rect == null) {
+                    return null;
+                }
+
+                Object treeNode = path.getLastPathComponent();
+                int row = getTree().getRowForLocation(e.getX(), e.getY());
+                boolean isLeaf = getTree().getModel().isLeaf(treeNode);
+                Component component = getTree().getCellRenderer().getTreeCellRendererComponent(
+                        getTree(), treeNode, false, false, isLeaf, row, false);
+                if (component instanceof SimpleColoredComponent) {
+                    Object tag = ((SimpleColoredComponent) component).getFragmentTagAt(e.getX() - rect.x);
+                    if (tag instanceof ActionFormula) {
+                        return (ActionFormula) tag;
+                    }
+                }
+                return null;
+            }
+        };
+        addMouseListener(mouseListener);
+        addMouseMotionListener(mouseListener);
     }
 
-    ErrorTraceTreeTable() {
-        this(new ErrorTraceModel());
+    ErrorTraceTreeTable(@Nullable TLAplusModule module) {
+        this(new ErrorTraceModel(), module);
     }
 
     /**
@@ -151,13 +186,6 @@ class ErrorTraceTreeTable extends TreeTable {
                 getTree().expandRow(i);
             }
         }
-    }
-
-    @Override
-    public TreeTableCellRenderer createTableRenderer(TreeTableModel treeTableModel) {
-        TreeTableCellRenderer renderer = super.createTableRenderer(treeTableModel);
-        renderer.setCellRenderer(new ErrorTraceCellRenderer(this));
-        return renderer;
     }
 
     private static void renderTraceVariableValue(
