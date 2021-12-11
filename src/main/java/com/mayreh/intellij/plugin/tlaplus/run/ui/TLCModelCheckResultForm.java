@@ -8,15 +8,16 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
 
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -25,8 +26,10 @@ import javax.swing.table.TableCellRenderer;
 
 import com.intellij.openapi.progress.util.ColorProgressBar;
 import com.intellij.ui.AnimatedIcon;
+import com.intellij.ui.ScrollPaneFactory;
 import com.intellij.ui.table.JBTable;
 import com.intellij.util.ui.JBFont;
+import com.intellij.util.ui.JBUI.Borders;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.CoverageInit;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.CoverageItem;
@@ -40,6 +43,7 @@ import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.SANYEnd;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.SANYError;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCError;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCError.ErrorItem;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCError.Severity;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCFinished;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCStart;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCSuccess;
@@ -66,7 +70,7 @@ public class TLCModelCheckResultForm {
     private JPanel errorTracePanel;
     private StatesTableModel statesTableModel;
     private TLCCoverageTableModel coverageTableModel;
-    private TableModel errorsTableModel;
+    private ErrorsPane errorsPane;
 
     // We want to set statusLabel from exitCode=0 event only when
     // TLCFinished event is not received yet. (though not sure if such case can happen)
@@ -77,10 +81,13 @@ public class TLCModelCheckResultForm {
     }
 
     public void initUI() {
-        errorsTableModel = new TableModel("Error");
-        JTable errorsTable = new SimpleTable(errorsTableModel);
-        errorsTable.setForeground(ColorProgressBar.RED_TEXT);
-        errorsPanel.add(errorsTable, BorderLayout.CENTER);
+        errorsPane = new ErrorsPane();
+        JScrollPane errorsScrollPane = ScrollPaneFactory
+                .createScrollPane(errorsPane,
+                                  ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+                                  ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+        errorsScrollPane.setBorder(Borders.empty());
+        errorsPanel.add(errorsScrollPane, BorderLayout.CENTER);
 
         statesTableModel = new StatesTableModel("Time", "Diameter", "Found", "Distinct", "Queue");
         JTable statesTable = new SimpleTable(statesTableModel);
@@ -96,7 +103,7 @@ public class TLCModelCheckResultForm {
         errorTracePanel.add(errorTraceTree.getTableHeader(), BorderLayout.NORTH);
         errorTracePanel.add(errorTraceTree, BorderLayout.CENTER);
 
-        List<JTable> tables = Arrays.asList(errorsTable, statesTable, coverageTable, errorTraceTree);
+        List<JTable> tables = Arrays.asList(statesTable, coverageTable, errorTraceTree);
         // Make cell-selection exclusive among all tables (which should be familiar behavior)
         ListSelectionListener selectionListener = new ListSelectionListener() {
             @Override
@@ -129,7 +136,8 @@ public class TLCModelCheckResultForm {
                         sanyError.location().line(),
                         sanyError.location().col(),
                         sanyError.message());
-                errorsTableModel.addRow(Collections.singletonList(message));
+
+                errorsPane.printLine(message, ColorProgressBar.RED_TEXT);
             }
         }
         if (event instanceof TLCEvent.TLCStart) {
@@ -165,7 +173,11 @@ public class TLCModelCheckResultForm {
         }
         if (event instanceof TLCError) {
             for (ErrorItem error : ((TLCError) event).errors()) {
-                errorsTableModel.addRow(Collections.singletonList(error.message()));
+                errorsPane.printLine(
+                        error.message(),
+                        ((TLCError) event).severity() == Severity.Error ?
+                        ColorProgressBar.RED_TEXT : ColorProgressBar.YELLOW);
+                errorsPane.setText("aowiuerij;l a;sifj;aoweh ;oiwhe;roi ;jas;oeiuroiweur;oiasje;oirja;soiehr;alksejr;os;aoiejr;is;aoeirj;aowiuerij;l a;sifj;aoweh ;oiwhe;roi ;jas;oeiuroiweur;oiasje;oirja;soiehr;alksejr;os;aoiejr;is;aoeirj;aowiuerij;l a;sifj;aoweh ;oiwhe;roi ;jas;oeiuroiweur;oiasje;oirja;soiehr;alksejr;os;aoiejr;is;aoeirj;");
             }
         }
         if (event instanceof ProcessTerminated) {
