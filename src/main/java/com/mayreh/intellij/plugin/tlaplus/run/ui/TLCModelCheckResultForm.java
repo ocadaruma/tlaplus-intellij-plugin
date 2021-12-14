@@ -166,10 +166,11 @@ public class TLCModelCheckResultForm {
         }
         if (event instanceof TLCError) {
             for (ErrorItem error : ((TLCError) event).errors()) {
-                errorsPane.printLine(
-                        error.message(),
-                        ((TLCError) event).severity() == Severity.Error ?
-                        ColorProgressBar.RED_TEXT : ColorProgressBar.YELLOW);
+                if (((TLCError) event).severity() == Severity.Error) {
+                    errorsPane.printLine(error.message(), ColorProgressBar.RED_TEXT);
+                } else {
+                    errorsPane.printLine(error.message());
+                }
             }
         }
         if (event instanceof ProcessTerminated) {

@@ -24,6 +24,10 @@ class ErrorsPane extends JTextPane {
         printLineInternal(line, attr);
     }
 
+    public void printLine(String line) {
+        printLineInternal(line, null);
+    }
+
     private void printLineInternal(String line, AttributeSet attr) {
         Document doc = getDocument();
         String prefix = doc.getLength() > 0 ? "\n" : "";
