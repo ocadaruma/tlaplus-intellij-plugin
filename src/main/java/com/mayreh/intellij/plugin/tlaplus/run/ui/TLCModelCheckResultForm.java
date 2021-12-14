@@ -3,6 +3,7 @@ package com.mayreh.intellij.plugin.tlaplus.run.ui;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Insets;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -11,13 +12,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Vector;
 
+import javax.swing.BorderFactory;
 import javax.swing.JComponent;
+import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -25,10 +29,17 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 
 import com.intellij.openapi.progress.util.ColorProgressBar;
+import com.intellij.openapi.roots.ui.componentsList.components.ScrollablePanel;
 import com.intellij.ui.AnimatedIcon;
+import com.intellij.ui.AnimatedIcon.Default;
 import com.intellij.ui.ScrollPaneFactory;
+import com.intellij.ui.TitledSeparator;
 import com.intellij.ui.table.JBTable;
+import com.intellij.uiDesigner.core.GridConstraints;
+import com.intellij.uiDesigner.core.GridLayoutManager;
+import com.intellij.uiDesigner.core.Spacer;
 import com.intellij.util.ui.JBFont;
+import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.JBUI.Borders;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.CoverageInit;
@@ -41,6 +52,7 @@ import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ProcessTerminated
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.Progress;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.SANYEnd;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.SANYError;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.SANYStart;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCError;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCError.ErrorItem;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCError.Severity;
@@ -82,12 +94,12 @@ public class TLCModelCheckResultForm {
 
     public void initUI() {
         errorsPane = new ErrorsPane();
-        JScrollPane errorsScrollPane = ScrollPaneFactory
-                .createScrollPane(errorsPane,
-                                  ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
-                                  ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-        errorsScrollPane.setBorder(Borders.empty());
-        errorsPanel.add(errorsScrollPane, BorderLayout.CENTER);
+//        JScrollPane errorsScrollPane = ScrollPaneFactory
+//                .createScrollPane(errorsPane,
+//                                  ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+//                                  ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+//        errorsScrollPane.setBorder(Borders.empty());
+        errorsPanel.add(errorsPane, BorderLayout.CENTER);
 
         statesTableModel = new StatesTableModel("Time", "Diameter", "Found", "Distinct", "Queue");
         JTable statesTable = new SimpleTable(statesTableModel);
@@ -124,10 +136,10 @@ public class TLCModelCheckResultForm {
     }
 
     public void onEvent(TLCEvent event) {
-        if (event instanceof TLCEvent.SANYStart) {
+        if (event instanceof SANYStart) {
             statusLabel.setText("SANY running");
         }
-        if (event instanceof TLCEvent.SANYEnd) {
+        if (event instanceof SANYEnd) {
             statusLabel.setText("SANY finished");
             for (SANYError sanyError : ((SANYEnd) event).errors()) {
                 String message = String.format(
@@ -140,8 +152,8 @@ public class TLCModelCheckResultForm {
                 errorsPane.printLine(message, ColorProgressBar.RED_TEXT);
             }
         }
-        if (event instanceof TLCEvent.TLCStart) {
-            statusLabel.setIcon(AnimatedIcon.Default.INSTANCE);
+        if (event instanceof TLCStart) {
+            statusLabel.setIcon(Default.INSTANCE);
             statusLabel.setText("TLC running");
             startLabel.setText(((TLCStart) event).startedAt().format(DATETIME_FORMAT));
         }
@@ -177,7 +189,7 @@ public class TLCModelCheckResultForm {
                         error.message(),
                         ((TLCError) event).severity() == Severity.Error ?
                         ColorProgressBar.RED_TEXT : ColorProgressBar.YELLOW);
-                errorsPane.setText("aowiuerij;l a;sifj;aoweh ;oiwhe;roi ;jas;oeiuroiweur;oiasje;oirja;soiehr;alksejr;os;aoiejr;is;aoeirj;aowiuerij;l a;sifj;aoweh ;oiwhe;roi ;jas;oeiuroiweur;oiasje;oirja;soiehr;alksejr;os;aoiejr;is;aoeirj;aowiuerij;l a;sifj;aoweh ;oiwhe;roi ;jas;oeiuroiweur;oiasje;oirja;soiehr;alksejr;os;aoiejr;is;aoeirj;");
+//                errorsPane.setText("aowiuerij;l a;sifj;aoweh ;oiwhe;roi ;jas;oeiuroiweur;oiasje;oirja;soiehr;alksejr;os;aoiejr;is;aoeirj;aowiuerij;l a;sifj;aoweh ;oiwhe;roi ;jas;oeiuroiweur;oiasje;oirja;soiehr;alksejr;os;aoiejr;is;aoeirj;aowiuerij;l a;sifj;aoweh ;oiwhe;roi ;jas;oeiuroiweur;oiasje;oirja;soiehr;alksejr;os;aoiejr;is;aoeirj;");
             }
         }
         if (event instanceof ProcessTerminated) {
@@ -210,6 +222,169 @@ public class TLCModelCheckResultForm {
             errorTraceTree.addState(new StateRootNode(trace), trace.variables());
         }
     }
+
+    private void createUIComponents() {
+        panel = new ScrollablePanel();
+        panel.setLayout(new GridLayoutManager(11, 1, JBUI.emptyInsets(), -1, -1));
+    }
+
+//    {
+//// GUI initializer generated by IntelliJ IDEA GUI Designer
+//// >>> IMPORTANT!! <<<
+//// DO NOT EDIT OR ADD ANY CODE HERE!
+//        $$$setupUI$$$();
+//    }
+//
+//    /** Method generated by IntelliJ IDEA GUI Designer
+//     * >>> IMPORTANT!! <<<
+//     * DO NOT edit this method OR call it in your code!
+//     * @noinspection ALL
+//     */
+//    private void $$$setupUI$$$() {
+//        panel = new JPanel();
+//        panel.setLayout(new GridLayoutManager(11, 1, new Insets(0, 0, 0, 0), -1, -1));
+//        final TitledSeparator titledSeparator1 = new TitledSeparator();
+//        titledSeparator1.setText("General");
+//        panel.add(titledSeparator1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER,
+//                                                        GridConstraints.FILL_HORIZONTAL,
+//                                                        GridConstraints.SIZEPOLICY_CAN_SHRINK
+//                                                        | GridConstraints.SIZEPOLICY_CAN_GROW,
+//                                                        GridConstraints.SIZEPOLICY_CAN_SHRINK
+//                                                        | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null,
+//                                                        1, false));
+//        final Spacer spacer1 = new Spacer();
+//        panel.add(spacer1,
+//                  new GridConstraints(10, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL,
+//                                      1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+//        final JPanel panel1 = new JPanel();
+//        panel1.setLayout(new GridLayoutManager(3, 2, new Insets(0, 0, 0, 0), -1, -1));
+//        panel.add(panel1,
+//                  new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH,
+//                                      GridConstraints.SIZEPOLICY_CAN_SHRINK
+//                                      | GridConstraints.SIZEPOLICY_CAN_GROW,
+//                                      GridConstraints.SIZEPOLICY_CAN_SHRINK
+//                                      | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 2, false));
+//        final JLabel label1 = new JLabel();
+//        label1.setText("Status:");
+//        panel1.add(label1,
+//                   new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE,
+//                                       GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null,
+//                                       null, null, 0, false));
+//        statusLabel = new JLabel();
+//        statusLabel.setText("");
+//        panel1.add(statusLabel,
+//                   new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE,
+//                                       GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
+//                                       null, null, null, 0, false));
+//        final JLabel label2 = new JLabel();
+//        label2.setText("Start:");
+//        panel1.add(label2,
+//                   new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE,
+//                                       GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null,
+//                                       null, null, 0, false));
+//        startLabel = new JLabel();
+//        startLabel.setText("");
+//        panel1.add(startLabel,
+//                   new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE,
+//                                       GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED,
+//                                       null, null, null, 0, false));
+//        final JLabel label3 = new JLabel();
+//        label3.setText("End:");
+//        panel1.add(label3,
+//                   new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE,
+//                                       GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null,
+//                                       null, null, 0, false));
+//        endLabel = new JLabel();
+//        endLabel.setText("");
+//        panel1.add(endLabel,
+//                   new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE,
+//                                       GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null,
+//                                       null, null, 0, false));
+//        final TitledSeparator titledSeparator2 = new TitledSeparator();
+//        titledSeparator2.setText("States");
+//        panel.add(titledSeparator2, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER,
+//                                                        GridConstraints.FILL_HORIZONTAL,
+//                                                        GridConstraints.SIZEPOLICY_CAN_SHRINK
+//                                                        | GridConstraints.SIZEPOLICY_CAN_GROW,
+//                                                        GridConstraints.SIZEPOLICY_CAN_SHRINK
+//                                                        | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null,
+//                                                        1, false));
+//        final TitledSeparator titledSeparator3 = new TitledSeparator();
+//        titledSeparator3.setText("Coverage");
+//        panel.add(titledSeparator3, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_CENTER,
+//                                                        GridConstraints.FILL_HORIZONTAL,
+//                                                        GridConstraints.SIZEPOLICY_CAN_SHRINK
+//                                                        | GridConstraints.SIZEPOLICY_CAN_GROW,
+//                                                        GridConstraints.SIZEPOLICY_CAN_SHRINK
+//                                                        | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null,
+//                                                        1, false));
+//        final TitledSeparator titledSeparator4 = new TitledSeparator();
+//        titledSeparator4.setText("Errors");
+//        panel.add(titledSeparator4, new GridConstraints(6, 0, 1, 1, GridConstraints.ANCHOR_CENTER,
+//                                                        GridConstraints.FILL_HORIZONTAL,
+//                                                        GridConstraints.SIZEPOLICY_CAN_SHRINK
+//                                                        | GridConstraints.SIZEPOLICY_CAN_GROW,
+//                                                        GridConstraints.SIZEPOLICY_CAN_SHRINK
+//                                                        | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null,
+//                                                        1, false));
+//        final TitledSeparator titledSeparator5 = new TitledSeparator();
+//        titledSeparator5.setText("Error Trace");
+//        panel.add(titledSeparator5, new GridConstraints(8, 0, 1, 1, GridConstraints.ANCHOR_CENTER,
+//                                                        GridConstraints.FILL_HORIZONTAL,
+//                                                        GridConstraints.SIZEPOLICY_CAN_SHRINK
+//                                                        | GridConstraints.SIZEPOLICY_CAN_GROW,
+//                                                        GridConstraints.SIZEPOLICY_CAN_SHRINK
+//                                                        | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null,
+//                                                        1, false));
+//        statesTablePanel = new JPanel();
+//        statesTablePanel.setLayout(new BorderLayout(0, 0));
+//        panel.add(statesTablePanel,
+//                  new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH,
+//                                      GridConstraints.SIZEPOLICY_CAN_SHRINK
+//                                      | GridConstraints.SIZEPOLICY_CAN_GROW,
+//                                      GridConstraints.SIZEPOLICY_CAN_SHRINK
+//                                      | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 2, false));
+//        statesTablePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(), null,
+//                                                                    TitledBorder.DEFAULT_JUSTIFICATION,
+//                                                                    TitledBorder.DEFAULT_POSITION, null, null));
+//        coverageTablePanel = new JPanel();
+//        coverageTablePanel.setLayout(new BorderLayout(0, 0));
+//        panel.add(coverageTablePanel,
+//                  new GridConstraints(5, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH,
+//                                      GridConstraints.SIZEPOLICY_CAN_SHRINK
+//                                      | GridConstraints.SIZEPOLICY_CAN_GROW,
+//                                      GridConstraints.SIZEPOLICY_CAN_SHRINK
+//                                      | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 2, false));
+//        coverageTablePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(), null,
+//                                                                      TitledBorder.DEFAULT_JUSTIFICATION,
+//                                                                      TitledBorder.DEFAULT_POSITION, null,
+//                                                                      null));
+//        errorsPanel = new JPanel();
+//        errorsPanel.setLayout(new BorderLayout(0, 0));
+//        panel.add(errorsPanel,
+//                  new GridConstraints(7, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH,
+//                                      GridConstraints.SIZEPOLICY_CAN_SHRINK
+//                                      | GridConstraints.SIZEPOLICY_CAN_GROW,
+//                                      GridConstraints.SIZEPOLICY_CAN_SHRINK
+//                                      | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 2, false));
+//        errorsPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(), null,
+//                                                               TitledBorder.DEFAULT_JUSTIFICATION,
+//                                                               TitledBorder.DEFAULT_POSITION, null, null));
+//        errorTracePanel = new JPanel();
+//        errorTracePanel.setLayout(new BorderLayout(0, 0));
+//        panel.add(errorTracePanel,
+//                  new GridConstraints(9, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH,
+//                                      GridConstraints.SIZEPOLICY_CAN_SHRINK
+//                                      | GridConstraints.SIZEPOLICY_CAN_GROW,
+//                                      GridConstraints.SIZEPOLICY_CAN_SHRINK
+//                                      | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 2, false));
+//        errorTracePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(), null,
+//                                                                   TitledBorder.DEFAULT_JUSTIFICATION,
+//                                                                   TitledBorder.DEFAULT_POSITION, null, null));
+//    }
+//
+//    /** @noinspection ALL */
+//    public JComponent $$$getRootComponent$$$() {return panel;}
 
     private static class TableModel extends DefaultTableModel {
         TableModel(String... headers) {
