@@ -24,6 +24,7 @@ public class PlusCalTranslator {
 
         ToolIO.reset();
         ToolIO.setMode(ToolIO.TOOL);
+        PcalParams.resetParams();
 
         List<String> translated = trans.performTranslation(lines);
         if (translated != null) {
