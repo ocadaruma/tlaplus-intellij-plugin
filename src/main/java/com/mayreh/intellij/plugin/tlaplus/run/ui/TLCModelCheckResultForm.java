@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
 
@@ -24,7 +23,8 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 
 import com.intellij.openapi.progress.util.ColorProgressBar;
-import com.intellij.ui.AnimatedIcon;
+import com.intellij.openapi.roots.ui.componentsList.components.ScrollablePanel;
+import com.intellij.ui.AnimatedIcon.Default;
 import com.intellij.ui.table.JBTable;
 import com.intellij.util.ui.JBFont;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent;
@@ -38,8 +38,10 @@ import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ProcessTerminated
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.Progress;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.SANYEnd;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.SANYError;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.SANYStart;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCError;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCError.ErrorItem;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCError.Severity;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCFinished;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCStart;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCSuccess;
@@ -66,7 +68,7 @@ public class TLCModelCheckResultForm {
     private JPanel errorTracePanel;
     private StatesTableModel statesTableModel;
     private TLCCoverageTableModel coverageTableModel;
-    private TableModel errorsTableModel;
+    private ErrorsPane errorsPane;
 
     // We want to set statusLabel from exitCode=0 event only when
     // TLCFinished event is not received yet. (though not sure if such case can happen)
@@ -77,10 +79,8 @@ public class TLCModelCheckResultForm {
     }
 
     public void initUI() {
-        errorsTableModel = new TableModel("Error");
-        JTable errorsTable = new SimpleTable(errorsTableModel);
-        errorsTable.setForeground(ColorProgressBar.RED_TEXT);
-        errorsPanel.add(errorsTable, BorderLayout.CENTER);
+        errorsPane = new ErrorsPane();
+        errorsPanel.add(errorsPane, BorderLayout.CENTER);
 
         statesTableModel = new StatesTableModel("Time", "Diameter", "Found", "Distinct", "Queue");
         JTable statesTable = new SimpleTable(statesTableModel);
@@ -96,7 +96,7 @@ public class TLCModelCheckResultForm {
         errorTracePanel.add(errorTraceTree.getTableHeader(), BorderLayout.NORTH);
         errorTracePanel.add(errorTraceTree, BorderLayout.CENTER);
 
-        List<JTable> tables = Arrays.asList(errorsTable, statesTable, coverageTable, errorTraceTree);
+        List<JTable> tables = Arrays.asList(statesTable, coverageTable, errorTraceTree);
         // Make cell-selection exclusive among all tables (which should be familiar behavior)
         ListSelectionListener selectionListener = new ListSelectionListener() {
             @Override
@@ -117,10 +117,10 @@ public class TLCModelCheckResultForm {
     }
 
     public void onEvent(TLCEvent event) {
-        if (event instanceof TLCEvent.SANYStart) {
+        if (event instanceof SANYStart) {
             statusLabel.setText("SANY running");
         }
-        if (event instanceof TLCEvent.SANYEnd) {
+        if (event instanceof SANYEnd) {
             statusLabel.setText("SANY finished");
             for (SANYError sanyError : ((SANYEnd) event).errors()) {
                 String message = String.format(
@@ -129,11 +129,12 @@ public class TLCModelCheckResultForm {
                         sanyError.location().line(),
                         sanyError.location().col(),
                         sanyError.message());
-                errorsTableModel.addRow(Collections.singletonList(message));
+
+                errorsPane.printLine(message, ColorProgressBar.RED_TEXT);
             }
         }
-        if (event instanceof TLCEvent.TLCStart) {
-            statusLabel.setIcon(AnimatedIcon.Default.INSTANCE);
+        if (event instanceof TLCStart) {
+            statusLabel.setIcon(Default.INSTANCE);
             statusLabel.setText("TLC running");
             startLabel.setText(((TLCStart) event).startedAt().format(DATETIME_FORMAT));
         }
@@ -165,7 +166,11 @@ public class TLCModelCheckResultForm {
         }
         if (event instanceof TLCError) {
             for (ErrorItem error : ((TLCError) event).errors()) {
-                errorsTableModel.addRow(Collections.singletonList(error.message()));
+                if (((TLCError) event).severity() == Severity.Error) {
+                    errorsPane.printLine(error.message(), ColorProgressBar.RED_TEXT);
+                } else {
+                    errorsPane.printLine(error.message());
+                }
             }
         }
         if (event instanceof ProcessTerminated) {
@@ -197,6 +202,12 @@ public class TLCModelCheckResultForm {
             BackToStateErrorTrace trace = (BackToStateErrorTrace) event;
             errorTraceTree.addState(new StateRootNode(trace), trace.variables());
         }
+    }
+
+    private void createUIComponents() {
+        // We need to instantiate the root panel as `Scrollable` so that outer scroll pane (i.e. TLCResultPanel's splitter left pane)
+        // can resize this panel to fit in view port with taking `Scrollable#getScrollableTracksViewportWidth` into account.
+        panel = new ScrollablePanel();
     }
 
     private static class TableModel extends DefaultTableModel {
