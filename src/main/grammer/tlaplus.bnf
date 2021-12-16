@@ -579,7 +579,6 @@ set_comprehension ::= clear_indent '{' identifier_or_tuple clear_indent '\in' ex
   mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusSetComprehensionImplMixin'
 }
 // e.g. { x + 1 : x \in some_set }
-// e.g. { x + 1 : x \in some_set }
 // in this expression, variable binding appears right to the variable-use
 set_comprehension_map ::= clear_indent '{' expr clear_indent ':' <<comma_list quantifier_bound>> clear_indent '}'
 {
