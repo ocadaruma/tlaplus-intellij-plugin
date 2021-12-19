@@ -72,16 +72,15 @@ public class ExpressionEvaluator {
         IsolatedClassLoader loader = new IsolatedClassLoader(
                 ExpressionEvaluator.class.getClassLoader());
         try {
-            Class<?> clazz = Class.forName(clazzName, true, loader);
-            Method method = clazz.getDeclaredMethod("evaluateInternal", Context.class, String.class);
+            Class<?> clazz = loader.loadClass(clazzName);
+            Method method = clazz.getDeclaredMethod("evaluate0", Context.class, String.class);
             return (Result) method.invoke(null, context, expression);
         } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
     }
 
-    // called by reflection
-    private static Result evaluateInternal(
+    public static Result evaluate0(
             @Nullable Context context,
             String expression) {
         Path tmpDir = null;
@@ -95,7 +94,7 @@ public class ExpressionEvaluator {
 
             final Path moduleDirectory;
             if (context != null) {
-                moduleDirectory = context.directory;
+                moduleDirectory = context.directory();
             } else {
                 moduleDirectory = tmpDir;
             }
@@ -111,9 +110,9 @@ public class ExpressionEvaluator {
             throw new UncheckedIOException(e);
         } finally {
             tlc2.module.TLC.OUTPUT = null;
-            if (tmpDir != null) {
-                delete(tmpDir);
-            }
+//            if (tmpDir != null) {
+//                delete(tmpDir);
+//            }
         }
     }
 
@@ -123,7 +122,7 @@ public class ExpressionEvaluator {
                 .append("---- MODULE ").append(DummyModule.moduleName()).append(" ----").append('\n')
                 .append("EXTENDS Reals,Sequences,Bags,FiniteSets,TLC,Randomization");
         if (context != null) {
-            moduleBuilder.append(',' + context.moduleName);
+            moduleBuilder.append(',' + context.moduleName());
         }
         moduleBuilder.append('\n');
         moduleBuilder
@@ -144,7 +143,7 @@ public class ExpressionEvaluator {
         return cfgBuilder.toString();
     }
 
-    private static void delete(Path dir) {
+    public static void delete(Path dir) {
         try {
             Files.walkFileTree(dir, new SimpleFileVisitor<>() {
                 @Override
@@ -160,11 +159,11 @@ public class ExpressionEvaluator {
         }
     }
 
-    private static class Runner extends Writer {
+    public static class Runner extends Writer {
         private final FilenameResolver resolver;
         private final StringWriter delegate;
 
-        Runner(FilenameResolver resolver) {
+        public Runner(FilenameResolver resolver) {
             this.resolver = resolver;
             delegate = new StringWriter();
         }
@@ -184,7 +183,7 @@ public class ExpressionEvaluator {
             delegate.close();
         }
 
-        Result run(String opName) {
+        public Result run(String opName) {
             StringBuilder output = new StringBuilder();
             List<String> errors = new ArrayList<>();
             try {
@@ -209,6 +208,7 @@ public class ExpressionEvaluator {
     }
 
     private static class IsolatedClassLoader extends URLClassLoader {
+        private static final String EVALUATOR_CLAZZ = ExpressionEvaluator.class.getName();
         private final ClassLoader delegate;
 
         private final Map<String, Class<?>> cache = new HashMap<>();
@@ -216,7 +216,7 @@ public class ExpressionEvaluator {
                 "tla2sany", "pcal", "util", "tla2tex", "tlc2");
 
         IsolatedClassLoader(ClassLoader current) {
-            super(new URL[]{toolsJarURL()});
+            super(new URL[]{toolsJarURL(), evaluatorJarURL()});
             delegate = current;
         }
 
@@ -228,10 +228,23 @@ public class ExpressionEvaluator {
             }
         }
 
+        private static URL evaluatorJarURL() {
+            try {
+                return PathManager.getJarForClass(ExpressionEvaluator.class).toUri().toURL();
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         @Override
         public Class<?> loadClass(String name) throws ClassNotFoundException {
             if (cache.containsKey(name)) {
                 return cache.get(name);
+            }
+            if (EVALUATOR_CLAZZ.equals(name)) {
+                Class<?> clazz = findClass(name);
+                cache.put(name, clazz);
+                return clazz;
             }
             for (String pkg : packages) {
                 if (name.startsWith(pkg)) {
