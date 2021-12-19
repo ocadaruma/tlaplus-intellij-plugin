@@ -50,6 +50,8 @@ public class ExpressionEvaluator {
 
     /**
      * Evaluate an expression and return the value.
+     * The implementation is almost taken from tla2tools's official {@link tlc2.REPL}.
+     *
      * Please refer {@link IsolatedClassLoader}'s javadoc about why this method
      * loads {@link ExpressionEvaluator} from custom classloader.
      */
