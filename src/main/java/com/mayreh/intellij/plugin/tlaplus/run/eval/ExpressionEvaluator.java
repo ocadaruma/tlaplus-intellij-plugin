@@ -48,6 +48,11 @@ import util.ToolIO;
 public class ExpressionEvaluator {
     private static final Logger LOG = Logger.getInstance(ExpressionEvaluator.class);
 
+    /**
+     * Evaluate an expression and return the value.
+     * Please refer {@link IsolatedClassLoader}'s javadoc about why this method
+     * loads {@link ExpressionEvaluator} from custom classloader.
+     */
     public static Result evaluate(@Nullable Context context,
                                   String expression) {
         String clazzName = ExpressionEvaluator.class.getName();
@@ -62,6 +67,11 @@ public class ExpressionEvaluator {
         }
     }
 
+    /**
+     * Expected to be called only from {@link #evaluate}, but set to public
+     * because {@link #evaluate}'s caller may be loaded from different class loader than
+     * {@link IsolatedClassLoader}.
+     */
     public static Result evaluate0(
             @Nullable Context context,
             String expression) {
@@ -141,6 +151,10 @@ public class ExpressionEvaluator {
         }
     }
 
+    /**
+     * Evaluate an operation in dummy module to get the value.
+     * Also collect TLC's output which is printed by Print/PrintT
+     */
     private static class Runner extends Writer {
         private final FilenameResolver resolver;
         private final StringWriter underlying;
@@ -194,6 +208,22 @@ public class ExpressionEvaluator {
         }
     }
 
+    /**
+     * ClassLoader that loads ExpressionEvaluator and tla2tools-related classes from
+     * jars to obtain initialized class everytime {@link ExpressionEvaluator#evaluate} called.
+     *
+     * As of tla2tools v1.7.1, TLC is not expected to be run multiple times on same JVM instance
+     * because there are many places that mutating static fields.
+     * refs: https://github.com/tlaplus/tlaplus/pull/425
+     *
+     * There are two workarounds for this:
+     * 1. Fork JVM process when evaluating expression
+     *   - This is simple, but might have significant overhead to start-up new JVM
+     * 2. Use custom classloader to get initialized classes every time evaluating expression
+     *   - This is the technique mentioned in tlaplus/tlaplus#424.
+     *
+     * We want to make expression-evaluation lightweight as much as possible, so we adopt 2.
+     */
     private static class IsolatedClassLoader extends URLClassLoader {
         private final ClassLoader delegate;
 
