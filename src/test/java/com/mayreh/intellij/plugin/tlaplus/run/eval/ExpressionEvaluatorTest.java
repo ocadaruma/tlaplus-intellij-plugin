@@ -9,9 +9,6 @@ import java.util.Collections;
 
 import org.junit.Test;
 
-import com.mayreh.intellij.plugin.tlaplus.run.eval.ExpressionEvaluator.Context;
-import com.mayreh.intellij.plugin.tlaplus.run.eval.ExpressionEvaluator.Result;
-
 public class ExpressionEvaluatorTest {
     @Test
     public void testEval() {
@@ -25,7 +22,7 @@ public class ExpressionEvaluatorTest {
         Path path = Paths.get(getClass().getClassLoader().getResource("tlaplus/run/eval").toURI());
         Context ctx = new Context("Foo", path);
         assertEquals(
-                new Result("{1, 2, 3}", Collections.emptyList()),
+                new Result("{9, 10, 11}", Collections.emptyList()),
                 ExpressionEvaluator.evaluate(ctx, "Baz"));
     }
 
@@ -50,19 +47,10 @@ public class ExpressionEvaluatorTest {
     }
 
     @Test
-    public void test() throws Exception {
+    public void testPrint() throws Exception {
         Path path = Paths.get(getClass().getClassLoader().getResource("tlaplus/run/eval").toURI());
-        Context ctx = new Context("Foo", path);
-
-        Result result = null;
-        result = ExpressionEvaluator.evaluate(null, "{1,2,3}");
-//        result = ExpressionEvaluator.evaluate(ctx, "Baz");
-        result = ExpressionEvaluator.evaluate(ctx, "S");
-        result = ExpressionEvaluator.evaluate(ctx, "S");
-//        result = ExpressionEvaluator.evaluate(ctx, "S");
-//        result = ExpressionEvaluator.evaluate(ctx, "Baz");
-
-//        System.
-        System.out.println(result);
+        Context ctx = new Context("Foo2", path);
+        Result result = ExpressionEvaluator.evaluate(ctx, "T");
+        assertEquals(new Result("55301\nTRUE", Collections.emptyList()), result);
     }
 }

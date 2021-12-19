@@ -1,6 +1,6 @@
 package com.mayreh.intellij.plugin.tlaplus.run.eval;
 
-import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.UncheckedIOException;
@@ -20,55 +20,33 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.jetbrains.annotations.Nullable;
 
 import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.io.FileUtil;
+import com.intellij.openapi.util.text.StringUtil;
 
-import lombok.Value;
-import lombok.experimental.Accessors;
 import tla2sany.semantic.ModuleNode;
 import tla2sany.semantic.OpDefNode;
 import tlc2.tool.EvalException;
-import tlc2.tool.TLCState;
 import tlc2.tool.impl.FastTool;
 import tlc2.tool.impl.Tool;
-import tlc2.util.Context;
 import util.Assert.TLCRuntimeException;
+import util.FilenameToStream;
+import util.SimpleFilenameToStream;
 import util.ToolIO;
-import util.UniqueString;
 
 /**
  * Provides a feature to evaluate constant expression in given module context
  */
 public class ExpressionEvaluator {
     private static final Logger LOG = Logger.getInstance(ExpressionEvaluator.class);
-
-    /**
-     * Represents the result of evaluation.
-     */
-    @Value
-    @Accessors(fluent = true)
-    public static class Result {
-        String output;
-        List<String> errors;
-    }
-
-    /**
-     * The context that expression evaluation to be executed.
-     * This module will be imported into dummy module for evaluation,
-     * so it has to be valid.
-     * Otherwise, the evaluation will fail.
-     */
-    @Value
-    @Accessors(fluent = true)
-    public static class Context {
-        String moduleName;
-        Path directory;
-    }
 
     public static Result evaluate(@Nullable Context context,
                                   String expression) {
@@ -114,9 +92,9 @@ public class ExpressionEvaluator {
             throw new UncheckedIOException(e);
         } finally {
             tlc2.module.TLC.OUTPUT = null;
-//            if (tmpDir != null) {
-//                delete(tmpDir);
-//            }
+            if (tmpDir != null) {
+                delete(tmpDir);
+            }
         }
     }
 
@@ -147,7 +125,7 @@ public class ExpressionEvaluator {
         return cfgBuilder.toString();
     }
 
-    public static void delete(Path dir) {
+    private static void delete(Path dir) {
         try {
             Files.walkFileTree(dir, new SimpleFileVisitor<>() {
                 @Override
@@ -163,30 +141,25 @@ public class ExpressionEvaluator {
         }
     }
 
-    public static class Runner extends BufferedWriter {
+    private static class Runner extends Writer {
         private final FilenameResolver resolver;
         private final StringWriter underlying;
 
-        public Runner(FilenameResolver resolver) {
-            this(resolver, new StringWriter());
-        }
-
-        private Runner(FilenameResolver resolver, StringWriter underlying) {
-            super(underlying);
+        Runner(FilenameResolver resolver) {
             this.resolver = resolver;
-            this.underlying = underlying;
+            underlying = new StringWriter();
         }
 
-        public Result run(String opName) {
-            StringBuilder output = new StringBuilder();
+        Result run(String opName) {
             List<String> errors = new ArrayList<>();
+
+            String value = null;
             try {
                 Tool tool = new FastTool(DummyModule.moduleName(), DummyModule.moduleName(), resolver);
                 ModuleNode module = tool.getSpecProcessor().getRootModule();
                 OpDefNode valueNode = module.getOpDef(opName);
-                output.append(((tlc2.value.impl.Value) tool.eval(valueNode.getBody(),
-                                                                 tlc2.util.Context.Empty,
-                                                                 TLCState.Empty)).toString());
+
+                value = ((tlc2.value.impl.Value) tool.eval(valueNode.getBody())).toString();
             } catch (EvalException e) {
                 errors.add(e.getMessage());
             } catch (TLCRuntimeException e) {
@@ -195,15 +168,29 @@ public class ExpressionEvaluator {
                     errors.addAll(Arrays.asList(e.parameters));
                 }
             } finally {
-                try {
-                    flush();
-                } catch (IOException e) {
-                    // underlying writer is StringWriter so this never happens
-                }
-                output.append(underlying);
+                flush();
             }
 
-            return new Result(output.toString(), errors);
+            String output = Stream.of(underlying.toString(), value)
+                                  .filter(StringUtil::isNotEmpty)
+                                  .map(String::trim)
+                                  .collect(Collectors.joining("\n"));
+            return new Result(output, errors);
+        }
+
+        @Override
+        public void write(char[] cbuf, int off, int len) {
+            underlying.write(cbuf, off, len);
+        }
+
+        @Override
+        public void flush() {
+            underlying.flush();
+        }
+
+        @Override
+        public void close() throws IOException {
+            underlying.close();
         }
     }
 
@@ -211,25 +198,22 @@ public class ExpressionEvaluator {
         private final ClassLoader delegate;
 
         private final Map<String, Class<?>> cache = new HashMap<>();
-        private final Set<String> packages = Set.of(
-                "tla2sany", "pcal", "util", "tla2tex", "tlc2");
+        private final Set<String> prefixes = Set.of(
+                "tla2sany",
+                "pcal",
+                "util",
+                "tla2tex",
+                "tlc2",
+                ExpressionEvaluator.class.getName());
 
         IsolatedClassLoader(ClassLoader current) {
-            super(new URL[]{toolsJarURL(), evaluatorJarURL()});
+            super(new URL[]{jarURL(tlc2.TLC.class), jarURL(ExpressionEvaluator.class)});
             delegate = current;
         }
 
-        private static URL toolsJarURL() {
+        private static URL jarURL(Class<?> clazz) {
             try {
-                return PathManager.getJarForClass(tlc2.TLC.class).toUri().toURL();
-            } catch (MalformedURLException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        private static URL evaluatorJarURL() {
-            try {
-                return PathManager.getJarForClass(ExpressionEvaluator.class).toUri().toURL();
+                return PathManager.getJarForClass(clazz).toUri().toURL();
             } catch (MalformedURLException e) {
                 throw new RuntimeException(e);
             }
@@ -240,20 +224,7 @@ public class ExpressionEvaluator {
             if (cache.containsKey(name)) {
                 return cache.get(name);
             }
-            if ("com.mayreh.intellij.plugin.tlaplus.run.eval.DummyModule".equals(name) ||
-                "com.mayreh.intellij.plugin.tlaplus.run.eval.FilenameResolver".equals(name) ||
-                "com.mayreh.intellij.plugin.tlaplus.run.eval.ExpressionEvaluator".equals(name) ||
-                "com.mayreh.intellij.plugin.tlaplus.run.eval.ExpressionEvaluator$Runner".equals(name)) {
-                Class<?> clazz = findClass(name);
-                cache.put(name, clazz);
-                return clazz;
-            }
-//            if (EVALUATOR_CLAZZ.equals(name)) {
-//                Class<?> clazz = findClass(name);
-//                cache.put(name, clazz);
-//                return clazz;
-//            }
-            for (String pkg : packages) {
+            for (String pkg : prefixes) {
                 if (name.startsWith(pkg)) {
                     Class<?> clazz = findClass(name);
                     cache.put(name, clazz);
@@ -261,6 +232,55 @@ public class ExpressionEvaluator {
                 }
             }
             return delegate.loadClass(name);
+        }
+    }
+
+    /**
+     * A {@link FilenameToStream} impl that resolves dummy module to dummy directory and
+     * otherwise just delegates to {@link SimpleFilenameToStream}.
+     *
+     * This is to apply different module name resolution logic.
+     * Expression evaluation on specific module works like below:
+     * - Create dummy module that extends the module in temporary directory
+     * - Run TLC against dummy module
+     * Hence, in normal resolution logic, dummy module and the imported module must be in same directory.
+     * We don't want to create dummy module in module's directory, so we need custom resolver.
+     */
+    private static class FilenameResolver implements FilenameToStream {
+        private final SimpleFilenameToStream delegate;
+        private final DummyModule dummyModule;
+
+        FilenameResolver(Path moduleDirectory,
+                         DummyModule dummyModule) {
+            delegate = new SimpleFilenameToStream(moduleDirectory.toAbsolutePath().toString());
+            this.dummyModule = dummyModule;
+        }
+
+        @Override
+        public File resolve(String name, boolean isModule) {
+            final String nameWithoutExtension;
+            if (name.contains(".")) {
+                nameWithoutExtension = name.substring(0, name.lastIndexOf('.'));
+            } else {
+                nameWithoutExtension = name;
+            }
+            if (Objects.equals(nameWithoutExtension, DummyModule.moduleName())) {
+                return dummyModule.moduleFile()
+                                  .getParent()
+                                  .resolve(name)
+                                  .toFile();
+            }
+            return delegate.resolve(name, isModule);
+        }
+
+        @Override
+        public String getFullPath() {
+            return delegate.getFullPath();
+        }
+
+        @Override
+        public boolean isStandardModule(String moduleName) {
+            return delegate.isStandardModule(moduleName);
         }
     }
 }
