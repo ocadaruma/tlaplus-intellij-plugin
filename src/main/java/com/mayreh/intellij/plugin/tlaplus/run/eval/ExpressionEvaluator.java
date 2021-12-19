@@ -1,5 +1,6 @@
 package com.mayreh.intellij.plugin.tlaplus.run.eval;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.UncheckedIOException;
@@ -32,10 +33,13 @@ import lombok.experimental.Accessors;
 import tla2sany.semantic.ModuleNode;
 import tla2sany.semantic.OpDefNode;
 import tlc2.tool.EvalException;
+import tlc2.tool.TLCState;
 import tlc2.tool.impl.FastTool;
 import tlc2.tool.impl.Tool;
+import tlc2.util.Context;
 import util.Assert.TLCRuntimeException;
 import util.ToolIO;
+import util.UniqueString;
 
 /**
  * Provides a feature to evaluate constant expression in given module context
@@ -159,28 +163,18 @@ public class ExpressionEvaluator {
         }
     }
 
-    public static class Runner extends Writer {
+    public static class Runner extends BufferedWriter {
         private final FilenameResolver resolver;
-        private final StringWriter delegate;
+        private final StringWriter underlying;
 
         public Runner(FilenameResolver resolver) {
+            this(resolver, new StringWriter());
+        }
+
+        private Runner(FilenameResolver resolver, StringWriter underlying) {
+            super(underlying);
             this.resolver = resolver;
-            delegate = new StringWriter();
-        }
-
-        @Override
-        public void write(char[] cbuf, int off, int len) throws IOException {
-            delegate.write(cbuf, off, len);
-        }
-
-        @Override
-        public void flush() {
-            delegate.flush();
-        }
-
-        @Override
-        public void close() throws IOException {
-            delegate.close();
+            this.underlying = underlying;
         }
 
         public Result run(String opName) {
@@ -190,7 +184,9 @@ public class ExpressionEvaluator {
                 Tool tool = new FastTool(DummyModule.moduleName(), DummyModule.moduleName(), resolver);
                 ModuleNode module = tool.getSpecProcessor().getRootModule();
                 OpDefNode valueNode = module.getOpDef(opName);
-                output.append(((tlc2.value.impl.Value) tool.eval(valueNode.getBody())).toString());
+                output.append(((tlc2.value.impl.Value) tool.eval(valueNode.getBody(),
+                                                                 tlc2.util.Context.Empty,
+                                                                 TLCState.Empty)).toString());
             } catch (EvalException e) {
                 errors.add(e.getMessage());
             } catch (TLCRuntimeException e) {
@@ -199,8 +195,12 @@ public class ExpressionEvaluator {
                     errors.addAll(Arrays.asList(e.parameters));
                 }
             } finally {
-                flush();
-                output.append(delegate);
+                try {
+                    flush();
+                } catch (IOException e) {
+                    // underlying writer is StringWriter so this never happens
+                }
+                output.append(underlying);
             }
 
             return new Result(output.toString(), errors);
@@ -208,7 +208,6 @@ public class ExpressionEvaluator {
     }
 
     private static class IsolatedClassLoader extends URLClassLoader {
-        private static final String EVALUATOR_CLAZZ = ExpressionEvaluator.class.getName();
         private final ClassLoader delegate;
 
         private final Map<String, Class<?>> cache = new HashMap<>();
@@ -241,11 +240,19 @@ public class ExpressionEvaluator {
             if (cache.containsKey(name)) {
                 return cache.get(name);
             }
-            if (EVALUATOR_CLAZZ.equals(name)) {
+            if ("com.mayreh.intellij.plugin.tlaplus.run.eval.DummyModule".equals(name) ||
+                "com.mayreh.intellij.plugin.tlaplus.run.eval.FilenameResolver".equals(name) ||
+                "com.mayreh.intellij.plugin.tlaplus.run.eval.ExpressionEvaluator".equals(name) ||
+                "com.mayreh.intellij.plugin.tlaplus.run.eval.ExpressionEvaluator$Runner".equals(name)) {
                 Class<?> clazz = findClass(name);
                 cache.put(name, clazz);
                 return clazz;
             }
+//            if (EVALUATOR_CLAZZ.equals(name)) {
+//                Class<?> clazz = findClass(name);
+//                cache.put(name, clazz);
+//                return clazz;
+//            }
             for (String pkg : packages) {
                 if (name.startsWith(pkg)) {
                     Class<?> clazz = findClass(name);
