@@ -66,6 +66,9 @@
         <lang.quoteHandler
           language="TLA+"
           implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusQuoteHandler"/>
+<!--        <lang.fileViewProviderFactory-->
+<!--          language="TLA+"-->
+<!--          implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusFileViewProviderFactory"/>-->
         <notificationGroup id="TLA+ plugin" displayType="BALLOON"/>
 
         <!-- TLC config -->
@@ -121,6 +124,28 @@
         <lang.quoteHandler
           language="PlusCal"
           implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusQuoteHandler"/>
+
+        <lang.parserDefinition
+          language="TLA+ code fragment"
+          implementationClass="com.mayreh.intellij.plugin.fragment.TLAplusCodeFragmentParserDefinition"/>
+        <fileType
+          name="TLA+ code fragment"
+          implementationClass="com.mayreh.intellij.plugin.fragment.TLAplusCodeFragmentFileType"
+          fieldName="INSTANCE"
+          language="TLA+ code fragment"/>
+        <lang.syntaxHighlighterFactory
+          language="TLA+ code fragment"
+          implementationClass="com.mayreh.intellij.plugin.fragment.TLAplusCodeFragmentSyntaxHighlighterFactory"/>
+<!--        <completion.contributor-->
+<!--          language="TLA+"-->
+<!--          implementationClass="com.mayreh.intellij.plugin.fragment"/>-->
+        <!-- Reuse same brace matcher as TLA+ -->
+        <lang.braceMatcher
+          language="TLA+ code fragment"
+          implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusBraceMatcher"/>
+        <lang.quoteHandler
+          language="TLA+ code fragment"
+          implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusQuoteHandler"/>
     </extensions>
 
     <actions>
@@ -129,6 +154,13 @@
                 text="Translate PlusCal"
                 description="Translate PlusCal algorithm into TLA+">
             <add-to-group group-id="CodeMenu" anchor="last"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </action>
+        <action id="com.mayreh.EvaluateExpression"
+                class="com.mayreh.intellij.plugin.tlaplus.ide.actions.EvaluateExpressionAction"
+                text="Evaluate Expression"
+                description="Evaluate constant TLA+ expression">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
         </action>
         <action id="com.mayreh.NewTLAplusFile"
                 class="com.mayreh.intellij.plugin.tlaplus.ide.actions.TLAplusCreateFileAction">

@@ -232,9 +232,17 @@
 
     extraRoot("tlc_error_trace") = true
     extraRoot("plus_cal_algorithm") = true
+    extraRoot("code_fragment") = true
 }
 
 root ::= module
+
+code_fragment ::= expr?
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusModuleContext'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusCodeFragmentImplMixin'
+}
+
 module ::= module_header ('EXTENDS' <<comma_list module_ref>>)? unit_with_recover* clear_indent '===='
 {
   pin = 1

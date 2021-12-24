@@ -68,6 +68,13 @@ task generateTLAplusLexer(type: GenerateLexer) {
     purgeOldFiles = true
 }
 
+task generateTLAplusCodeFragmentLexer(type: GenerateLexer) {
+    source = "src/main/grammer/tlaplus_code_fragment.flex"
+    targetDir = "src/gen/com/mayreh/intellij/plugin/tlaplus/lexer"
+    targetClass = "_TLAplusCodeFragmentLexer"
+    purgeOldFiles = true
+}
+
 task generateTLAplusModuleBeginLexer(type: GenerateLexer) {
     source = "src/main/grammer/tlaplus_modulebegin.flex"
     targetDir = "src/gen/com/mayreh/intellij/plugin/tlaplus/lexer"
