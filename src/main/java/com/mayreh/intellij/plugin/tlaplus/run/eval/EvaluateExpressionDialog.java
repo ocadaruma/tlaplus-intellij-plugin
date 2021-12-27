@@ -17,6 +17,7 @@ import javax.swing.text.StyledDocument;
 
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.application.ReadAction;
@@ -45,6 +46,7 @@ import com.intellij.xdebugger.impl.ui.XDebuggerEditorBase;
  */
 public class EvaluateExpressionDialog extends DialogWrapper {
     private final Project project;
+    private final @Nullable Context context;
     private final XDebuggerEditorsProvider editorsProvider;
     private final SwitchModeAction switchModeAction;
     private final JPanel mainPanel;
@@ -54,11 +56,13 @@ public class EvaluateExpressionDialog extends DialogWrapper {
     private EvaluationInputComponent inputComponent;
 
     public EvaluateExpressionDialog(@NotNull Project project,
+                                    @Nullable Context context,
                                     @NotNull XDebuggerEditorsProvider editorsProvider,
                                     @NotNull XExpression text) {
         super(project, true);
 
         this.project = project;
+        this.context = context;
         this.editorsProvider = editorsProvider;
         setModal(false);
         setOKButtonText(XDebuggerBundle.message("xdebugger.button.evaluate"));
@@ -176,7 +180,7 @@ public class EvaluateExpressionDialog extends DialogWrapper {
             resultTextPane.setText("Evaluating...");
 
             String expression = inputEditor.getExpression().getExpression();
-            ReadAction.nonBlocking(() -> ExpressionEvaluator.evaluate(null, expression))
+            ReadAction.nonBlocking(() -> ExpressionEvaluator.evaluate(context, expression))
                       .finishOnUiThread(ModalityState.defaultModalityState(), result -> {
                           StyledDocument document = resultTextPane.getStyledDocument();
                           try {

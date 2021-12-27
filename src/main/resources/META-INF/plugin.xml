@@ -66,9 +66,6 @@
         <lang.quoteHandler
           language="TLA+"
           implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusQuoteHandler"/>
-<!--        <lang.fileViewProviderFactory-->
-<!--          language="TLA+"-->
-<!--          implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusFileViewProviderFactory"/>-->
         <notificationGroup id="TLA+ plugin" displayType="BALLOON"/>
 
         <!-- TLC config -->
@@ -125,17 +122,21 @@
           language="PlusCal"
           implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusQuoteHandler"/>
 
+        <!-- TLA+ code fragment. -->
+        <!-- We define another language and parser definitions because we can't reuse -->
+        <!-- TLA+'s definition (by just parsing different root) since TLA+'s lexer assumes -->
+        <!-- all characters before module_begin as comment token, which isn't the case for code fragment. -->
         <lang.parserDefinition
           language="TLA+ code fragment"
-          implementationClass="com.mayreh.intellij.plugin.fragment.TLAplusCodeFragmentParserDefinition"/>
+          implementationClass="com.mayreh.intellij.plugin.tlaplus.fragment.TLAplusFragmentParserDefinition"/>
         <fileType
           name="TLA+ code fragment"
-          implementationClass="com.mayreh.intellij.plugin.fragment.TLAplusCodeFragmentFileType"
+          implementationClass="com.mayreh.intellij.plugin.tlaplus.fragment.TLAplusFragmentFileType"
           fieldName="INSTANCE"
           language="TLA+ code fragment"/>
         <lang.syntaxHighlighterFactory
           language="TLA+ code fragment"
-          implementationClass="com.mayreh.intellij.plugin.fragment.TLAplusCodeFragmentSyntaxHighlighterFactory"/>
+          implementationClass="com.mayreh.intellij.plugin.tlaplus.fragment.TLAplusFragmentSyntaxHighlighterFactory"/>
 <!--        <completion.contributor-->
 <!--          language="TLA+"-->
 <!--          implementationClass="com.mayreh.intellij.plugin.fragment"/>-->

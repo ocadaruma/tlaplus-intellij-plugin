@@ -1,4 +1,4 @@
-package com.mayreh.intellij.plugin.fragment;
+package com.mayreh.intellij.plugin.tlaplus.fragment;
 
 import javax.swing.Icon;
 
@@ -8,13 +8,12 @@ import org.jetbrains.annotations.NotNull;
 
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.fileTypes.LanguageFileType;
-import com.mayreh.intellij.plugin.pluscal.PlusCalLanguage;
 
-public final class TLAplusCodeFragmentFileType extends LanguageFileType {
-    public static final TLAplusCodeFragmentFileType INSTANCE = new TLAplusCodeFragmentFileType();
+public final class TLAplusFragmentFileType extends LanguageFileType {
+    public static final TLAplusFragmentFileType INSTANCE = new TLAplusFragmentFileType();
 
-    private TLAplusCodeFragmentFileType() {
-        super(TLAplusCodeFragmentLanguage.INSTANCE);
+    private TLAplusFragmentFileType() {
+        super(TLAplusFragmentLanguage.INSTANCE);
     }
 
     @Override
@@ -24,7 +23,7 @@ public final class TLAplusCodeFragmentFileType extends LanguageFileType {
 
     @Override
     public @NotNull @Nls(capitalization = Capitalization.Sentence) String getDescription() {
-        return "TLA";
+        return getName();
     }
 
     @Override

@@ -1,4 +1,6 @@
-package com.mayreh.intellij.plugin.tlaplus;
+package com.mayreh.intellij.plugin.tlaplus.fragment;
+
+import java.nio.file.Path;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -8,14 +10,24 @@ import com.intellij.lang.Language;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.util.Key;
 import com.intellij.psi.FileViewProvider;
-import com.mayreh.intellij.plugin.tlaplus.fragment.TLAplusFragmentFile.CodeFragmentContext;
+import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModule;
 
-public class TLAplusFile extends PsiFileBase {
+import lombok.Value;
+import lombok.experimental.Accessors;
+
+public class TLAplusFragmentFile extends PsiFileBase {
+    @Value
+    @Accessors(fluent = true)
+    public static class CodeFragmentContext {
+        @NotNull TLAplusModule dummyModule;
+        @NotNull Path directory;
+    }
+
     private static final Key<CodeFragmentContext> CONTEXT_KEY =
             Key.create("TLA.code.fragment.context");
 
-    public TLAplusFile(@NotNull FileViewProvider viewProvider,
-                       @NotNull Language language) {
+    public TLAplusFragmentFile(@NotNull FileViewProvider viewProvider,
+                               @NotNull Language language) {
         super(viewProvider, language);
     }
 
@@ -29,6 +41,6 @@ public class TLAplusFile extends PsiFileBase {
 
     @Override
     public @NotNull FileType getFileType() {
-        return TLAplusFileType.INSTANCE;
+        return TLAplusFragmentFileType.INSTANCE;
     }
 }

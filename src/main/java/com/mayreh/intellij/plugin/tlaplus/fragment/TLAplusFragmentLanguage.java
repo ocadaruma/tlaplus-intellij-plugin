@@ -1,12 +1,12 @@
-package com.mayreh.intellij.plugin.fragment;
+package com.mayreh.intellij.plugin.tlaplus.fragment;
 
 import com.intellij.lang.Language;
 import com.mayreh.intellij.plugin.tlaplus.TLAplusLanguage;
 
-public class TLAplusCodeFragmentLanguage extends Language {
-    public static final TLAplusCodeFragmentLanguage INSTANCE = new TLAplusCodeFragmentLanguage();
+public class TLAplusFragmentLanguage extends Language {
+    public static final TLAplusFragmentLanguage INSTANCE = new TLAplusFragmentLanguage();
 
-    private TLAplusCodeFragmentLanguage() {
+    private TLAplusFragmentLanguage() {
         super(TLAplusLanguage.INSTANCE,"TLA+ code fragment");
     }
 

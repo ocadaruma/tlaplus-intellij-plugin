@@ -68,13 +68,6 @@ task generateTLAplusLexer(type: GenerateLexer) {
     purgeOldFiles = true
 }
 
-task generateTLAplusCodeFragmentLexer(type: GenerateLexer) {
-    source = "src/main/grammer/tlaplus_code_fragment.flex"
-    targetDir = "src/gen/com/mayreh/intellij/plugin/tlaplus/lexer"
-    targetClass = "_TLAplusCodeFragmentLexer"
-    purgeOldFiles = true
-}
-
 task generateTLAplusModuleBeginLexer(type: GenerateLexer) {
     source = "src/main/grammer/tlaplus_modulebegin.flex"
     targetDir = "src/gen/com/mayreh/intellij/plugin/tlaplus/lexer"
@@ -119,13 +112,6 @@ task generateTLCConfigLexer(type: GenerateLexer) {
     purgeOldFiles = true
 }
 
-task generatePlusCalLexer(type: GenerateLexer) {
-    source = "src/main/grammer/plus_cal.flex"
-    targetDir = "src/gen/com/mayreh/intellij/plugin/pluscal/lexer"
-    targetClass = "_PlusCalLexer"
-    purgeOldFiles = true
-}
-
 task generatePlusCalAlgorithmBeginLexer(type: GenerateLexer) {
     source = "src/main/grammer/plus_cal_algorithmbegin.flex"
     targetDir = "src/gen/com/mayreh/intellij/plugin/pluscal/lexer"
@@ -142,7 +128,6 @@ compileJava.dependsOn(
         generateTLAplusParser,
         generateTLCConfigParser,
         generateTLCConfigLexer,
-        generatePlusCalLexer,
         generatePlusCalAlgorithmBeginLexer)
 
 tasks.withType(Test) {

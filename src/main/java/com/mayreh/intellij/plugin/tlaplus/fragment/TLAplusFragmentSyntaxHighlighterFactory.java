@@ -1,4 +1,4 @@
-package com.mayreh.intellij.plugin.fragment;
+package com.mayreh.intellij.plugin.tlaplus.fragment;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -9,7 +9,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.mayreh.intellij.plugin.pluscal.PlusCalSyntaxHighlighter;
 
-public class TLAplusCodeFragmentSyntaxHighlighterFactory extends SyntaxHighlighterFactory {
+public class TLAplusFragmentSyntaxHighlighterFactory extends SyntaxHighlighterFactory {
     @Override
     public @NotNull SyntaxHighlighter getSyntaxHighlighter(
             @Nullable Project project,

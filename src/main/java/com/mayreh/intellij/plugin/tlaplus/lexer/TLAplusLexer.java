@@ -9,7 +9,7 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 public class TLAplusLexer extends LayeredLexer {
     public TLAplusLexer(boolean forHighlighting) {
         super(new MergingLexerAdapter(
-                new FlexAdapter(new _TLAplusLexer(forHighlighting)),
+                new FlexAdapter(new _TLAplusLexer(forHighlighting, TLAplusLexerMode.TLA)),
                 TokenSet.create(TLAplusElementTypes.COMMENT)));
 
         registerLayer(
