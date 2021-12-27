@@ -44,6 +44,7 @@ public class EvaluateExpressionAction extends TLAplusActionBase {
 
         Pair<Context, PsiDirectory> context = maybeContext(currentModuleName, document);
         FileDocumentManager.getInstance().saveAllDocuments();
+
         new EvaluateExpressionDialog(project, context == null ? null : context.first, new XDebuggerEditorsProviderBase() {
             @Override
             protected PsiFile createExpressionCodeFragment(
