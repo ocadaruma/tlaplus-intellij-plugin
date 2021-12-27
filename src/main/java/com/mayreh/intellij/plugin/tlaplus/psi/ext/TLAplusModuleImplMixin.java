@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 import org.jetbrains.annotations.NotNull;
 
 import com.intellij.lang.ASTNode;
+import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDirectory;
@@ -23,13 +24,11 @@ import com.intellij.psi.PsiManager;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ResourceUtil;
 import com.mayreh.intellij.plugin.tlaplus.TLAplusFile;
-import com.mayreh.intellij.plugin.tlaplus.fragment.TLAplusFragmentFile;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusFuncDefinition;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusInstance;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModule;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusOpDecl;
-import com.mayreh.intellij.plugin.tlaplus.run.eval.DummyModule;
 
 public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implements TLAplusModule {
     private static final Set<String> STANDARD_MODULES = Set.of(
@@ -68,43 +67,36 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
     @Override
     public @NotNull Stream<TLAplusModule> availableModules() {
         Stream<TLAplusModule> standardModules = standardModules();
-
         Stream<TLAplusModule> modulesInSameDir =
                 Optional.ofNullable(getContainingFile())
                         .stream()
                         .flatMap(file -> {
                             PsiDirectory directory = file.getOriginalFile().getContainingDirectory();
-                            if (directory == null) {
-                                return Stream.empty();
+                            if (directory != null) {
+                                return Stream.of(Pair.pair(file, directory));
                             }
-                            return Arrays.stream(directory.getFiles())
-                                         // this file should not be included
-                                         .filter(f -> f.getName().endsWith(".tla") && !f.getName().equals(file.getName()))
-                                         .flatMap(f -> Optional.ofNullable(
-                                                 // TODO: There are many codes that finding module in PsiFile
-                                                 PsiTreeUtil.findChildOfType(f, TLAplusModule.class)).stream());
-                        });
+                            if (getContainingFile() instanceof TLAplusFile) {
+                                return Optional
+                                        .ofNullable(((TLAplusFile) getContainingFile()).codeFragmentContext())
+                                        .stream()
+                                        .flatMap(ctx -> Optional
+                                                .ofNullable(VfsUtil.findFile(ctx.directory(), true))
+                                                .stream()
+                                                .flatMap(dir -> Optional
+                                                        .ofNullable(PsiManager.getInstance(getProject()).findDirectory(dir)).stream()))
+                                        .map(dir -> Pair.pair(file, dir));
+                            }
+                            return Stream.empty();
+                        })
+                        .flatMap(pair -> Arrays
+                                .stream(pair.second.getFiles())
+                                // this file should not be included
+                                .filter(f -> f.getName().endsWith(".tla") && !f.getName().equals(pair.first.getName()))
+                                .flatMap(f -> Optional.ofNullable(
+                                        // TODO: There are many codes that finding module in PsiFile
+                                        PsiTreeUtil.findChildOfType(f, TLAplusModule.class)).stream()));
 
-        final Stream<TLAplusModule> dummyModuleDir;
-        if (getContainingFile() instanceof TLAplusFile) {
-            dummyModuleDir = Optional
-                    .ofNullable(((TLAplusFile) getContainingFile()).codeFragmentContext()).stream()
-                    .flatMap(ctx -> Optional
-                            .ofNullable(VfsUtil.findFile(ctx.directory(), true)).stream()
-                            .flatMap(dir -> Optional
-                                    .ofNullable(PsiManager.getInstance(getProject()).findDirectory(dir)).stream()
-                                    .flatMap(psiDir -> Arrays
-                                            .stream(psiDir.getFiles())
-                                            .filter(f -> f.getName().endsWith(".tla") &&
-                                                         !f.getName().equals(DummyModule.moduleName() + ".tla"))
-                                            .flatMap(f -> Optional.ofNullable(PsiTreeUtil.findChildOfType(f, TLAplusModule.class)).stream()))
-                            )
-                    );
-        } else {
-            dummyModuleDir = Stream.empty();
-        }
-
-        return Stream.concat(Stream.concat(standardModules, modulesInSameDir), dummyModuleDir);
+        return Stream.concat(standardModules, modulesInSameDir);
     }
 
     private @NotNull Stream<TLAplusNamedElement> definitions(

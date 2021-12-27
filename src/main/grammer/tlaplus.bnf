@@ -239,7 +239,7 @@ root ::= module
 
 code_fragment ::= expr?
 {
-  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusModuleContext'
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNameContext'
   mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusCodeFragmentImplMixin'
 }
 
