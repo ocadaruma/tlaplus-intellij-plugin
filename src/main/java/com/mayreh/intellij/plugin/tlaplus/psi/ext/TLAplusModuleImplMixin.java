@@ -2,6 +2,7 @@ package com.mayreh.intellij.plugin.tlaplus.psi.ext;
 
 import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPsiUtils.isForwardReference;
 import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPsiUtils.isLocal;
+import static com.mayreh.intellij.plugin.util.Optionalx.asInstanceOf;
 
 import java.net.URL;
 import java.util.Arrays;
@@ -75,18 +76,10 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
                             if (directory != null) {
                                 return Stream.of(Pair.pair(file, directory));
                             }
-                            if (getContainingFile() instanceof TLAplusFile) {
-                                return Optional
-                                        .ofNullable(((TLAplusFile) getContainingFile()).codeFragmentContext())
-                                        .stream()
-                                        .flatMap(ctx -> Optional
-                                                .ofNullable(VfsUtil.findFile(ctx.directory(), true))
-                                                .stream()
-                                                .flatMap(dir -> Optional
-                                                        .ofNullable(PsiManager.getInstance(getProject()).findDirectory(dir)).stream()))
-                                        .map(dir -> Pair.pair(file, dir));
-                            }
-                            return Stream.empty();
+                            return asInstanceOf(getContainingFile(), TLAplusFile.class)
+                                    .flatMap(f -> Optional.ofNullable(f.directory()))
+                                    .map(dir -> Pair.pair(file, dir))
+                                    .stream();
                         })
                         .flatMap(pair -> Arrays
                                 .stream(pair.second.getFiles())

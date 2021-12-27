@@ -10,6 +10,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
@@ -21,7 +22,6 @@ import com.intellij.xdebugger.impl.breakpoints.XExpressionImpl;
 import com.mayreh.intellij.plugin.tlaplus.TLAplusFile;
 import com.mayreh.intellij.plugin.tlaplus.TLAplusLanguage;
 import com.mayreh.intellij.plugin.tlaplus.fragment.TLAplusFragmentFile;
-import com.mayreh.intellij.plugin.tlaplus.fragment.TLAplusFragmentFile.CodeFragmentContext;
 import com.mayreh.intellij.plugin.tlaplus.fragment.TLAplusFragmentFileType;
 import com.mayreh.intellij.plugin.tlaplus.fragment.TLAplusFragmentLanguage;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModule;
@@ -42,9 +42,9 @@ public class EvaluateExpressionAction extends TLAplusActionBase {
             currentModuleName = null;
         }
 
-        Context context = maybeContext(currentModuleName, document);
+        Pair<Context, PsiDirectory> context = maybeContext(currentModuleName, document);
         FileDocumentManager.getInstance().saveAllDocuments();
-        new EvaluateExpressionDialog(project, context, new XDebuggerEditorsProviderBase() {
+        new EvaluateExpressionDialog(project, context == null ? null : context.first, new XDebuggerEditorsProviderBase() {
             @Override
             protected PsiFile createExpressionCodeFragment(
                     @NotNull Project project,
@@ -77,8 +77,8 @@ public class EvaluateExpressionAction extends TLAplusActionBase {
                 // TODO add comment why we can't use source module itself as context
                 TLAplusModule dummyModule = PsiTreeUtil.findChildOfType(dummyModuleFile, TLAplusModule.class);
                 if (dummyModule != null && context != null) {
-                    fragment.setCodeFragmentContext(new CodeFragmentContext(dummyModule, context.directory()));
-                    dummyModuleFile.setCodeFragmentContext(new CodeFragmentContext(dummyModule, context.directory()));
+                    fragment.setModule(dummyModule);
+                    dummyModuleFile.setDirectory(context.second);
                 }
                 return fragment;
             }
@@ -90,7 +90,7 @@ public class EvaluateExpressionAction extends TLAplusActionBase {
         }, XExpressionImpl.EMPTY_EXPRESSION).show();
     }
 
-    private static @Nullable Context maybeContext(
+    private static @Nullable Pair<Context, PsiDirectory> maybeContext(
             @Nullable String moduleName,
             TLAplusDocument document) {
         if (moduleName == null) {
@@ -112,6 +112,6 @@ public class EvaluateExpressionAction extends TLAplusActionBase {
             return null;
         }
 
-        return new Context(moduleName, path);
+        return Pair.pair(new Context(moduleName, path), directory);
     }
 }

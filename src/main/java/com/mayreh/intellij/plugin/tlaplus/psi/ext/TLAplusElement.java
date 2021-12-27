@@ -1,10 +1,14 @@
 package com.mayreh.intellij.plugin.tlaplus.psi.ext;
 
+import static com.mayreh.intellij.plugin.util.Optionalx.asInstanceOf;
+
+import java.util.Optional;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusCodeFragment;
+import com.mayreh.intellij.plugin.tlaplus.fragment.TLAplusFragmentFile;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModule;
 
 public interface TLAplusElement extends PsiElement {
@@ -17,11 +21,9 @@ public interface TLAplusElement extends PsiElement {
         if (parentModule != null) {
             return parentModule;
         }
-        // For TLA+ code fragment, root element is TLAplusCodeFragment rather than TLAplusModule
-        TLAplusCodeFragment parentFragment = PsiTreeUtil.getParentOfType(this, TLAplusCodeFragment.class);
-        if (parentFragment != null) {
-            return parentFragment.currentModule();
-        }
-        return null;
+        // For TLA+ code fragment, the module that the fragment is executed on is stored in TLAplusFragmentFile's user data
+        return asInstanceOf(getContainingFile(), TLAplusFragmentFile.class)
+                .flatMap(file -> Optional.ofNullable(file.module()))
+                .orElse(null);
     }
 }
