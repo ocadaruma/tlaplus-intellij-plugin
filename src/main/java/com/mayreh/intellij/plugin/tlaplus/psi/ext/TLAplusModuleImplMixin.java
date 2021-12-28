@@ -2,6 +2,7 @@ package com.mayreh.intellij.plugin.tlaplus.psi.ext;
 
 import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPsiUtils.isForwardReference;
 import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPsiUtils.isLocal;
+import static com.mayreh.intellij.plugin.util.Optionalx.asInstanceOf;
 
 import java.net.URL;
 import java.util.Arrays;
@@ -15,18 +16,17 @@ import java.util.stream.Stream;
 import org.jetbrains.annotations.NotNull;
 
 import com.intellij.lang.ASTNode;
-import com.intellij.openapi.vfs.VfsUtil;
-import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.util.Pair;
 import com.intellij.psi.PsiDirectory;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiManager;
-import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ResourceUtil;
+import com.mayreh.intellij.plugin.tlaplus.TLAplusFile;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusFuncDefinition;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusInstance;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModule;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusOpDecl;
+import com.mayreh.intellij.plugin.util.TLAplusTreeUtil;
+import com.mayreh.intellij.plugin.util.TLAplusVfsUtil;
 
 public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implements TLAplusModule {
     private static final Set<String> STANDARD_MODULES = Set.of(
@@ -65,21 +65,24 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
     @Override
     public @NotNull Stream<TLAplusModule> availableModules() {
         Stream<TLAplusModule> standardModules = standardModules();
-
         Stream<TLAplusModule> modulesInSameDir =
                 Optional.ofNullable(getContainingFile())
                         .stream()
                         .flatMap(file -> {
                             PsiDirectory directory = file.getOriginalFile().getContainingDirectory();
-                            if (directory == null) {
-                                return Stream.empty();
+                            if (directory != null) {
+                                return Stream.of(Pair.pair(file, directory));
                             }
-                            return Arrays.stream(directory.getFiles())
-                                         // this file should not be included
-                                         .filter(f -> f.getName().endsWith(".tla") && !f.getName().equals(file.getName()))
-                                         .flatMap(f -> Optional.ofNullable(
-                                                 PsiTreeUtil.findChildOfType(f, TLAplusModule.class)).stream());
-                        });
+                            return asInstanceOf(getContainingFile(), TLAplusFile.class)
+                                    .flatMap(f -> Optional.ofNullable(f.directory()))
+                                    .map(dir -> Pair.pair(file, dir))
+                                    .stream();
+                        })
+                        .flatMap(pair -> Arrays
+                                .stream(pair.second.getFiles())
+                                // this file should not be included
+                                .filter(f -> f.getName().endsWith(".tla") && !f.getName().equals(pair.first.getName()))
+                                .flatMap(f -> TLAplusTreeUtil.findChildOfType(f, TLAplusModule.class).stream()));
 
         return Stream.concat(standardModules, modulesInSameDir);
     }
@@ -148,19 +151,10 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
                             getClass().getClassLoader(),
                             "tla2sany/StandardModules",
                             moduleName + ".tla");
-                    if (url == null) {
-                        return Stream.empty();
-                    }
-                    VirtualFile file = VfsUtil.findFileByURL(url);
-                    if (file == null) {
-                        return Stream.empty();
-                    }
-                    PsiFile psiFile = PsiManager.getInstance(getProject()).findFile(file);
-                    if (psiFile == null) {
-                        return Stream.empty();
-                    }
-                    return Optional.ofNullable(PsiTreeUtil.findChildOfType(psiFile, TLAplusModule.class))
-                                   .stream();
+                    return TLAplusVfsUtil
+                            .findFile(getProject(), url)
+                            .flatMap(file -> TLAplusTreeUtil.findChildOfType(file, TLAplusModule.class))
+                            .stream();
                 });
     }
 }

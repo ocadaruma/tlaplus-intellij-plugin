@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import com.intellij.execution.Location;
 import com.intellij.execution.actions.ConfigurationContext;
@@ -62,7 +63,7 @@ public class TLCRunConfigurationProducer extends LazyRunConfigurationProducer<TL
                Objects.equals(path.getParent().toString(), configuration.getWorkingDirectory());
     }
 
-    private VirtualFile maybeVirtualFile(ConfigurationContext context) {
+    private static @Nullable VirtualFile maybeVirtualFile(ConfigurationContext context) {
         Location location = context.getLocation();
         if (location == null) {
             return null;

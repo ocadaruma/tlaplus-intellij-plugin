@@ -112,13 +112,6 @@ task generateTLCConfigLexer(type: GenerateLexer) {
     purgeOldFiles = true
 }
 
-task generatePlusCalLexer(type: GenerateLexer) {
-    source = "src/main/grammer/plus_cal.flex"
-    targetDir = "src/gen/com/mayreh/intellij/plugin/pluscal/lexer"
-    targetClass = "_PlusCalLexer"
-    purgeOldFiles = true
-}
-
 task generatePlusCalAlgorithmBeginLexer(type: GenerateLexer) {
     source = "src/main/grammer/plus_cal_algorithmbegin.flex"
     targetDir = "src/gen/com/mayreh/intellij/plugin/pluscal/lexer"
@@ -135,7 +128,6 @@ compileJava.dependsOn(
         generateTLAplusParser,
         generateTLCConfigParser,
         generateTLCConfigLexer,
-        generatePlusCalLexer,
         generatePlusCalAlgorithmBeginLexer)
 
 tasks.withType(Test) {

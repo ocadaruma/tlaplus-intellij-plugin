@@ -1,51 +1,114 @@
 package com.mayreh.intellij.plugin.tlaplus.lexer;
 
+import com.intellij.lexer.FlexLexer;
 import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.TokenType;
+import com.intellij.util.containers.Stack;
+import com.mayreh.intellij.plugin.tlaplus.lexer.JunctionIndentation.Type;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
+import com.mayreh.intellij.plugin.util.StringUtil;
 
 %%
 
 %unicode
 %public
 %class _TLAplusLexer
-%extends TLAplusFlexLexerBase
+%implements FlexLexer
 %function advance
 %type IElementType
 %{
-  private int zzNestedModuleLevel = 0;
-  private int zzNestedBlockCommentLevel = 0;
+    private final Stack<JunctionIndentation> zzIndentationStack = new Stack<>(1000);
+    private boolean forHighlighting;
+    private TLAplusLexerMode lexerMode;
+    private int zzNestedModuleLevel = 0;
+    private int zzNestedBlockCommentLevel = 0;
 
-  public _TLAplusLexer(boolean forHighlighting) {
-      this(null);
-      setForHighlighting(forHighlighting);
-  }
+    public _TLAplusLexer(boolean forHighlighting, TLAplusLexerMode lexerMode) {
+        this(null);
+        this.forHighlighting = forHighlighting;
+        this.lexerMode = lexerMode;
+        zzLexicalState = lexerMode.initialState;
+    }
 
-  @Override
-  public int stateHandleIndent() {
-      return HANDLE_INDENT;
-  }
+    private IElementType clearIndent(IElementType e, int nextState) {
+        if (forHighlighting) {
+            if (yystate() != nextState) {
+                yybegin(nextState);
+            }
+            return e;
+        }
 
-  @Override
-  public int stateDefault() {
-      return IN_MODULE;
-  }
+        JunctionIndentation i = zzIndentationStack.isEmpty() ? null : zzIndentationStack.peek();
+        if (i == null) {
+            yybegin(nextState);
+            return e;
+        }
+        zzIndentationStack.pop();
+        yypushback(yylength());
+        yybegin(lexerMode.handleIndentState);
+        return TLAplusElementTypes.JUNCTION_BREAK;
+    }
 
-  @Override
-  public CharSequence zzBuffer() {
-      return zzBuffer;
-  }
+    private IElementType maybeHandleIndent(IElementType e) {
+        if (forHighlighting) {
+            return e;
+        }
 
-  @Override
-  public int zzCurrentPos() {
-      return zzCurrentPos;
-  }
+        JunctionIndentation i = zzIndentationStack.isEmpty() ? null : zzIndentationStack.peek();
+        if (i == null) {
+            if (yystate() == lexerMode.handleIndentState) {
+                yybegin(lexerMode.defaultState);
+            }
+            return e;
+        }
+        int column = StringUtil.offsetToColumn(zzBuffer, zzCurrentPos);
+        if (i.column() < column) {
+            if (yystate() == lexerMode.handleIndentState) {
+                yybegin(lexerMode.defaultState);
+            }
+            return e;
+        }
+        zzIndentationStack.pop();
+        yypushback(yylength());
+        yybegin(lexerMode.handleIndentState);
+        return TLAplusElementTypes.JUNCTION_BREAK;
+    }
+
+    private IElementType maybeJunction(IElementType operator) {
+        if (forHighlighting) {
+            return operator;
+        }
+        if (yystate() == lexerMode.handleIndentState) {
+            yybegin(lexerMode.defaultState);
+            return operator;
+        }
+        JunctionIndentation i = zzIndentationStack.isEmpty() ? null : zzIndentationStack.peek();
+        int column = StringUtil.offsetToColumn(zzBuffer, zzCurrentPos);
+        if (i == null || i.column() < column) {
+            zzIndentationStack.push(JunctionIndentation.and(column));
+            yybegin(lexerMode.handleIndentState);
+            yypushback(yylength());
+            return TLAplusElementTypes.JUNCTION_BEGIN;
+        }
+        if (i.type() == Type.And && i.column() == column) {
+            yybegin(lexerMode.handleIndentState);
+            yypushback(yylength());
+            return TLAplusElementTypes.JUNCTION_CONT;
+        }
+
+        zzIndentationStack.pop();
+        yypushback(yylength());
+        return TLAplusElementTypes.JUNCTION_BREAK;
+    }
 %}
 
-%state IN_MODULE
-%state HANDLE_INDENT
-%state IN_BLOCK_COMMENT
-%state TERMINATED
+// This lexer is expected to be used for all of
+// ordinary TLA+ specification, TLA+ code fragment, PlusCal specification.
+%state ZZ_TLA_INITIAL
+%state ZZ_TLA_DEFAULT, ZZ_PLUSCAL_DEFAULT
+%state ZZ_TLA_HANDLE_INDENT, ZZ_PLUSCAL_HANDLE_INDENT
+%state ZZ_IN_BLOCK_COMMENT
+%state ZZ_TERMINATED
 
 WHITE_SPACE = " " | \t | \f | \R
 SEPARATOR = ---- -*
@@ -54,22 +117,66 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
 
 %%
 <YYINITIAL> {
+  [^] { yybegin(lexerMode.initialState); yypushback(yylength()); }
+}
+
+<ZZ_TLA_INITIAL> {
   {MODULE_BEGIN} {
     zzNestedModuleLevel = 0;
-    yybegin(IN_MODULE);
+    yybegin(ZZ_TLA_DEFAULT);
     return TLAplusElementTypes.MODULE_BEGIN;
   }
   [^] { return TLAplusElementTypes.COMMENT; }
 }
 
-<IN_MODULE, HANDLE_INDENT> {
+// Rules only for TLA+
+<ZZ_TLA_DEFAULT, ZZ_TLA_HANDLE_INDENT> {
   {MODULE_BEGIN} {
-    if (yystate() == IN_MODULE) {
+    if (yystate() == ZZ_TLA_DEFAULT) {
         zzNestedModuleLevel++;
     }
-    return clearIndent(TLAplusElementTypes.MODULE_BEGIN, IN_MODULE);
+    return clearIndent(TLAplusElementTypes.MODULE_BEGIN, ZZ_TLA_DEFAULT);
+  }
+}
+
+// Rules only for PlusCal
+<ZZ_PLUSCAL_DEFAULT, ZZ_PLUSCAL_HANDLE_INDENT> {
+  --algorithm | (--fair {WHITE_SPACE}+ algorithm) {
+    return TLAplusElementTypes.PLUS_CAL_ALGORITHM_BEGIN;
   }
 
+  // pluscal keywords
+  "algorithm"  { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_ALGORITHM); }
+  "assert"     { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_ASSERT); }
+  "await"      { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_AWAIT); }
+  "begin"      { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_BEGIN); }
+  "call"       { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_CALL); }
+  "define"     { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_DEFINE); }
+  "do"         { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_DO); }
+  "either"     { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_EITHER); }
+  "else"       { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_ELSE); }
+  "elsif"      { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_ELSIF); }
+  "end"        { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_END); }
+  "goto"       { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_GOTO); }
+  "if"         { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_IF); }
+  "macro"      { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_MACRO); }
+  "or"         { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_OR); }
+  "print"      { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_PRINT); }
+  "procedure"  { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_PROCEDURE); }
+  "process"    { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_PROCESS); }
+  "return"     { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_RETURN); }
+  "skip"       { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_SKIP); }
+  "then"       { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_THEN); }
+  "variable"   { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_VARIABLE); }
+  "variables"  { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_VARIABLES); }
+  "when"       { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_WHEN); }
+  "while"      { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_WHILE); }
+  "with"       { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_WITH); }
+  "fair"       { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_FAIR); }
+}
+
+// Common Rules
+<ZZ_TLA_DEFAULT, ZZ_PLUSCAL_DEFAULT, ZZ_TLA_HANDLE_INDENT, ZZ_PLUSCAL_HANDLE_INDENT> {
   // keywords
   "ASSUME"     { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_ASSUME); }
   "ELSE"       { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_ELSE); }
@@ -123,6 +230,7 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
   "]_"  { return maybeHandleIndent(TLAplusElementTypes.RSQBRACKETUNDER); }
   "."   { return maybeHandleIndent(TLAplusElementTypes.DOT); }
   ":"   { return maybeHandleIndent(TLAplusElementTypes.COLON); }
+  ";"   { return maybeHandleIndent(TLAplusElementTypes.SEMICOLON); }
   "_"   { return maybeHandleIndent(TLAplusElementTypes.UNDER); }
   "@"   { return maybeHandleIndent(TLAplusElementTypes.AT); }
   "!"   { return maybeHandleIndent(TLAplusElementTypes.BANG); }
@@ -246,28 +354,33 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
 
   // comments
   \\"*"[^\r\n]* { return TLAplusElementTypes.COMMENT; }
-  "(*"          { zzNestedBlockCommentLevel = 0; yybegin(IN_BLOCK_COMMENT); yypushback(2); }
+  "(*"          { zzNestedBlockCommentLevel = 0; yybegin(ZZ_IN_BLOCK_COMMENT); yypushback(2); }
 
   {WHITE_SPACE}+ { return TokenType.WHITE_SPACE; }
-  {SEPARATOR}    { return clearIndent(TLAplusElementTypes.SEPARATOR, IN_MODULE); }
+}
+
+// Again, rules only for TLA+
+// Rules only for TLA+
+<ZZ_TLA_DEFAULT, ZZ_TLA_HANDLE_INDENT> {
+  {SEPARATOR}    { return clearIndent(TLAplusElementTypes.SEPARATOR, ZZ_TLA_DEFAULT); }
   ==== =*        {
     if (zzNestedModuleLevel == 0) {
-        return clearIndent(TLAplusElementTypes.MODULE_END, TERMINATED);
+        return clearIndent(TLAplusElementTypes.MODULE_END, ZZ_TERMINATED);
     } else {
-        if (yystate() == IN_MODULE) {
+        if (yystate() == ZZ_TLA_DEFAULT) {
             zzNestedModuleLevel--;
         }
-        return clearIndent(TLAplusElementTypes.MODULE_END, IN_MODULE);
+        return clearIndent(TLAplusElementTypes.MODULE_END, ZZ_TLA_DEFAULT);
     }
   }
 }
 
-<IN_BLOCK_COMMENT> {
+<ZZ_IN_BLOCK_COMMENT> {
   "(*"    { zzNestedBlockCommentLevel++; }
   "*)"    {
       zzNestedBlockCommentLevel--;
       if (zzNestedBlockCommentLevel == 0) {
-          yybegin(IN_MODULE);
+          yybegin(lexerMode.defaultState);
           return TLAplusElementTypes.COMMENT;
       }
   }
@@ -275,7 +388,7 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
   [^]     {}
 }
 
-<TERMINATED> {
+<ZZ_TERMINATED> {
   [^]     { return TLAplusElementTypes.COMMENT; }
 }
 

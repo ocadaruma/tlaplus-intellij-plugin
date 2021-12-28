@@ -14,13 +14,12 @@ public class TLAplusPsiFactory {
         this.project = project;
     }
 
-    public TLAplusFile createFile(String text) {
-        return (TLAplusFile) PsiFileFactory.getInstance(project)
-                                           .createFileFromText("DUMMY.tla", TLAplusFileType.INSTANCE, text);
-    }
-
     public PsiElement createIdentifier(String text) {
-        return PsiTreeUtil.findChildOfType(createFile("---- MODULE " + text + " ----"),
-                                           TLAplusModuleHeader.class).getNameIdentifier();
+        TLAplusFile file = (TLAplusFile) PsiFileFactory
+                .getInstance(project)
+                .createFileFromText("DUMMY.tla",
+                                    TLAplusFileType.INSTANCE,
+                                    "---- MODULE " + text + " ----");
+        return PsiTreeUtil.findChildOfType(file, TLAplusModuleHeader.class).getNameIdentifier();
     }
 }

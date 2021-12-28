@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="16"
+   height="16"
+   viewBox="0 0 4.23328 4.23328"
+   version="1.1"
+   id="svg5"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs2">
+    <rect
+       x="365.32629"
+       y="749.38727"
+       width="135.82645"
+       height="101.47953"
+       id="rect5886" />
+    <rect
+       x="384.06097"
+       y="746.26483"
+       width="62.44894"
+       height="40.591812"
+       id="rect4472" />
+    <rect
+       x="206.0815"
+       y="743.1424"
+       width="419.96912"
+       height="181.10193"
+       id="rect998" />
+  </defs>
+  <g
+     id="layer1"
+     transform="translate(-45.633135,-56.118113)">
+    <g
+       aria-label="LA"
+       id="text4554"
+       style="fill:#c649f9">
+      <path
+         d="M 48.430544,59.336793 H 47.999051 V 58.457442 H 47.63732 v 1.175626 h 0.793224 z"
+         id="path949" />
+      <path
+         d="m 48.900795,59.633068 0.05254,-0.222206 h 0.321252 l 0.05081,0.222206 h 0.385847 l -0.353118,-1.175626 h -0.458193 l -0.356564,1.175626 z m 0.22479,-0.876767 0.09129,0.400488 h -0.20412 l 0.09474,-0.400488 z"
+         id="path951" />
+    </g>
+    <g
+       aria-label="+"
+       id="text4554-4"
+       style="fill:#c649f9">
+      <path
+         d="m 49.296517,57.344041 h 0.384467 v -0.35863 h -0.384467 v -0.397903 h -0.371033 v 0.397903 h -0.384467 v 0.35863 h 0.384467 v 0.401005 h 0.371033 z"
+         id="path946" />
+    </g>
+    <g
+       aria-label="T "
+       id="text4554-8"
+       style="fill:#c649f9">
+      <path
+         d="m 47.452149,59.648582 v -2.126975 h 0.717259 v -0.694522 h -2.302672 v 0.694522 h 0.717259 v 2.126975 z"
+         id="path943" />
+    </g>
+  </g>
+</svg>
