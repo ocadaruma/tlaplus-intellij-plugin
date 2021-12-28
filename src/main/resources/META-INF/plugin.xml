@@ -137,9 +137,6 @@
         <lang.syntaxHighlighterFactory
           language="TLA+ code fragment"
           implementationClass="com.mayreh.intellij.plugin.tlaplus.fragment.TLAplusFragmentSyntaxHighlighterFactory"/>
-<!--        <completion.contributor-->
-<!--          language="TLA+"-->
-<!--          implementationClass="com.mayreh.intellij.plugin.fragment"/>-->
         <!-- Reuse same brace matcher as TLA+ -->
         <lang.braceMatcher
           language="TLA+ code fragment"
@@ -154,18 +151,32 @@
                 class="com.mayreh.intellij.plugin.tlaplus.ide.actions.PlusCalTranslateAction"
                 text="Translate PlusCal"
                 description="Translate PlusCal algorithm into TLA+">
-            <add-to-group group-id="CodeMenu" anchor="last"/>
-            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </action>
+        <action id="com.mayreh.EvaluateExpressionOnModule"
+                class="com.mayreh.intellij.plugin.tlaplus.ide.actions.EvaluateExpressionOnModuleAction"
+                text="Evaluate Expression on Module"
+                description="Evaluate constant TLA+ expression on module">
         </action>
         <action id="com.mayreh.EvaluateExpression"
                 class="com.mayreh.intellij.plugin.tlaplus.ide.actions.EvaluateExpressionAction"
                 text="Evaluate Expression"
                 description="Evaluate constant TLA+ expression">
-            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
         </action>
         <action id="com.mayreh.NewTLAplusFile"
                 class="com.mayreh.intellij.plugin.tlaplus.ide.actions.TLAplusCreateFileAction">
             <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFile"/>
         </action>
+
+        <group id="com.mayreh.Tools"
+               icon="/icons/tlaplus.svg"
+               text="TLA+"
+               popup="true">
+            <reference id="com.mayreh.TranslatePlusCal"/>
+            <reference id="com.mayreh.EvaluateExpressionOnModule"/>
+            <reference id="com.mayreh.EvaluateExpression"/>
+
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </group>
     </actions>
 </idea-plugin>
