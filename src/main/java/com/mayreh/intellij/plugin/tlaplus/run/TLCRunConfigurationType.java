@@ -2,7 +2,7 @@ package com.mayreh.intellij.plugin.tlaplus.run;
 
 import com.intellij.execution.configurations.ConfigurationTypeBase;
 import com.intellij.execution.configurations.ConfigurationTypeUtil;
-import com.intellij.icons.AllIcons.General;
+import com.mayreh.intellij.plugin.icons.TLAplusIcons;
 
 public class TLCRunConfigurationType extends ConfigurationTypeBase {
     public static final String ID = "TLC";
@@ -11,7 +11,7 @@ public class TLCRunConfigurationType extends ConfigurationTypeBase {
         super("TLCRunConfiguration",
               ID,
                 "TLC run configuration",
-              General.Information);
+              TLAplusIcons.TLA_PLUS);
 
         addFactory(new TLCConfigurationFactory(this));
     }

@@ -143,12 +143,12 @@ public class ExpressionEvaluator {
     private static class Runner extends Writer {
         private final FilenameResolver resolver;
         private final StringWriter underlying;
-        private boolean enabled;
+        private boolean outputEnabled;
 
         Runner(FilenameResolver resolver) {
             this.resolver = resolver;
             underlying = new StringWriter();
-            enabled = true;
+            outputEnabled = true;
         }
 
         Result run(String opName) {
@@ -163,7 +163,7 @@ public class ExpressionEvaluator {
                 // PrintT will be output on parsing (when instantiating tool above).
                 // We disable output right before evaluating the expression to suppress redundant output
                 // on evaluation
-                enabled = false;
+                outputEnabled = false;
                 value = ((tlc2.value.impl.Value) tool.eval(valueNode.getBody())).toString();
             } catch (EvalException e) {
                 errors.add(e.getMessage());
@@ -185,7 +185,7 @@ public class ExpressionEvaluator {
 
         @Override
         public void write(char[] cbuf, int off, int len) {
-            if (enabled) {
+            if (outputEnabled) {
                 underlying.write(cbuf, off, len);
             }
         }
