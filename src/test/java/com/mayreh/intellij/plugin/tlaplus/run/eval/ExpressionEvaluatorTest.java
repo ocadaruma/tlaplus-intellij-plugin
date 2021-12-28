@@ -53,4 +53,10 @@ public class ExpressionEvaluatorTest {
         Result result = ExpressionEvaluator.evaluate(ctx, "T");
         assertEquals(new Result("55301\nTRUE", Collections.emptyList()), result);
     }
+
+    @Test
+    public void testPrintWithoutContext() {
+        Result result = ExpressionEvaluator.evaluate(null, "PrintT(3)");
+        assertEquals(new Result("3\nTRUE", Collections.emptyList()), result);
+    }
 }

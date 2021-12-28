@@ -28,6 +28,7 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModule;
 import com.mayreh.intellij.plugin.tlaplus.run.eval.Context;
 import com.mayreh.intellij.plugin.tlaplus.run.eval.DummyModule;
 import com.mayreh.intellij.plugin.tlaplus.run.eval.EvaluateExpressionDialog;
+import com.mayreh.intellij.plugin.util.TLAplusTreeUtil;
 
 public class EvaluateExpressionAction extends TLAplusActionBase {
     @Override
@@ -75,10 +76,14 @@ public class EvaluateExpressionAction extends TLAplusActionBase {
                         .createFileFromText(dummyFileName,
                                             TLAplusFragmentLanguage.INSTANCE,
                                             text);
-                // TODO add comment why we can't use source module itself as context
-                TLAplusModule dummyModule = PsiTreeUtil.findChildOfType(dummyModuleFile, TLAplusModule.class);
-                if (dummyModule != null && context != null) {
-                    fragment.setModule(dummyModule);
+
+                // We can't set currentModule as the fragment's module directory because:
+                // - currentModule's local definitions (e.g. LOCAL operators) shouldn't be appeared in
+                //   completion candidates because they can't be referred when evaluating an expression (i.e.
+                //   it creates dummy module that extends currentModule, so only can refer public definitions).
+                //   We set dummy module here to resolve references in same logic as expression evaluation.
+                TLAplusTreeUtil.findChildOfType(dummyModuleFile, TLAplusModule.class).ifPresent(fragment::setModule);
+                if (context != null) {
                     dummyModuleFile.setDirectory(context.second);
                 }
                 return fragment;
