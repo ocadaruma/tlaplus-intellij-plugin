@@ -43,19 +43,12 @@ public class EvaluateExpressionAction extends DumbAwareAction {
                     @Nullable PsiElement elementContext,
                     boolean isPhysical) {
 
-                StringBuilder moduleBuilder = new StringBuilder();
-                moduleBuilder
-                        .append("---- MODULE ").append(DummyModule.moduleName()).append(" ----").append('\n')
-                        .append("EXTENDS Reals,Sequences,Bags,FiniteSets,TLC,Randomization");
-                moduleBuilder.append('\n');
-                moduleBuilder.append("====");
-
                 String dummyFileName = DummyModule.moduleName() + ".tla";
                 TLAplusFile dummyModuleFile = (TLAplusFile) PsiFileFactory
                         .getInstance(project)
                         .createFileFromText(dummyFileName,
                                             TLAplusLanguage.INSTANCE,
-                                            moduleBuilder.toString());
+                                            DummyModule.builder().forCompletion().buildAsString());
 
                 TLAplusFragmentFile fragment = (TLAplusFragmentFile) PsiFileFactory
                         .getInstance(project)

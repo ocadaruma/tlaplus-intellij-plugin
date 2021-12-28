@@ -84,7 +84,7 @@ public class ExpressionEvaluator {
             Path dummyCfgFile = tmpDir.resolve(DummyModule.moduleName() + ".cfg");
 
             FileUtil.writeToFile(dummyModuleFile.toFile(), createDummyModule(context, expression));
-            FileUtil.writeToFile(dummyCfgFile.toFile(), createDummyConfig());
+            FileUtil.writeToFile(dummyCfgFile.toFile(), DummyModule.configFileContent());
 
             final Path moduleDirectory;
             if (context != null) {
@@ -111,30 +111,13 @@ public class ExpressionEvaluator {
     }
 
     private static String createDummyModule(@Nullable Context context, String expression) {
-        StringBuilder moduleBuilder = new StringBuilder();
-        moduleBuilder
-                .append("---- MODULE ").append(DummyModule.moduleName()).append(" ----").append('\n')
-                .append("EXTENDS Reals,Sequences,Bags,FiniteSets,TLC,Randomization");
+        DummyModule.Builder builder = DummyModule
+                .builder()
+                .setExpression(expression);
         if (context != null) {
-            moduleBuilder.append(',' + context.moduleName());
+            builder.extend(context.moduleName());
         }
-        moduleBuilder.append('\n');
-        moduleBuilder
-                .append("VARIABLE replvar").append('\n')
-                .append("replinit == replvar = 0").append('\n')
-                .append("replnext == replvar' = 0").append('\n')
-                .append("replvalue == ").append(expression).append('\n');
-        moduleBuilder.append("====");
-
-        return moduleBuilder.toString();
-    }
-
-    private static String createDummyConfig() {
-        StringBuilder cfgBuilder = new StringBuilder();
-        cfgBuilder
-                .append("INIT replinit").append('\n')
-                .append("NEXT replnext");
-        return cfgBuilder.toString();
+        return builder.buildAsString();
     }
 
     private static void delete(Path dir) {

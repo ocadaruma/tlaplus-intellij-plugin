@@ -54,22 +54,17 @@ public class EvaluateExpressionOnModuleAction extends TLAplusActionBase {
                     @Nullable PsiElement elementContext,
                     boolean isPhysical) {
 
-                StringBuilder moduleBuilder = new StringBuilder();
-                moduleBuilder
-                        .append("---- MODULE ").append(DummyModule.moduleName()).append(" ----").append('\n')
-                        .append("EXTENDS Reals,Sequences,Bags,FiniteSets,TLC,Randomization");
+                DummyModule.Builder moduleBuilder = DummyModule.builder().forCompletion();
                 if (currentModuleName != null) {
-                    moduleBuilder.append(',' + currentModuleName);
+                    moduleBuilder.extend(currentModuleName);
                 }
-                moduleBuilder.append('\n');
-                moduleBuilder.append("====");
 
                 String dummyFileName = DummyModule.moduleName() + ".tla";
                 TLAplusFile dummyModuleFile = (TLAplusFile) PsiFileFactory
                         .getInstance(project)
                         .createFileFromText(dummyFileName,
                                             TLAplusLanguage.INSTANCE,
-                                            moduleBuilder.toString());
+                                            moduleBuilder.buildAsString());
 
                 TLAplusFragmentFile fragment = (TLAplusFragmentFile) PsiFileFactory
                         .getInstance(project)
