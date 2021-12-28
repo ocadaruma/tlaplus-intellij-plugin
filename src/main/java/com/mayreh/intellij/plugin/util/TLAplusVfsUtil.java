@@ -23,8 +23,4 @@ public class TLAplusVfsUtil {
         }
         return Optional.ofNullable(PsiManager.getInstance(project).findFile(file));
     }
-
-//    public static Optional<PsiFile> findFile(@NotNull Project project, @Nullable URL url) {
-//
-//    }
 }
