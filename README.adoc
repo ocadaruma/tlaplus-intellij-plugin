@@ -10,17 +10,22 @@ This plugin is heavily inspired by https://github.com/alygin/vscode-tlaplus[TLA+
 
 == Features
 
-* [x] Syntax highlighting
-* [x] Run TLC
-** Current limitations:
-*** You have to write TLC config file (`.cfg`) directly instead of GUI like toolbox
-*** TLC's command line args are not configurable
-*** Error trace exploration is not supported
-* [x] Find usages (Go to declaration)
-* [x] Code completion
-* [x] PlusCal (Translate into TLA+)
+=== Syntax highlighting
+=== Run TLC model checker
 
-== Screenshots
+image::images/tlc.gif["TLC model checker",480]
 
-image::images/context_menu.png["Context menu"480]
-image::images/run_console.png["Run console",480]
+==== Current limitations:
+* You have to write TLC config file (`.cfg`) directly instead of GUI like toolbox
+* TLC's command line args are not configurable
+* Error trace exploration is not supported
+
+=== Find usages (Go to declaration)
+=== Code completion
+=== PlusCal (Translate into TLA+)
+
+image::images/pluscal.gif["PlusCal translation",480]
+
+=== Evaluate expression
+
+image::images/evaluate_expression.gif["Evaluate expression",480]
