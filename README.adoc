@@ -11,6 +11,8 @@ This plugin is heavily inspired by https://github.com/alygin/vscode-tlaplus[TLA+
 == Features
 
 === Syntax highlighting
+* Supports syntax highlighting for TLA+, PlusCal, TLC cfg file
+
 === Run TLC model checker
 
 image::images/tlc.gif["TLC model checker",480]
@@ -21,7 +23,11 @@ image::images/tlc.gif["TLC model checker",480]
 * Error trace exploration is not supported
 
 === Find usages (Go to declaration)
+* References are searched across different modules including standard modules
+
 === Code completion
+* Support basic keyword completion and variable/constant/operator name completion
+
 === PlusCal (Translate into TLA+)
 
 image::images/pluscal.gif["PlusCal translation",480]
