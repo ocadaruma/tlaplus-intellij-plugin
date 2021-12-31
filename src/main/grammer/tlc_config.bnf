@@ -51,10 +51,10 @@
 
 config ::= statement+
 
-statement ::= singular_statement
-            | check_deadlock_statement
-            | plural_statement
-            | constant_decl
+private statement ::= singular_statement
+                    | check_deadlock_statement
+                    | plural_statement
+                    | constant_decl
 
 singular_statement ::= ('SPECIFICATION'
                       | 'INIT'
@@ -62,9 +62,9 @@ singular_statement ::= ('SPECIFICATION'
                       | 'VIEW'
                       | 'SYMMETRY'
                       | 'ALIAS'
-                      | 'POSTCONDITION') 'identifier'
+                      | 'POSTCONDITION') 'identifier' { pin = 1 }
 
-check_deadlock_statement ::= 'CHECK_DEADLOCK' ('TRUE' | 'FALSE')
+check_deadlock_statement ::= 'CHECK_DEADLOCK' ('TRUE' | 'FALSE') { pin = 1 }
 
 plural_statement ::= ('CONSTRAINT'
                     | 'CONSTRAINTS'
@@ -73,9 +73,9 @@ plural_statement ::= ('CONSTRAINT'
                     | 'INVARIANT'
                     | 'INVARIANTS'
                     | 'PROPERTY'
-                    | 'PROPERTIES') 'identifier'*
+                    | 'PROPERTIES') 'identifier'* { pin = 1 }
 
-constant_decl ::= ('CONSTANT' | 'CONSTANTS') (substitution | assignment)*
+constant_decl ::= ('CONSTANT' | 'CONSTANTS') (substitution | assignment)* { pin = 1 }
 
 substitution ::= 'identifier' '<-' ('identifier' | reserved_keywords)
 

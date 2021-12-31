@@ -92,6 +92,9 @@
         <lang.quoteHandler
           language="TLC config"
           implementationClass="com.mayreh.intellij.plugin.tlc.TLCConfigQuoteHandler"/>
+        <completion.contributor
+          language="TLC config"
+          implementationClass="com.mayreh.intellij.plugin.tlc.TLCConfigCompletionContributor"/>
         <stepsBeforeRunProvider implementation="com.mayreh.intellij.plugin.tlaplus.run.TLCBeforeRunTaskProvider"/>
 
         <!-- PlusCal -->
