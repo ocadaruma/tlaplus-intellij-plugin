@@ -1,5 +1,6 @@
 package com.mayreh.intellij.plugin.tlaplus.run.ui.errortrace;
 
+import static com.mayreh.intellij.plugin.tlaplus.run.ui.errortrace.ErrorTraceModel.VALUE_COLUMN_INDEX;
 import static com.mayreh.intellij.plugin.tlaplus.run.ui.errortrace.ValueDiffType.Added;
 import static com.mayreh.intellij.plugin.tlaplus.run.ui.errortrace.ValueDiffType.Modified;
 import static com.mayreh.intellij.plugin.tlaplus.run.ui.errortrace.ValueDiffType.Unmodified;
@@ -30,8 +31,6 @@ import com.mayreh.intellij.plugin.tlaplus.run.ui.ActionFormulaLinkListener;
 import com.mayreh.intellij.plugin.util.Optionalx;
 
 public class ErrorTraceTreeTable extends TreeTable {
-    private static final int VALUE_COLUMN_INDEX = 1;
-
     private final ErrorTraceModel treeTableModel;
 
     ErrorTraceTreeTable(ErrorTraceModel treeTableModel,

@@ -23,7 +23,7 @@ class ValueColumnCellRenderer extends IconTableCellRenderer<TraceVariableValueWr
             case Modified:
                 text = "M";
                 // We prefer UNKNOWN rather than FileStatus.MODIFIED for better visibility
-                foreground = FileStatus.UNKNOWN.getColor();
+                foreground = FileStatus.MODIFIED.getColor();
                 break;
             case Added:
                 text = "A";
@@ -36,7 +36,7 @@ class ValueColumnCellRenderer extends IconTableCellRenderer<TraceVariableValueWr
                 break;
         }
         TextIcon icon = new TextIcon(text, foreground, null, 1);
-        icon.setFont(RelativeFont.NORMAL.family(Font.MONOSPACED).derive(getFont()));
+        icon.setFont(RelativeFont.BOLD.family(Font.MONOSPACED).derive(getFont()));
         return icon;
     }
 }
