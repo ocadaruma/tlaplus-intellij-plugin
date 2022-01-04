@@ -2,6 +2,7 @@ package com.mayreh.intellij.plugin.tlaplus.psi.ext;
 
 import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPsiUtils.isLocal;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -63,7 +64,7 @@ public class TLAplusReference extends PsiReferenceBase<TLAplusReferenceElement> 
                         .findFirst()
                         .orElse(null);
                 if (module != null) {
-                    return module.publicDefinitions(module);
+                    return module.publicDefinitions(new HashSet<>());
                 }
             }
         }
@@ -108,7 +109,7 @@ public class TLAplusReference extends PsiReferenceBase<TLAplusReferenceElement> 
             return Stream.empty();
         }
 
-        return resolvedModule.publicDefinitions(resolvedModule);
+        return resolvedModule.publicDefinitions(new HashSet<>());
     }
 
     private static @Nullable TLAplusModule resolveInstancePrefix(

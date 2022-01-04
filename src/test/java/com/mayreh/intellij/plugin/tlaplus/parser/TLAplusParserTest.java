@@ -43,4 +43,8 @@ public class TLAplusParserTest extends ParserTestCaseBase {
     public void test_union() {
         doTest();
     }
+
+    public void test_NestedPrefixOpApply() {
+        doTest();
+    }
 }
