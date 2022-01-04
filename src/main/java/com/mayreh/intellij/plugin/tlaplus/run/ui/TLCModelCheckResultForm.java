@@ -45,8 +45,8 @@ import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCError.Severity
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCFinished;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCStart;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.TLCSuccess;
-import com.mayreh.intellij.plugin.tlaplus.run.ui.ErrorTraceTreeTable.StateRootNode;
 import com.mayreh.intellij.plugin.tlaplus.run.ui.TLCCoverageTable.TLCCoverageTableModel;
+import com.mayreh.intellij.plugin.tlaplus.run.ui.errortrace.ErrorTraceTreeTable;
 
 import lombok.RequiredArgsConstructor;
 
@@ -192,15 +192,15 @@ public class TLCModelCheckResultForm {
         }
         if (event instanceof SimpleErrorTrace) {
             SimpleErrorTrace trace = (SimpleErrorTrace) event;
-            errorTraceTree.addState(new StateRootNode(trace), trace.variables());
+            errorTraceTree.addState(trace, trace.variables());
         }
         if (event instanceof SpecialErrorTrace) {
             SpecialErrorTrace trace = (SpecialErrorTrace) event;
-            errorTraceTree.addState(new StateRootNode(trace), trace.variables());
+            errorTraceTree.addState(trace, trace.variables());
         }
         if (event instanceof BackToStateErrorTrace) {
             BackToStateErrorTrace trace = (BackToStateErrorTrace) event;
-            errorTraceTree.addState(new StateRootNode(trace), trace.variables());
+            errorTraceTree.addState(trace, trace.variables());
         }
     }
 
