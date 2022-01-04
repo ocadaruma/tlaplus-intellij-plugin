@@ -48,6 +48,17 @@ public class TLAplusReferenceTest extends BasePlatformTestCase {
         Assert.assertEquals("InstancePrefix_C", name.currentModule().getModuleHeader().getName());
     }
 
+    /*
+     * Though cyclic module reference isn't allowed in TLA+ (SANY will report an error),
+     * we should confirm that reference is resolved properly without causing stack overflow.
+     */
+    public void testCyclicModuleReference() {
+        PsiReference reference = getReferenceAtCaret("Cycle_A.tla", "Cycle_B.tla", "Cycle_C.tla");
+
+        TLAplusModuleHeader name = assertInstanceOf(reference.resolve(), TLAplusModuleHeader.class);
+        Assert.assertEquals("Cycle_B", name.getName());
+    }
+
     public void testCompletionStandardModules() {
         List<String> elements = getLookupElementStringsAtCaret("StandardModules.tla");
         Assert.assertNotNull(elements);

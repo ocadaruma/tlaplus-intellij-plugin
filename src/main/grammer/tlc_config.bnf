@@ -62,7 +62,18 @@ singular_statement ::= ('SPECIFICATION'
                       | 'VIEW'
                       | 'SYMMETRY'
                       | 'ALIAS'
-                      | 'POSTCONDITION') 'identifier' { pin = 1 }
+                      | 'POSTCONDITION') operator_reference { pin = 1 }
+
+constant_reference ::= 'identifier' {
+  implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusReferenceElement"
+  mixin = "com.mayreh.intellij.plugin.tlc.psi.ext.TLCConfigIdentifierImplMixin"
+}
+
+operator_reference ::= 'identifier' {
+  implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusReferenceElement"
+  mixin = "com.mayreh.intellij.plugin.tlc.psi.ext.TLCConfigIdentifierImplMixin"
+}
+
 
 check_deadlock_statement ::= 'CHECK_DEADLOCK' ('TRUE' | 'FALSE') { pin = 1 }
 
@@ -73,15 +84,21 @@ plural_statement ::= ('CONSTRAINT'
                     | 'INVARIANT'
                     | 'INVARIANTS'
                     | 'PROPERTY'
-                    | 'PROPERTIES') 'identifier'* { pin = 1 }
+                    | 'PROPERTIES') operator_reference* { pin = 1 }
 
-constant_decl ::= ('CONSTANT' | 'CONSTANTS') (substitution | assignment)* { pin = 1 }
+constant_decl ::= ('CONSTANT' | 'CONSTANTS') (constant_body)* { pin = 1 }
 
-substitution ::= 'identifier' '<-' ('identifier' | reserved_keywords)
+// We use bit tricky rule (instead of including 'constant_reference' in substitution or assignment directly)
+// here so that input text is immediately parsed as constant_reference and can get variants for completion
+// (If we use include constant_reference in subst/assignment, it can not be parsed until we input <- or =, so
+// lhs cannot be completed)
+private constant_body ::= constant_reference (substitution | assignment) { pin = 1 }
 
-assignment ::= 'identifier' '=' assignment_value
+substitution ::= '<-' (operator_reference | reserved_keywords) { pin = 1 }
 
-private assignment_value ::= 'identifier'
+assignment ::= '=' assignment_value { pin = 1 }
+
+private assignment_value ::= operator_reference
                            | reserved_keywords
                            | 'number'
                            | 'string'

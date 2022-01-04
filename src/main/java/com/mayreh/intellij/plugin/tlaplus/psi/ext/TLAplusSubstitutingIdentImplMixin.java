@@ -13,6 +13,7 @@ public abstract class TLAplusSubstitutingIdentImplMixin extends TLAplusElementIm
 
     @Override
     public PsiReference getReference() {
-        return new TLAplusReference<>(this);
+        // TODO: Filter only substitutable names
+        return new TLAplusReference(this, e -> true);
     }
 }

@@ -13,6 +13,6 @@ public abstract class TLAplusUnqualifiedIdentImplMixin extends TLAplusElementImp
 
     @Override
     public PsiReference getReference() {
-        return new TLAplusReference<>(this);
+        return new TLAplusReference(this, e -> true);
     }
 }

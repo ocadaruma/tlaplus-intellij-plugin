@@ -6,6 +6,7 @@ import static com.mayreh.intellij.plugin.util.Optionalx.asInstanceOf;
 
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiPredicate;
@@ -43,21 +44,27 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
         Stream.Builder<Stream<TLAplusNamedElement>> streams = Stream.builder();
 
         streams.add(definitions((container, name) -> !isForwardReference(placement, name)));
-        streams.add(modulesFromExtends().flatMap(TLAplusModuleContext::publicDefinitions));
+        streams.add(modulesFromExtends().flatMap(m -> m.publicDefinitions(this)));
         // Definitions in the module instantiated by INSTANCE only visible
         // after INSTANCE declaration.
         streams.add(modulesFromInstantiation(i -> i.getTextOffset() <= placement.getTextOffset())
-                            .flatMap(TLAplusModuleContext::publicDefinitions));
+                            .flatMap(m -> m.publicDefinitions(this)));
 
         return streams.build().flatMap(Function.identity());
     }
 
     @Override
-    public @NotNull Stream<TLAplusNamedElement> publicDefinitions() {
+    public @NotNull Stream<TLAplusNamedElement> publicDefinitions(TLAplusModule searchRoot) {
         Stream.Builder<Stream<TLAplusNamedElement>> streams = Stream.builder();
         streams.add(definitions((container, name) -> !isLocal(container)));
-        streams.add(modulesFromExtends().flatMap(TLAplusModuleContext::publicDefinitions));
-        streams.add(modulesFromInstantiation(i -> !isLocal(i)).flatMap(TLAplusModuleContext::publicDefinitions));
+        streams.add(modulesFromExtends()
+                            // Filter out searchRoot from search targets to prevent
+                            // infinite recursion when a module contains cyclic module reference
+                            .filter(m -> !Objects.equals(searchRoot.getModuleHeader().getName(), m.getModuleHeader().getName()))
+                            .flatMap(m -> m.publicDefinitions(searchRoot)));
+        streams.add(modulesFromInstantiation(i -> !isLocal(i))
+                            .filter(m -> !Objects.equals(searchRoot.getModuleHeader().getName(), m.getModuleHeader().getName()))
+                            .flatMap(m -> m.publicDefinitions(searchRoot)));
 
         return streams.build().flatMap(Function.identity());
     }

@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiReference;
+import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModuleHeader;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModuleRef;
 
 public abstract class TLAplusModuleRefImplMixin extends TLAplusElementImpl implements TLAplusModuleRef {
@@ -13,6 +14,6 @@ public abstract class TLAplusModuleRefImplMixin extends TLAplusElementImpl imple
 
     @Override
     public PsiReference getReference() {
-        return new TLAplusReference<>(this);
+        return new TLAplusReference(this, e -> e instanceof TLAplusModuleHeader);
     }
 }

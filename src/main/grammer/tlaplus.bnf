@@ -509,7 +509,7 @@ instance ::= clear_indent 'INSTANCE' clear_indent module_ref (clear_indent 'WITH
 private substitution ::= (clear_indent substituting_ident
                         | prefix_op
                         | infix_op_outer
-                        | postfix_op) clear_indent '<-' op_suite
+                        | postfix_op) clear_indent '<-' op_suite { pin = 1 }
 
 substituting_ident ::= 'identifier'
 {

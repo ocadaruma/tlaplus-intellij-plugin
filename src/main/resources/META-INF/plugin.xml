@@ -66,6 +66,8 @@
         <lang.quoteHandler
           language="TLA+"
           implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusQuoteHandler"/>
+        <psi.referenceContributor
+          implementation="com.mayreh.intellij.plugin.tlaplus.TLAplusReferenceContributor"/>
         <notificationGroup id="TLA+ plugin" displayType="BALLOON"/>
 
         <!-- TLC config -->

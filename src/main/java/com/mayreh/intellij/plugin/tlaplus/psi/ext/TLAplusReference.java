@@ -13,24 +13,24 @@ import org.jetbrains.annotations.Nullable;
 
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.PsiReferenceBase;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.ArrayUtilRt;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusGeneralIdentifier;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusInstance;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusInstancePrefix;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModule;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModuleDefinition;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModuleRef;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPsiFactory;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusSubstitutingIdent;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusUnqualifiedIdent;
 
-public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiReferenceBase<T> {
-    public TLAplusReference(@NotNull T element) {
+public class TLAplusReference extends PsiReferenceBase<TLAplusReferenceElement> {
+    private final Predicate<TLAplusNamedElement> variantFilter;
+
+    public TLAplusReference(@NotNull TLAplusReferenceElement element,
+                            Predicate<TLAplusNamedElement> variantFilter) {
         super(element, new TextRange(0, element.getTextLength()));
+        this.variantFilter = variantFilter;
     }
 
     @Override
@@ -40,18 +40,17 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
         return getElement();
     }
 
-    // TODO: Change icons by modules/constants/variables/... etc
-    @Override
-    public Object @NotNull [] getVariants() {
+    /**
+     * Returns the stream of variants that are available at the placement.
+     * This will return all variants without taking element type into account.
+     * (e.g. When we have `INSTANCE M`, M's variants should be limited to only module names but
+     * this method will return all variants including operator/constant etc.)
+     * You have to filter out unnecessary variants by proper variantFilter.
+     */
+    private Stream<? extends TLAplusNamedElement> variants() {
         TLAplusModule currentModule = getElement().currentModule();
         if (currentModule == null) {
-            return ArrayUtilRt.EMPTY_OBJECT_ARRAY;
-        }
-
-        if (getElement() instanceof TLAplusUnqualifiedIdent) {
-            return unqualifiedIdentVariants(currentModule, (TLAplusUnqualifiedIdent) getElement())
-                    .map(PsiNamedElement::getName)
-                    .toArray();
+            return Stream.empty();
         }
 
         if (getElement() instanceof TLAplusSubstitutingIdent) {
@@ -64,108 +63,41 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
                         .findFirst()
                         .orElse(null);
                 if (module != null) {
-                    return module.publicDefinitions()
-                                 .map(PsiNamedElement::getName)
-                                 .toArray();
+                    return module.publicDefinitions(module);
                 }
             }
         }
 
-        if (getElement() instanceof TLAplusModuleRef) {
-            return currentModule.availableModules()
-                                .flatMap(m -> Optional.ofNullable(m.getModuleHeader().getName()).stream())
-                                .toArray();
-        }
+        return identifierVariants(currentModule, getElement());
+    }
 
-        return ArrayUtilRt.EMPTY_OBJECT_ARRAY;
+    // TODO: Change icons by modules/constants/variables/... etc
+    @Override
+    public Object @NotNull [] getVariants() {
+        return variants()
+                .filter(variantFilter)
+                .flatMap(e -> Optional.ofNullable(e.getName()).stream())
+                .toArray();
     }
 
     @Override
     public @Nullable PsiElement resolve() {
-        TLAplusModule currentModule = getElement().currentModule();
-        if (currentModule == null) {
-            return null;
-        }
-
-        if (getElement() instanceof TLAplusUnqualifiedIdent) {
-            return unqualifiedIdentVariants(currentModule, (TLAplusUnqualifiedIdent) getElement())
-                    .filter(name -> getElement().getReferenceName().equals(name.getName()))
-                    .findFirst()
-                    .orElse(null);
-        }
-
-        if (getElement() instanceof TLAplusSubstitutingIdent) {
-            TLAplusSubstitutingIdent ident = (TLAplusSubstitutingIdent) getElement();
-            TLAplusInstance instance = PsiTreeUtil.getParentOfType(ident, TLAplusInstance.class);
-            if (instance != null && instance.getModuleRef() != null) {
-                TLAplusModule module = currentModule
-                        .availableModules()
-                        .filter(m -> instance.getModuleRef().getReferenceName().equals(m.getModuleHeader().getName()))
-                        .findFirst()
-                        .orElse(null);
-                if (module != null) {
-                    return module.publicDefinitions()
-                                 .filter(name -> ident.getReferenceName().equals(name.getName()))
-                                 .findFirst()
-                                 .orElse(null);
-                }
-            }
-        }
-
-        if (getElement() instanceof TLAplusModuleRef) {
-            // If the module is a plain module (i.e. without instantiation), just resolved to its module header.
-            TLAplusModule resolvedModule = currentModule
-                    .availableModules()
-                    .filter(m -> getElement().getReferenceName().equals(m.getModuleHeader().getName()))
-                    .findFirst()
-                    .orElse(null);
-            if (resolvedModule != null) {
-                return resolvedModule.getModuleHeader();
-            }
-
-            if (getElement().getParent() instanceof TLAplusInstancePrefix) {
-                TLAplusInstancePrefix instancePrefix = (TLAplusInstancePrefix) getElement().getParent();
-                int index = instancePrefix.getModuleRefList().indexOf(getElement());
-
-                if (index == 0) {
-                    // For first moduleReference, it should be resolved locally as like other element.
-                    return localVariants(getElement())
-                            .filter(name -> getElement().getReferenceName().equals(name.getName()))
-                            .findFirst()
-                            .orElse(null);
-                }
-                if (index > 0) {
-                    // Otherwise, search scope should be narrowed first and should resolve in that scope.
-                    TLAplusModule scope = resolveInstancePrefix(
-                            currentModule, instancePrefix.getModuleRefList().subList(0, index));
-                    if (scope != null) {
-                        return scope.publicDefinitions()
-                                    .filter(name -> getElement().getReferenceName().equals(name.getName()))
-                                    .findFirst()
-                                    .orElse(null);
-                    }
-                }
-            } else {
-                // If the module is not inside instance prefix, just resolve as like other element.
-                return localVariants(getElement())
-                        .filter(name -> getElement().getReferenceName().equals(name.getName()))
-                        .findFirst()
-                        .orElse(null);
-            }
-        }
-
-        return null;
+        return variants()
+                .filter(variantFilter)
+                .filter(e -> getElement().getReferenceName().equals(e.getName()))
+                .findFirst()
+                .orElse(null);
     }
 
-    private static @NotNull Stream<TLAplusNamedElement> unqualifiedIdentVariants(
-            TLAplusModule currentModule, TLAplusUnqualifiedIdent element) {
+    private static @NotNull Stream<TLAplusNamedElement> identifierVariants(
+            TLAplusModule currentModule, TLAplusElement element) {
         TLAplusGeneralIdentifier generalIdentifier = null;
         if (element.getParent() instanceof TLAplusGeneralIdentifier) {
             generalIdentifier = (TLAplusGeneralIdentifier) element.getParent();
         }
 
         if (generalIdentifier == null || generalIdentifier.getInstancePrefix() == null) {
-            return localVariants(element);
+            return unqualifiedVariants(element);
         }
 
         TLAplusModule resolvedModule = resolveInstancePrefix(
@@ -176,7 +108,7 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
             return Stream.empty();
         }
 
-        return resolvedModule.publicDefinitions();
+        return resolvedModule.publicDefinitions(resolvedModule);
     }
 
     private static @Nullable TLAplusModule resolveInstancePrefix(
@@ -232,7 +164,7 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
         Stream.Builder<Stream<TLAplusModule>> streams = Stream.builder();
 
         streams.add(
-                localVariants(placement)
+                unqualifiedVariants(placement)
                         .filter(moduleRefNameFilter)
                         .flatMap(e -> {
                             if (e.getParent() == null) {
@@ -265,7 +197,7 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
     /**
      * Returns the stream of variants that are available at the placement.
      */
-    private static @NotNull Stream<TLAplusNamedElement> localVariants(TLAplusElement placement) {
+    private static @NotNull Stream<TLAplusNamedElement> unqualifiedVariants(TLAplusElement placement) {
         TLAplusNameContext context = null;
         if (placement.getContext() instanceof TLAplusNameContext) {
             context = (TLAplusNameContext) placement.getContext();
@@ -273,7 +205,16 @@ public class TLAplusReference<T extends TLAplusReferenceElement> extends PsiRefe
 
         Stream.Builder<Stream<TLAplusNamedElement>> streams = Stream.builder();
         while (context != null) {
+            // add all local names into the variants
             streams.add(context.localDefinitions(placement));
+            // available module names are kind of "names" implicitly defined
+            // by directory structure and standard modules.
+            // so we add them into the variants as well.
+            if (context instanceof TLAplusModuleContext) {
+                streams.add(((TLAplusModuleContext) context)
+                                    .availableModules()
+                                    .map(TLAplusModule::getModuleHeader));
+            }
 
             if (context.getContext() instanceof TLAplusNameContext) {
                 context = (TLAplusNameContext) context.getContext();

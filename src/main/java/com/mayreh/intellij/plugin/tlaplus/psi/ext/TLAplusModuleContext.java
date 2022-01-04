@@ -12,8 +12,10 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement;
 public interface TLAplusModuleContext extends TLAplusNameContext {
     /**
      * Returns the stream of public definitions.
+     * searchRoot will be used for infinite recursion guard when a module contains
+     * cyclic module reference. (e.g. ModuleA extends ModuleB, ModuleB extends ModuleA)
      */
-    @NotNull Stream<TLAplusNamedElement> publicDefinitions();
+    @NotNull Stream<TLAplusNamedElement> publicDefinitions(TLAplusModule searchRoot);
 
     /**
      * Returns the stream of modules from search path (i.e. same directory or standard modules)

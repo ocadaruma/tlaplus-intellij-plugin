@@ -14,4 +14,10 @@ public class TLAplusTreeUtil {
             @NotNull Class<T> clazz) {
         return Optional.ofNullable(PsiTreeUtil.findChildOfType(element, clazz));
     }
+
+    public static <T extends PsiElement> boolean hasParentOfType(
+            @Nullable PsiElement element,
+            @NotNull Class<T> clazz) {
+        return PsiTreeUtil.getParentOfType(element, clazz) != null;
+    }
 }
