@@ -2,28 +2,37 @@ package com.mayreh.intellij.plugin.tlaplus.run.ui;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Font;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.swing.Icon;
+import javax.swing.JTable;
 import javax.swing.JTree;
+import javax.swing.table.TableColumn;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import com.intellij.openapi.vcs.FileStatus;
 import com.intellij.ui.ColoredTreeCellRenderer;
+import com.intellij.ui.RelativeFont;
 import com.intellij.ui.SimpleColoredComponent;
 import com.intellij.ui.SimpleTextAttributes;
+import com.intellij.ui.TextIcon;
 import com.intellij.ui.treeStructure.treetable.ListTreeTableModel;
 import com.intellij.ui.treeStructure.treetable.TreeColumnInfo;
 import com.intellij.ui.treeStructure.treetable.TreeTable;
 import com.intellij.util.ui.ColumnInfo;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.JBUI.Borders;
+import com.intellij.util.ui.UIUtil;
+import com.intellij.util.ui.table.IconTableCellRenderer;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModule;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.BackToStateErrorTrace;
@@ -43,6 +52,8 @@ import lombok.experimental.Accessors;
 
 @SuppressWarnings("rawtypes")
 class ErrorTraceTreeTable extends TreeTable {
+    private static final int VALUE_COLUMN_INDEX = 1;
+
     private final ErrorTraceModel treeTableModel;
 
     static class ErrorTraceModel extends ListTreeTableModel {
@@ -61,7 +72,7 @@ class ErrorTraceTreeTable extends TreeTable {
                         @Override
                         public Object valueOf(Object o) {
                             if (o instanceof TraceVariableNode) {
-                                return ((TraceVariableNode) o).value.asString();
+                                return ((TraceVariableNode) o).value;
                             }
                             return null;
                         }
@@ -112,21 +123,49 @@ class ErrorTraceTreeTable extends TreeTable {
         }
     }
 
+    @Value
+    @Accessors(fluent = true)
+    static class TraceVariableValueWrapper {
+        ValueDiffType diffType;
+        TraceVariableValue value;
+
+        // Should return TraceVariableValue#asString so that it will be rendered as
+        // cell text and clipboard content
+        @Override
+        public String toString() {
+            return value.asString();
+        }
+    }
+
+    enum ValueDiffType {
+        Unmodified,
+        Modified,
+        Added,
+    }
+
     static class TraceVariableNode extends DefaultMutableTreeNode {
-        private final String key;
-        private final TraceVariableValue value;
+        private final TraceVariableValueWrapper value;
 
         TraceVariableNode(String key, TraceVariableValue value) {
             super(key);
 
-            this.key = key;
-            this.value = value;
+//            int rand = new java.util.Random().nextInt(3);
+//            ValueDiffType diffType;
+//            if (rand == 2) {
+//                diffType = ValueDiffType.Unmodified;
+//            } else if (rand == 1) {
+//                diffType = ValueDiffType.Modified;
+//            } else {
+//                diffType = ValueDiffType.Added;
+//            }
+            this.value = new TraceVariableValueWrapper(diffType, value);
         }
     }
 
     ErrorTraceTreeTable(ErrorTraceModel treeTableModel,
                         @Nullable TLAplusModule module) {
         super(treeTableModel);
+
         this.treeTableModel = treeTableModel;
         setRootVisible(false);
         setTreeCellRenderer(new ErrorTraceCellRenderer(this));
@@ -159,6 +198,34 @@ class ErrorTraceTreeTable extends TreeTable {
         };
         addMouseListener(mouseListener);
         addMouseMotionListener(mouseListener);
+
+        IconTableCellRenderer renderer = new IconTableCellRenderer<TraceVariableValueWrapper>() {
+            @Override
+            protected Icon getIcon(@NotNull TraceVariableValueWrapper value, JTable table, int row) {
+                final String text;
+                final Color foreground;
+                switch (value.diffType) {
+                    case Modified:
+                        text = "M";
+                        // We prefer UNKNOWN rather than FileStatus.MODIFIED for better visibility
+                        foreground = FileStatus.UNKNOWN.getColor();
+                        break;
+                    case Added:
+                        text = "A";
+                        foreground = FileStatus.ADDED.getColor();
+                        break;
+                    default:
+                        // We fill dummy text even when unchanged to allocate same size of rectangle
+                        text = "_";
+                        foreground = UIUtil.TRANSPARENT_COLOR;
+                        break;
+                }
+                TextIcon icon = new TextIcon(text, foreground, null, 1);
+                icon.setFont(RelativeFont.NORMAL.family(Font.MONOSPACED).derive(getFont()));
+                return icon;
+            }
+        };
+        getColumnModel().getColumn(VALUE_COLUMN_INDEX).setCellRenderer(renderer);
     }
 
     ErrorTraceTreeTable(@Nullable TLAplusModule module) {
