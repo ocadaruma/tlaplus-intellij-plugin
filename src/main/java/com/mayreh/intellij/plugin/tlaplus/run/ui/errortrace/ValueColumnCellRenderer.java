@@ -22,7 +22,6 @@ class ValueColumnCellRenderer extends IconTableCellRenderer<TraceVariableValueWr
         switch (value.diffType()) {
             case Modified:
                 text = "M";
-                // We prefer UNKNOWN rather than FileStatus.MODIFIED for better visibility
                 foreground = FileStatus.MODIFIED.getColor();
                 break;
             case Added:
