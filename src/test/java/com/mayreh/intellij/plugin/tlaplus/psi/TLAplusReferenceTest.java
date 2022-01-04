@@ -66,6 +66,13 @@ public class TLAplusReferenceTest extends BasePlatformTestCase {
         Assert.assertEquals("Cycle_A", name.getName());
     }
 
+    public void testFunction() {
+        PsiReference reference = getReferenceAtCaret("Function.tla");
+
+        TLAplusBoundName name = assertInstanceOf(reference.resolve(), TLAplusBoundName.class);
+        Assert.assertEquals("bar", name.getName());
+    }
+
     public void testCompletionStandardModules() {
         List<String> elements = getLookupElementStringsAtCaret("StandardModules.tla");
         Assert.assertNotNull(elements);

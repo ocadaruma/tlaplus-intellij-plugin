@@ -17,7 +17,7 @@ public interface TLAplusNameContext extends TLAplusElement {
      * same module as the specified placement locally.
      *
      * To lookup definitions which visible to other modules publicly,
-     * you should use {@link TLAplusModuleContext#publicDefinitions()}.
+     * you should use {@link TLAplusModuleContext#publicDefinitions}.
      */
     @NotNull Stream<TLAplusNamedElement> localDefinitions(@NotNull TLAplusElement placement);
 }

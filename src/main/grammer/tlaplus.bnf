@@ -429,6 +429,7 @@ private reduced_expr ::= no_op_extension
                        | paren_expr
                        | set_expr
                        | functions_expr
+                       | function_literal_expr
                        | records_expr
                        | except_expr
                        | action_expr
@@ -596,8 +597,13 @@ set_comprehension_map ::= clear_indent '{' expr clear_indent ':' <<comma_list qu
 
 apply_argument_expr ::= expr clear_indent '[' <<comma_list expr>> clear_indent ']'
 
-functions_expr ::= clear_indent '[' <<comma_list quantifier_bound>> clear_indent '|->' expr clear_indent ']'
-                 | clear_indent '[' expr clear_indent '->' expr clear_indent ']'
+function_literal_expr ::= clear_indent '[' <<comma_list quantifier_bound>> clear_indent '|->' expr clear_indent ']'
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNameContext'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusFunctionLiteralExprImplMixin'
+}
+
+functions_expr ::= clear_indent '[' expr clear_indent '->' expr clear_indent ']'
 
 records_expr ::= clear_indent '[' <<comma_list (clear_indent 'identifier' clear_indent '|->' expr)>> clear_indent ']'
                | clear_indent '[' <<comma_list (clear_indent 'identifier' clear_indent ':' expr)>> clear_indent ']'
@@ -670,6 +676,7 @@ expr ::= if_expr
        | paren_expr
        | set_expr
        | functions_expr
+       | function_literal_expr
        | records_expr
        | infix_op_expr
        | cartesian_product_expr
