@@ -219,10 +219,6 @@ public class TLCModelCheckResultForm {
         public boolean isCellEditable(int row, int column) {
             return false;
         }
-
-        public void addRow(List<String> columns) {
-            super.addRow(new Vector<>(columns));
-        }
     }
 
     private static class StatesTableModel extends TableModel {
