@@ -3,9 +3,11 @@ package com.mayreh.intellij.plugin.tlaplus.run.parsing;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.intellij.util.Range;
+import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.RecordValue.Entry;
 
 import lombok.ToString;
 import lombok.Value;
@@ -271,6 +273,13 @@ public interface TLCEvent {
                               .collect(Collectors.joining(", ", "[", "]"));
             }
 
+            public Optional<TraceVariableValue> lookup(String key) {
+                return entries.stream()
+                              .filter(entry -> key.equals(entry.key))
+                              .map(Entry::value)
+                              .findFirst();
+            }
+
             @Override
             public boolean hasChildren() {
                 return !entries.isEmpty();
@@ -294,6 +303,13 @@ public interface TLCEvent {
                 return entries.stream()
                               .map(e -> e.key + " :> " + e.value.asString())
                               .collect(Collectors.joining(" @@ ", "(", ")"));
+            }
+
+            public Optional<TraceVariableValue> lookup(String key) {
+                return entries.stream()
+                              .filter(entry -> key.equals(entry.key))
+                              .map(Entry::value)
+                              .findFirst();
             }
 
             @Override

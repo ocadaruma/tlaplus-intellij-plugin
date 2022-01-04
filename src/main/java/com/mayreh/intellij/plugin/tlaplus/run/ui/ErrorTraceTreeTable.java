@@ -6,13 +6,14 @@ import java.awt.Font;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.swing.Icon;
 import javax.swing.JTable;
 import javax.swing.JTree;
-import javax.swing.table.TableColumn;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
@@ -45,6 +46,7 @@ import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.S
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.TraceVariable;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.TraceVariableValue;
 import com.mayreh.intellij.plugin.tlaplus.run.ui.ErrorTraceTreeTable.ErrorTraceCellRenderer.TextFragment;
+import com.mayreh.intellij.plugin.util.Optionalx;
 
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -58,6 +60,7 @@ class ErrorTraceTreeTable extends TreeTable {
 
     static class ErrorTraceModel extends ListTreeTableModel {
         private final DefaultMutableTreeNode rootNode;
+        private final List<StateRootNode> stateRootNodes = new ArrayList<>();
 
         ErrorTraceModel(DefaultMutableTreeNode rootNode, ColumnInfo[] columns) {
             super(rootNode, columns);
@@ -79,10 +82,27 @@ class ErrorTraceTreeTable extends TreeTable {
                     }
             });
         }
+
+        void addStateRoot(StateRootNode stateRootNode) {
+            rootNode.add(stateRootNode);
+            stateRootNodes.add(stateRootNode);
+        }
+
+        void nodeStructureChanged() {
+            nodeStructureChanged(rootNode);
+        }
+
+        Optional<StateRootNode> lastState() {
+            if (stateRootNodes.isEmpty()) {
+                return Optional.empty();
+            }
+            return Optional.of(stateRootNodes.get(stateRootNodes.size() - 1));
+        }
     }
 
     static class StateRootNode extends DefaultMutableTreeNode {
         private final List<TextFragment> textRepresentation;
+        private final HashMap<String, TraceVariableValue> variables = new HashMap<>();
 
         StateRootNode(ErrorTraceEvent errorTraceEvent) {
             this(textRepresentation(errorTraceEvent));
@@ -121,6 +141,15 @@ class ErrorTraceTreeTable extends TreeTable {
             }
             return fragments;
         }
+
+        void addVariableNode(TraceVariableNode node) {
+            variables.put(node.key, node.value.value);
+            add(node);
+        }
+
+        Optional<TraceVariableValue> lookupVariable(String name) {
+            return Optional.ofNullable(variables.get(name));
+        }
     }
 
     @Value
@@ -144,20 +173,12 @@ class ErrorTraceTreeTable extends TreeTable {
     }
 
     static class TraceVariableNode extends DefaultMutableTreeNode {
-        private final TraceVariableValueWrapper value;
+        public final String key;
+        public final TraceVariableValueWrapper value;
 
-        TraceVariableNode(String key, TraceVariableValue value) {
+        TraceVariableNode(String key, TraceVariableValue value, ValueDiffType diffType) {
             super(key);
-
-//            int rand = new java.util.Random().nextInt(3);
-//            ValueDiffType diffType;
-//            if (rand == 2) {
-//                diffType = ValueDiffType.Unmodified;
-//            } else if (rand == 1) {
-//                diffType = ValueDiffType.Modified;
-//            } else {
-//                diffType = ValueDiffType.Added;
-//            }
+            this.key = key;
             this.value = new TraceVariableValueWrapper(diffType, value);
         }
     }
@@ -236,13 +257,23 @@ class ErrorTraceTreeTable extends TreeTable {
      * Add a state consists of variable assignments to the error-trace tree.
      */
     void addState(StateRootNode stateRoot, List<TraceVariable> variables) {
-        treeTableModel.rootNode.add(stateRoot);
         for (TraceVariable variable : variables) {
-            TraceVariableNode variableNode = new TraceVariableNode(variable.name(), variable.value());
-            stateRoot.add(variableNode);
-            renderTraceVariableValue(variableNode, variable.value());
+            ValueDiffType diffType = treeTableModel
+                    .lastState()
+                    .map(lastState -> lastState.lookupVariable(variable.name()).map(
+                            lastValue -> lastValue.equals(variable.value()) ?
+                                         ValueDiffType.Unmodified : ValueDiffType.Modified).orElse(ValueDiffType.Added))
+                    .orElse(ValueDiffType.Unmodified);
+
+            TraceVariableNode variableNode = new TraceVariableNode(variable.name(), variable.value(), diffType);
+            stateRoot.addVariableNode(variableNode);
+            renderTraceVariableValue(
+                    variableNode,
+                    variable.value(),
+                    treeTableModel.lastState().flatMap(state -> state.lookupVariable(variable.name())));
         }
-        treeTableModel.nodeStructureChanged(treeTableModel.rootNode);
+        treeTableModel.addStateRoot(stateRoot);
+        treeTableModel.nodeStructureChanged();
     }
 
     void expandStates() {
@@ -257,38 +288,109 @@ class ErrorTraceTreeTable extends TreeTable {
 
     private static void renderTraceVariableValue(
             DefaultMutableTreeNode parent,
-            TraceVariableValue value) {
+            TraceVariableValue value,
+            Optional<TraceVariableValue> lastValue) {
         if (!value.hasChildren()) {
             return;
         }
+
         if (value instanceof SequenceValue) {
+            Optional<SequenceValue> lastSequence = lastValue.flatMap(v -> Optionalx.asInstanceOf(v, SequenceValue.class));
             SequenceValue sequence = (SequenceValue) value;
             for (int i = 0; i < sequence.values().size(); i++) {
                 TraceVariableValue subValue = sequence.values().get(i);
-                TraceVariableNode node = new TraceVariableNode("[" + (i + 1) + "]", subValue);
+
+                final ValueDiffType diffType;
+                final Optional<TraceVariableValue> maybeLastSubValue;
+                if (lastSequence.isPresent()) {
+                    List<TraceVariableValue> lastValues = lastSequence.get().values();
+                    if (i < lastValues.size()) {
+                        TraceVariableValue lastSubValue = lastValues.get(i);
+                        diffType = subValue.equals(lastSubValue) ? ValueDiffType.Unmodified : ValueDiffType.Modified;
+                        maybeLastSubValue = Optional.of(lastSubValue);
+                    } else {
+                        diffType = ValueDiffType.Added;
+                        maybeLastSubValue = Optional.empty();
+                    }
+                } else {
+                    diffType = ValueDiffType.Unmodified;
+                    maybeLastSubValue = Optional.empty();
+                }
+
+                TraceVariableNode node = new TraceVariableNode("[" + (i + 1) + "]", subValue, diffType);
                 parent.add(node);
-                renderTraceVariableValue(node, subValue);
+                renderTraceVariableValue(node, subValue, maybeLastSubValue);
             }
         }
         if (value instanceof SetValue) {
+            Optional<SetValue> lastSet = lastValue.flatMap(v -> Optionalx.asInstanceOf(v, SetValue.class));
             for (TraceVariableValue subValue : ((SetValue) value).values()) {
-                TraceVariableNode node = new TraceVariableNode("*", subValue);
+                final ValueDiffType diffType;
+                final Optional<TraceVariableValue> maybeLastSubValue;
+                if (lastSet.isPresent()) {
+                    if (lastSet.get().values().contains(subValue)) {
+                        diffType = ValueDiffType.Unmodified;
+                        maybeLastSubValue = Optional.of(subValue);
+                    } else {
+                        diffType = ValueDiffType.Added;
+                        maybeLastSubValue = Optional.empty();
+                    }
+                } else {
+                    diffType = ValueDiffType.Unmodified;
+                    maybeLastSubValue = Optional.empty();
+                }
+
+                TraceVariableNode node = new TraceVariableNode("*", subValue, diffType);
                 parent.add(node);
-                renderTraceVariableValue(node, subValue);
+                renderTraceVariableValue(node, subValue, maybeLastSubValue);
             }
         }
         if (value instanceof RecordValue) {
+            Optional<RecordValue> lastRecord = lastValue.flatMap(v -> Optionalx.asInstanceOf(v, RecordValue.class));
             for (RecordValue.Entry entry : ((RecordValue) value).entries()) {
-                TraceVariableNode node = new TraceVariableNode(entry.key(), entry.value());
+                final ValueDiffType diffType;
+                final Optional<TraceVariableValue> maybeLastSubValue;
+
+                if (lastRecord.isPresent()) {
+                    maybeLastSubValue = lastRecord.flatMap(record -> record.lookup(entry.key()));
+                    if (maybeLastSubValue.isPresent()) {
+                        diffType = entry.value().equals(maybeLastSubValue.get()) ?
+                                   ValueDiffType.Unmodified : ValueDiffType.Modified;
+                    } else {
+                        diffType = ValueDiffType.Added;
+                    }
+                } else {
+                    diffType = ValueDiffType.Unmodified;
+                    maybeLastSubValue = Optional.empty();
+                }
+
+                TraceVariableNode node = new TraceVariableNode(entry.key(), entry.value(), diffType);
                 parent.add(node);
-                renderTraceVariableValue(node, entry.value());
+                renderTraceVariableValue(node, entry.value(), maybeLastSubValue);
             }
         }
         if (value instanceof FunctionValue) {
+            Optional<FunctionValue> lastFunction = lastValue.flatMap(v -> Optionalx.asInstanceOf(v, FunctionValue.class));
             for (FunctionValue.Entry entry : ((FunctionValue) value).entries()) {
-                TraceVariableNode node = new TraceVariableNode(entry.key(), entry.value());
+                final ValueDiffType diffType;
+                final Optional<TraceVariableValue> maybeLastSubValue;
+
+                if (lastFunction.isPresent()) {
+                    maybeLastSubValue = lastFunction.flatMap(func -> func.lookup(entry.key()));
+                    if (maybeLastSubValue.isPresent()) {
+                        diffType = entry.value().equals(maybeLastSubValue.get()) ?
+                                   ValueDiffType.Unmodified : ValueDiffType.Modified;
+                    } else {
+                        diffType = ValueDiffType.Added;
+                    }
+                } else {
+                    diffType = ValueDiffType.Unmodified;
+                    maybeLastSubValue = Optional.empty();
+                }
+
+                TraceVariableNode node = new TraceVariableNode(entry.key(), entry.value(), diffType);
                 parent.add(node);
-                renderTraceVariableValue(node, entry.value());
+                renderTraceVariableValue(node, entry.value(), maybeLastSubValue);
             }
         }
     }
