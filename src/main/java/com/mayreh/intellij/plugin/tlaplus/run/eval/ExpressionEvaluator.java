@@ -137,7 +137,7 @@ public class ExpressionEvaluator {
     }
 
     /**
-     * Evaluate an operation in dummy module to get the value.
+     * Evaluate an operator in dummy module to get the value.
      * Also collect TLC's output which is printed by Print/PrintT
      */
     private static class Runner extends Writer {
