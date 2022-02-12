@@ -145,6 +145,8 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
     return TLAplusElementTypes.PLUS_CAL_ALGORITHM_BEGIN;
   }
 
+  {IDENTIFIER} / {WHITE_SPACE}* ":" { return maybeHandleIndent(TLAplusElementTypes.IDENTIFIER); }
+
   // pluscal keywords
   "algorithm"  { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_ALGORITHM); }
   "assert"     { return maybeHandleIndent(TLAplusElementTypes.PLUS_CAL_KW_ASSERT); }

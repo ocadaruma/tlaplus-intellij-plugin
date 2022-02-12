@@ -19,4 +19,8 @@ public class PlusCalParserTest extends ParserTestCaseBase {
     public void test_With() {
         doTest();
     }
+
+    public void test_Label() {
+        doTest();
+    }
 }

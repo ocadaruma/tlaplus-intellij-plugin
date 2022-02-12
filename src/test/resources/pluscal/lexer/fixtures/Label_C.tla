@@ -1,0 +1,6 @@
+--algorithm Label {
+  {
+algorithm:
+    skip;
+  }
+}

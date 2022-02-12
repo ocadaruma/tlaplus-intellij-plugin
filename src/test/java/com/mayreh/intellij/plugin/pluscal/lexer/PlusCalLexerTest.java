@@ -17,4 +17,8 @@ public class PlusCalLexerTest extends LexerTestCaseBase {
     public void test_Euclid_C() {
         doTest();
     }
+
+    public void test_Label_C() {
+        doTest();
+    }
 }
