@@ -931,4 +931,7 @@ private plus_cal_def ::= variable_decl
 // https://lamport.azurewebsites.net/tla/p-manual.pdf
 // > Any “;” prescribed in the grammar may be omitted if it immediately precedes any of the following reserved words.
 // > begin do else elsif end macro or procedure process
-private stmt_termination ::= ';' | &('begin' | 'do' | 'else' | 'elsif' | 'end' | 'macro' | 'or' | 'procedure' | 'process')
+//
+// But seems there are few more tokens that preceding semicolon can be omitted.
+// refs: https://github.com/tlaplus/tlaplus/blob/v1.7.1/tlatools/org.lamport.tlatools/src/pcal/ParseAlgorithm.java#L3450-L3460
+private stmt_termination ::= ';' | &('begin' | 'do' | 'else' | 'elsif' | 'end' | 'macro' | 'or' | 'procedure' | 'process' | 'fair' | 'define')
