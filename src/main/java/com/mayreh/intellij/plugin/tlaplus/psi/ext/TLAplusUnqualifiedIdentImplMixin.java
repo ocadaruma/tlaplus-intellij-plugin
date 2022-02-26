@@ -15,4 +15,9 @@ public abstract class TLAplusUnqualifiedIdentImplMixin extends TLAplusElementImp
     public PsiReference getReference() {
         return new TLAplusReference(this, e -> true);
     }
+
+    @Override
+    public @NotNull String getReferenceName() {
+        return getIdentifier().getText();
+    }
 }

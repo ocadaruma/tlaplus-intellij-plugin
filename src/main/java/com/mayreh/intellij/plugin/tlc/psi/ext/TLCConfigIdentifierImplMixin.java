@@ -22,6 +22,14 @@ public abstract class TLCConfigIdentifierImplMixin
         super(node);
     }
 
+    @NotNull
+    public abstract PsiElement getIdentifier();
+
+    @Override
+    public @NotNull String getReferenceName() {
+        return getIdentifier().getText();
+    }
+
     @Override
     public PsiReference @NotNull [] getReferences() {
         return PsiReferenceService.getService().getContributedReferences(this);

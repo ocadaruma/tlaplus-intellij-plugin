@@ -7,6 +7,7 @@ import static com.mayreh.intellij.plugin.util.Optionalx.asInstanceOf;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiPredicate;
@@ -117,9 +118,16 @@ public abstract class TLAplusModuleImplMixin extends TLAplusElementImpl implemen
 
         streams.add(getOpDefinitionList()
                             .stream()
-                            .filter(def -> def.getNonfixLhs() != null &&
-                                           requirement.test(def, def.getNonfixLhs().getNonfixLhsName()))
-                            .map(def -> def.getNonfixLhs().getNonfixLhsName()));
+                            .flatMap(def -> Stream.of(def.getNonfixLhs(),
+                                                      def.getPrefixOpLhs(),
+                                                      def.getDashdotOpLhs(),
+                                                      def.getInfixOpLhs(),
+                                                      def.getPostfixOpLhs())
+                                                  .filter(Objects::nonNull)
+                                                  .findFirst()
+                                                  .map(TLAplusNamedLhs::getNamedElement)
+                                                  .filter(name -> requirement.test(def, name))
+                                                  .stream()));
 
         streams.add(getFuncDefinitionList()
                             .stream()

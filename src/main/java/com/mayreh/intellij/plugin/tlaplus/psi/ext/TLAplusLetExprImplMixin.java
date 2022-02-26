@@ -2,6 +2,7 @@ package com.mayreh.intellij.plugin.tlaplus.psi.ext;
 
 import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPsiUtils.isForwardReference;
 
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -25,15 +26,16 @@ public abstract class TLAplusLetExprImplMixin extends TLAplusElementImpl impleme
         streams.add(
                 getOpDefinitionList()
                         .stream()
-                        .flatMap(def -> {
-                            if (def.getNonfixLhs() == null) {
-                                return Stream.empty();
-                            }
-                            if (isForwardReference(placement, def.getNonfixLhs().getNonfixLhsName())) {
-                                return Stream.empty();
-                            }
-                            return Stream.of(def.getNonfixLhs().getNonfixLhsName());
-                        }));
+                        .flatMap(def -> Stream.of(def.getNonfixLhs(),
+                                                  def.getPrefixOpLhs(),
+                                                  def.getDashdotOpLhs(),
+                                                  def.getInfixOpLhs(),
+                                                  def.getPostfixOpLhs())
+                                              .filter(Objects::nonNull)
+                                              .findFirst()
+                                              .map(TLAplusNamedLhs::getNamedElement)
+                                              .filter(namedElement -> !isForwardReference(placement, namedElement))
+                                              .stream()));
 
         streams.add(getFuncDefinitionList()
                             .stream()

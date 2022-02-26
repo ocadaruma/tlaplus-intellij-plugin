@@ -16,4 +16,9 @@ public abstract class TLAplusModuleRefImplMixin extends TLAplusElementImpl imple
     public PsiReference getReference() {
         return new TLAplusReference(this, e -> e instanceof TLAplusModuleHeader);
     }
+
+    @Override
+    public @NotNull String getReferenceName() {
+        return getIdentifier().getText();
+    }
 }

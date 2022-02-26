@@ -16,7 +16,7 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiReferenceBase;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusGeneralIdentifier;
+import com.intellij.util.IncorrectOperationException;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusInstance;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModule;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModuleDefinition;
@@ -36,9 +36,13 @@ public class TLAplusReference extends PsiReferenceBase<TLAplusReferenceElement> 
 
     @Override
     public PsiElement handleElementRename(@NotNull String newElementName) {
-        PsiElement newIdent = new TLAplusPsiFactory(getElement().getProject()).createIdentifier(newElementName);
-        getElement().getIdentifier().replace(newIdent);
-        return getElement();
+        if (getElement() instanceof TLAplusIdentifierReferenceElement) {
+            PsiElement identifier = ((TLAplusIdentifierReferenceElement) getElement()).getIdentifier();
+            PsiElement newIdent = new TLAplusPsiFactory(getElement().getProject()).createIdentifier(newElementName);
+            identifier.replace(newIdent);
+            return getElement();
+        }
+        throw new IncorrectOperationException("Can't rename symbolic operator");
     }
 
     /**
@@ -92,18 +96,18 @@ public class TLAplusReference extends PsiReferenceBase<TLAplusReferenceElement> 
 
     private static @NotNull Stream<TLAplusNamedElement> identifierVariants(
             TLAplusModule currentModule, TLAplusElement element) {
-        TLAplusGeneralIdentifier generalIdentifier = null;
-        if (element.getParent() instanceof TLAplusGeneralIdentifier) {
-            generalIdentifier = (TLAplusGeneralIdentifier) element.getParent();
+        TLAplusGeneralReference generalReference = null;
+        if (element.getParent() instanceof TLAplusGeneralReference) {
+            generalReference = (TLAplusGeneralReference) element.getParent();
         }
 
-        if (generalIdentifier == null || generalIdentifier.getInstancePrefix() == null) {
+        if (generalReference == null || generalReference.getInstancePrefix() == null) {
             return unqualifiedVariants(element);
         }
 
         TLAplusModule resolvedModule = resolveInstancePrefix(
                 currentModule,
-                generalIdentifier.getInstancePrefix().getModuleRefList());
+                generalReference.getInstancePrefix().getModuleRefList());
 
         if (resolvedModule == null) {
             return Stream.empty();
