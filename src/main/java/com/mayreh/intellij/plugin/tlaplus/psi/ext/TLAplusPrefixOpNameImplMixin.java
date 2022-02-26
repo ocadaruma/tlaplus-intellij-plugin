@@ -8,8 +8,8 @@ import com.intellij.psi.PsiElement;
 import com.intellij.util.IncorrectOperationException;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPrefixOpName;
 
-public abstract class TLAplusPrefixOpNameImpl extends TLAplusNamedElementImplBase implements TLAplusPrefixOpName {
-    protected TLAplusPrefixOpNameImpl(@NotNull ASTNode node) {
+public abstract class TLAplusPrefixOpNameImplMixin extends TLAplusNamedElementImplBase implements TLAplusPrefixOpName {
+    protected TLAplusPrefixOpNameImplMixin(@NotNull ASTNode node) {
         super(node);
     }
 

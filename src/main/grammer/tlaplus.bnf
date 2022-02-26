@@ -266,7 +266,7 @@ module_header ::= clear_indent 'MODULE_BEGIN' 'identifier' '----'
 {
   pin = 2
   implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
-  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusIdentifierNamedElementImpl'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusIdentifierNamedElementImplMixin'
 }
 
 private unit ::= variable_decl
@@ -311,7 +311,7 @@ private identifier_or_tuple ::= clear_indent (bound_name | '<<' <<comma_list bou
 bound_name ::= 'identifier'
 {
   implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
-  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusIdentifierNamedElementImpl'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusIdentifierNamedElementImplMixin'
 }
 
 prefix_op ::= clear_indent (
@@ -450,14 +450,14 @@ op_decl ::= anon_infix_op
 op_name ::= 'identifier'
 {
   implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
-  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusIdentifierNamedElementImpl'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusIdentifierNamedElementImplMixin'
 }
 
 variable_decl ::= clear_indent ('VARIABLE' | 'VARIABLES') <<comma_list variable_name>> { pin = 2 }
 variable_name ::= 'identifier'
 {
   implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
-  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusIdentifierNamedElementImpl'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusIdentifierNamedElementImplMixin'
 }
 
 constant_decl ::= clear_indent ('CONSTANT' | 'CONSTANTS') <<comma_list op_decl>> { pin = 2 }
@@ -470,7 +470,7 @@ nonfix_lhs ::= clear_indent nonfix_lhs_name (clear_indent '(' <<comma_list op_de
 nonfix_lhs_name ::= 'identifier'
 {
   implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
-  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusIdentifierNamedElementImpl'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusIdentifierNamedElementImplMixin'
 }
 
 prefix_op_lhs ::= clear_indent prefix_op_name clear_indent op_name
@@ -481,7 +481,7 @@ prefix_op_lhs ::= clear_indent prefix_op_name clear_indent op_name
 prefix_op_name ::= prefix_op
 {
   implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
-  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusPrefixOpNameImpl'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusPrefixOpNameImplMixin'
 }
 
 dashdot_op_lhs ::= clear_indent dashdot_op_name clear_indent op_name
@@ -492,7 +492,7 @@ dashdot_op_lhs ::= clear_indent dashdot_op_name clear_indent op_name
 dashdot_op_name ::= '-.'
 {
   implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
-  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusDashdotOpNameImpl'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusDashdotOpNameImplMixin'
 }
 
 infix_op_lhs ::= clear_indent op_name infix_op_name clear_indent op_name
@@ -503,7 +503,7 @@ infix_op_lhs ::= clear_indent op_name infix_op_name clear_indent op_name
 infix_op_name ::= infix_op_all
 {
   implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
-  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusInfixOpNameImpl'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusInfixOpNameImplMixin'
 }
 
 postfix_op_lhs ::= clear_indent op_name postfix_op_name
@@ -514,7 +514,7 @@ postfix_op_lhs ::= clear_indent op_name postfix_op_name
 postfix_op_name ::= postfix_op
 {
   implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
-  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusPostfixOpNameImpl'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusPostfixOpNameImplMixin'
 }
 
 op_definition ::= (infix_op_lhs
@@ -537,7 +537,7 @@ func_definition ::= clear_indent func_name
 func_name ::= 'identifier'
 {
   implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
-  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusIdentifierNamedElementImpl'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusIdentifierNamedElementImplMixin'
 }
 
 private quantifier_bound ::= (clear_indent '<<' <<comma_list (clear_indent bound_name)>>

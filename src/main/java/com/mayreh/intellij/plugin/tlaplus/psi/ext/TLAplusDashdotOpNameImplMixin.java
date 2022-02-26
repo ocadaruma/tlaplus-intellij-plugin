@@ -6,16 +6,16 @@ import org.jetbrains.annotations.Nullable;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.IncorrectOperationException;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPostfixOpName;
+import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusDashdotOpName;
 
-public abstract class TLAplusPostfixOpNameImpl extends TLAplusNamedElementImplBase implements TLAplusPostfixOpName {
-    protected TLAplusPostfixOpNameImpl(@NotNull ASTNode node) {
+public abstract class TLAplusDashdotOpNameImplMixin extends TLAplusNamedElementImplBase implements TLAplusDashdotOpName {
+    protected TLAplusDashdotOpNameImplMixin(@NotNull ASTNode node) {
         super(node);
     }
 
     @Override
     public @Nullable PsiElement getNameIdentifier() {
-        return getPostfixOp();
+        return getOpDashdot();
     }
 
     @Override

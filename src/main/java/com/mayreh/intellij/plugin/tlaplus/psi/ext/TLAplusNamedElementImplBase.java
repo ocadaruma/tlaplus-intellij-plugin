@@ -6,6 +6,9 @@ import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement;
 
+/**
+ * Base class for the element that defines name
+ */
 public abstract class TLAplusNamedElementImplBase extends TLAplusElementImpl implements TLAplusNamedElement {
     protected TLAplusNamedElementImplBase(@NotNull ASTNode node) {
         super(node);

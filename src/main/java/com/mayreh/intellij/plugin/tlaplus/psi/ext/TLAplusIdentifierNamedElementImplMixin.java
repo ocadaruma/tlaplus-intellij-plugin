@@ -7,8 +7,8 @@ import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPsiFactory;
 
-public abstract class TLAplusIdentifierNamedElementImpl extends TLAplusNamedElementImplBase {
-    protected TLAplusIdentifierNamedElementImpl(@NotNull ASTNode node) {
+public abstract class TLAplusIdentifierNamedElementImplMixin extends TLAplusNamedElementImplBase {
+    protected TLAplusIdentifierNamedElementImplMixin(@NotNull ASTNode node) {
         super(node);
     }
 
