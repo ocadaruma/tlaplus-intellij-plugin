@@ -18,9 +18,6 @@ public abstract class TLAplusUnqualifiedPrefixOpImplMixin extends TLAplusElement
 
     @Override
     public @NotNull String getReferenceName() {
-        if (getPrefixOp().getOpDash() != null) {
-            return "-.";
-        }
         return getPrefixOp().getText();
     }
 }

@@ -19,6 +19,11 @@ public abstract class TLAplusDashdotOpNameImplMixin extends TLAplusNamedElementI
     }
 
     @Override
+    public String getName() {
+        return "-";
+    }
+
+    @Override
     public PsiElement setName(@NotNull String name) {
         throw new IncorrectOperationException("Can't rename symbolic operator");
     }

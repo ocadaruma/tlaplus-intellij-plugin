@@ -11,8 +11,10 @@ import com.intellij.lang.cacheBuilder.WordsScanner;
 import com.intellij.lang.findUsages.FindUsagesProvider;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiNamedElement;
 import com.intellij.psi.tree.TokenSet;
 import com.mayreh.intellij.plugin.tlaplus.lexer.TLAplusLexer;
+import com.mayreh.intellij.plugin.tlaplus.lexer.TokenSets;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement;
 
@@ -56,7 +58,10 @@ public class TLAplusFindUsagesProvider implements FindUsagesProvider {
             super(new TLAplusLexer(false),
                   TokenSet.create(TLAplusElementTypes.IDENTIFIER),
                   TLAplusParserDefinition.COMMENT_TOKENS,
-                  TokenSet.EMPTY);
+                  TokenSet.EMPTY,
+                  TokenSet.EMPTY,
+                  // We need to specify processAsWordTokenSet so that symbolic operators can be lexed correctly
+                  TokenSets.OPERATORS);
         }
     }
 }
