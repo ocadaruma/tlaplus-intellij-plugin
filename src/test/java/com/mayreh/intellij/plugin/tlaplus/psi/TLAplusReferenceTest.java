@@ -103,6 +103,13 @@ public class TLAplusReferenceTest extends BasePlatformTestCase {
         Assert.assertEquals("^+", name.getName());
     }
 
+    public void testSynonym() {
+        PsiReference reference = getReferenceAtCaret("Synonym.tla");
+
+        TLAplusInfixOpName name = assertInstanceOf(reference.resolve(), TLAplusInfixOpName.class);
+        Assert.assertEquals("\\leq", name.getName());
+    }
+
     private PsiReference getReferenceAtCaret(String... fileNames) {
         return myFixture.getReferenceAtCaretPositionWithAssertion(
                 Arrays.stream(fileNames)
