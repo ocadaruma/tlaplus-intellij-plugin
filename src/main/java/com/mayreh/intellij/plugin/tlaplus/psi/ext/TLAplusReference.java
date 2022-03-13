@@ -14,9 +14,12 @@ import org.jetbrains.annotations.Nullable;
 
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiReferenceBase;
+import com.intellij.psi.PsiElementResolveResult;
+import com.intellij.psi.PsiPolyVariantReferenceBase;
+import com.intellij.psi.ResolveResult;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusGeneralIdentifier;
+import com.intellij.util.ArrayUtil;
+import com.intellij.util.IncorrectOperationException;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusInstance;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModule;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModuleDefinition;
@@ -25,7 +28,7 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPsiFactory;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusSubstitutingIdent;
 
-public class TLAplusReference extends PsiReferenceBase<TLAplusReferenceElement> {
+public class TLAplusReference extends PsiPolyVariantReferenceBase<TLAplusReferenceElement> {
     private final Predicate<TLAplusNamedElement> variantFilter;
 
     public TLAplusReference(@NotNull TLAplusReferenceElement element,
@@ -36,9 +39,13 @@ public class TLAplusReference extends PsiReferenceBase<TLAplusReferenceElement> 
 
     @Override
     public PsiElement handleElementRename(@NotNull String newElementName) {
-        PsiElement newIdent = new TLAplusPsiFactory(getElement().getProject()).createIdentifier(newElementName);
-        getElement().getIdentifier().replace(newIdent);
-        return getElement();
+        if (getElement() instanceof TLAplusIdentifierReferenceElement) {
+            PsiElement identifier = ((TLAplusIdentifierReferenceElement) getElement()).getIdentifier();
+            PsiElement newIdent = new TLAplusPsiFactory(getElement().getProject()).createIdentifier(newElementName);
+            identifier.replace(newIdent);
+            return getElement();
+        }
+        throw new IncorrectOperationException("Can't rename symbolic operator");
     }
 
     /**
@@ -82,28 +89,34 @@ public class TLAplusReference extends PsiReferenceBase<TLAplusReferenceElement> 
     }
 
     @Override
-    public @Nullable PsiElement resolve() {
+    public ResolveResult @NotNull [] multiResolve(boolean incompleteCode) {
         return variants()
                 .filter(variantFilter)
-                .filter(e -> getElement().getReferenceName().equals(e.getName()))
-                .findFirst()
-                .orElse(null);
+                .filter(e -> {
+                    if (e.synonyms() != null) {
+                        return ArrayUtil.contains(getElement().getReferenceName(), e.synonyms());
+                    }
+                    return getElement().getReferenceName().equals(e.getName());
+                })
+                .filter(e -> e.fixness() == getElement().fixness())
+                .map(PsiElementResolveResult::new)
+                .toArray(ResolveResult[]::new);
     }
 
     private static @NotNull Stream<TLAplusNamedElement> identifierVariants(
             TLAplusModule currentModule, TLAplusElement element) {
-        TLAplusGeneralIdentifier generalIdentifier = null;
-        if (element.getParent() instanceof TLAplusGeneralIdentifier) {
-            generalIdentifier = (TLAplusGeneralIdentifier) element.getParent();
+        TLAplusGeneralReference generalReference = null;
+        if (element.getParent() instanceof TLAplusGeneralReference) {
+            generalReference = (TLAplusGeneralReference) element.getParent();
         }
 
-        if (generalIdentifier == null || generalIdentifier.getInstancePrefix() == null) {
+        if (generalReference == null || generalReference.getInstancePrefix() == null) {
             return unqualifiedVariants(element);
         }
 
         TLAplusModule resolvedModule = resolveInstancePrefix(
                 currentModule,
-                generalIdentifier.getInstancePrefix().getModuleRefList());
+                generalReference.getInstancePrefix().getModuleRefList());
 
         if (resolvedModule == null) {
             return Stream.empty();

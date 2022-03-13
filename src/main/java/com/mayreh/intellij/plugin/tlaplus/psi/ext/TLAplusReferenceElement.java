@@ -2,20 +2,14 @@ package com.mayreh.intellij.plugin.tlaplus.psi.ext;
 
 import org.jetbrains.annotations.NotNull;
 
-import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.psi.PsiElement;
+import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNameFixness;
 
 public interface TLAplusReferenceElement extends TLAplusElement {
-    /**
-     * Identifier token of this reference
-     */
-    @NotNull PsiElement getIdentifier();
-
     /**
      * Name of this reference.
      * Used for reference resolution.
      */
-    @NotNull default String getReferenceName() {
-        return StringUtil.defaultIfEmpty(getIdentifier().getText(), "");
-    }
+    @NotNull String getReferenceName();
+
+    @NotNull TLAplusNameFixness fixness();
 }

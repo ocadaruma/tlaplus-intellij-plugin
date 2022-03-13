@@ -82,6 +82,34 @@ public class TLAplusReferenceTest extends BasePlatformTestCase {
                            "Sequences", "TLC", "TLCExt", "Toolbox");
     }
 
+    public void testDashdotOp() {
+        PsiReference reference = getReferenceAtCaret("DashdotOp.tla");
+
+        TLAplusDashdotOpName name = assertInstanceOf(reference.resolve(), TLAplusDashdotOpName.class);
+        Assert.assertEquals("-", name.getName());
+    }
+
+    public void testInfixOp() {
+        PsiReference reference = getReferenceAtCaret("InfixOp.tla");
+
+        TLAplusInfixOpName name = assertInstanceOf(reference.resolve(), TLAplusInfixOpName.class);
+        Assert.assertEquals("+", name.getName());
+    }
+
+    public void testPostfixOp() {
+        PsiReference reference = getReferenceAtCaret("PostfixOp.tla");
+
+        TLAplusPostfixOpName name = assertInstanceOf(reference.resolve(), TLAplusPostfixOpName.class);
+        Assert.assertEquals("^+", name.getName());
+    }
+
+    public void testSynonym() {
+        PsiReference reference = getReferenceAtCaret("Synonym.tla");
+
+        TLAplusInfixOpName name = assertInstanceOf(reference.resolve(), TLAplusInfixOpName.class);
+        Assert.assertEquals("\\leq", name.getName());
+    }
+
     private PsiReference getReferenceAtCaret(String... fileNames) {
         return myFixture.getReferenceAtCaretPositionWithAssertion(
                 Arrays.stream(fileNames)

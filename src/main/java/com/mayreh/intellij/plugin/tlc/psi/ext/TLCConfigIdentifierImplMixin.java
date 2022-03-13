@@ -14,6 +14,7 @@ import com.intellij.psi.PsiReference;
 import com.intellij.psi.PsiReferenceService;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModule;
+import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNameFixness;
 import com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusReferenceElement;
 
 public abstract class TLCConfigIdentifierImplMixin
@@ -22,9 +23,22 @@ public abstract class TLCConfigIdentifierImplMixin
         super(node);
     }
 
+    @NotNull
+    public abstract PsiElement getIdentifier();
+
+    @Override
+    public @NotNull String getReferenceName() {
+        return getIdentifier().getText();
+    }
+
     @Override
     public PsiReference @NotNull [] getReferences() {
         return PsiReferenceService.getService().getContributedReferences(this);
+    }
+
+    @Override
+    public @NotNull TLAplusNameFixness fixness() {
+        return TLAplusNameFixness.NONFIX;
     }
 
     @Override

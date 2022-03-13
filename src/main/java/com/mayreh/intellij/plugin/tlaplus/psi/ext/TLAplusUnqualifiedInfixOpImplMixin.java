@@ -4,27 +4,26 @@ import org.jetbrains.annotations.NotNull;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiReference;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModuleHeader;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModuleRef;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNameFixness;
+import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusUnqualifiedInfixOp;
 
-public abstract class TLAplusModuleRefImplMixin extends TLAplusElementImpl implements TLAplusModuleRef {
-    protected TLAplusModuleRefImplMixin(@NotNull ASTNode node) {
+public abstract class TLAplusUnqualifiedInfixOpImplMixin extends TLAplusElementImpl implements TLAplusUnqualifiedInfixOp {
+    protected TLAplusUnqualifiedInfixOpImplMixin(@NotNull ASTNode node) {
         super(node);
     }
 
     @Override
     public PsiReference getReference() {
-        return new TLAplusReference(this, e -> e instanceof TLAplusModuleHeader);
+        return new TLAplusReference(this, e -> true);
     }
 
     @Override
     public @NotNull String getReferenceName() {
-        return getIdentifier().getText();
+        return getInfixOpAll().getText();
     }
 
     @Override
     public @NotNull TLAplusNameFixness fixness() {
-        return TLAplusNameFixness.NONFIX;
+        return TLAplusNameFixness.INFIX;
     }
 }

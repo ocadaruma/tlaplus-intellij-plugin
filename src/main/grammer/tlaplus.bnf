@@ -252,7 +252,9 @@ module ::= module_header ('EXTENDS' <<comma_list module_ref>>)? unit_with_recove
 
 module_ref ::= 'identifier'
 {
-  implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusReferenceElement"
+  implements = [
+    "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusReferenceElement"
+    "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusIdentifierReferenceElement"]
   mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusModuleRefImplMixin'
 }
 
@@ -264,7 +266,7 @@ module_header ::= clear_indent 'MODULE_BEGIN' 'identifier' '----'
 {
   pin = 2
   implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
-  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNamedElementImpl'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusIdentifierNamedElementImplMixin'
 }
 
 private unit ::= variable_decl
@@ -309,7 +311,7 @@ private identifier_or_tuple ::= clear_indent (bound_name | '<<' <<comma_list bou
 bound_name ::= 'identifier'
 {
   implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
-  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNamedElementImpl'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusIdentifierNamedElementImplMixin'
 }
 
 prefix_op ::= clear_indent (
@@ -411,7 +413,7 @@ infix_op ::= clear_indent (
            | '\wr'
            | '\sqsupset')
 
-private infix_op_outer ::= infix_op | <<parseInfixOpLand>> | <<parseInfixOpLor>>
+infix_op_all ::= infix_op | <<parseInfixOpLand>> | <<parseInfixOpLor>>
 
 postfix_op ::= clear_indent (
                '^+'
@@ -435,7 +437,7 @@ private reduced_expr ::= no_op_extension
                        | action_expr
                        | tuple_expr
 
-anon_infix_op ::= clear_indent '_' infix_op_outer clear_indent '_'
+anon_infix_op ::= clear_indent '_' infix_op_all clear_indent '_'
 anon_prefix_op ::= prefix_op clear_indent '_'
 anon_postfix_op ::= clear_indent '_' postfix_op
 
@@ -448,33 +450,72 @@ op_decl ::= anon_infix_op
 op_name ::= 'identifier'
 {
   implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
-  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNamedElementImpl'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusIdentifierNamedElementImplMixin'
 }
 
 variable_decl ::= clear_indent ('VARIABLE' | 'VARIABLES') <<comma_list variable_name>> { pin = 2 }
 variable_name ::= 'identifier'
 {
   implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
-  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNamedElementImpl'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusIdentifierNamedElementImplMixin'
 }
 
 constant_decl ::= clear_indent ('CONSTANT' | 'CONSTANTS') <<comma_list op_decl>> { pin = 2 }
 
 nonfix_lhs ::= clear_indent nonfix_lhs_name (clear_indent '(' <<comma_list op_decl>> clear_indent ')')?
-
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNamedLhs'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNonfixLhsImplMixin'
+}
 nonfix_lhs_name ::= 'identifier'
 {
   implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
-  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNamedElementImpl'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusIdentifierNamedElementImplMixin'
 }
 
-prefix_op_lhs ::= clear_indent prefix_op clear_indent 'identifier'
+prefix_op_lhs ::= clear_indent prefix_op_name clear_indent op_name
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNamedLhs'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusPrefixOpLhsImplMixin'
+}
+prefix_op_name ::= prefix_op
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusPrefixOpNameImplMixin'
+}
 
-dashdot_op_lhs ::= clear_indent '-.' clear_indent 'identifier'
+dashdot_op_lhs ::= clear_indent dashdot_op_name clear_indent op_name
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNamedLhs'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusDashdotOpLhsImplMixin'
+}
+dashdot_op_name ::= '-.'
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusDashdotOpNameImplMixin'
+}
 
-infix_op_lhs ::= clear_indent 'identifier' infix_op_outer clear_indent 'identifier'
+infix_op_lhs ::= clear_indent op_name infix_op_name clear_indent op_name
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNamedLhs'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusInfixOpLhsImplMixin'
+}
+infix_op_name ::= infix_op_all
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusInfixOpNameImplMixin'
+}
 
-postfix_op_lhs ::= clear_indent 'identifier' postfix_op
+postfix_op_lhs ::= clear_indent op_name postfix_op_name
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNamedLhs'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusPostfixOpLhsImplMixin'
+}
+postfix_op_name ::= postfix_op
+{
+  implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusPostfixOpNameImplMixin'
+}
 
 op_definition ::= (infix_op_lhs
                  | dashdot_op_lhs
@@ -496,7 +537,7 @@ func_definition ::= clear_indent func_name
 func_name ::= 'identifier'
 {
   implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
-  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNamedElementImpl'
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusIdentifierNamedElementImplMixin'
 }
 
 private quantifier_bound ::= (clear_indent '<<' <<comma_list (clear_indent bound_name)>>
@@ -509,12 +550,14 @@ instance ::= clear_indent 'INSTANCE' clear_indent module_ref (clear_indent 'WITH
 
 private substitution ::= (clear_indent substituting_ident
                         | prefix_op
-                        | infix_op_outer
+                        | infix_op_all
                         | postfix_op) clear_indent '<-' op_suite { pin = 1 }
 
 substituting_ident ::= 'identifier'
 {
-  implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusReferenceElement"
+  implements = [
+    "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusReferenceElement"
+    "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusIdentifierReferenceElement"]
   mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusSubstitutingIdentImplMixin'
 }
 
@@ -522,18 +565,50 @@ instance_prefix ::= (clear_indent module_ref (
     clear_indent '(' <<comma_list expr>> clear_indent ')')? clear_indent '!')+
 
 general_identifier ::= instance_prefix? clear_indent unqualified_ident
+{
+  implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusGeneralReference"
+}
 
 unqualified_ident ::= 'identifier'
 {
-  implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusReferenceElement"
+  implements = [
+    "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusReferenceElement"
+    "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusIdentifierReferenceElement"]
   mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusUnqualifiedIdentImplMixin'
 }
 
-general_prefix_op ::= instance_prefix? prefix_op
+general_prefix_op ::= instance_prefix? unqualified_prefix_op
+{
+  implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusGeneralReference"
+}
 
-general_infix_op ::= instance_prefix? infix_op_outer
+unqualified_prefix_op ::= prefix_op
+{
+  implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusReferenceElement"
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusUnqualifiedPrefixOpImplMixin'
+}
 
-general_postfix_op ::= instance_prefix? postfix_op
+general_infix_op ::= instance_prefix? unqualified_infix_op
+{
+  implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusGeneralReference"
+}
+
+unqualified_infix_op ::= infix_op_all
+{
+  implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusReferenceElement"
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusUnqualifiedInfixOpImplMixin'
+}
+
+general_postfix_op ::= instance_prefix? unqualified_postfix_op
+{
+  implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusGeneralReference"
+}
+
+unqualified_postfix_op ::= postfix_op
+{
+  implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusReferenceElement"
+  mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusUnqualifiedPostfixOpImplMixin'
+}
 
 module_definition ::= nonfix_lhs clear_indent '==' instance
 
