@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
+import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNameFixness;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPsiFactory;
 
 public abstract class TLAplusIdentifierNamedElementImplMixin extends TLAplusNamedElementImplBase {
@@ -26,5 +27,10 @@ public abstract class TLAplusIdentifierNamedElementImplMixin extends TLAplusName
             identifier.replace(new TLAplusPsiFactory(getProject()).createIdentifier(name));
         }
         return this;
+    }
+
+    @Override
+    public @NotNull TLAplusNameFixness fixness() {
+        return TLAplusNameFixness.NONFIX;
     }
 }

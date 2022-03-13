@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiReference;
+import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNameFixness;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusSubstitutingIdent;
 
 public abstract class TLAplusSubstitutingIdentImplMixin extends TLAplusElementImpl implements TLAplusSubstitutingIdent {
@@ -20,5 +21,10 @@ public abstract class TLAplusSubstitutingIdentImplMixin extends TLAplusElementIm
     @Override
     public @NotNull String getReferenceName() {
         return getIdentifier().getText();
+    }
+
+    @Override
+    public @NotNull TLAplusNameFixness fixness() {
+        return TLAplusNameFixness.NONFIX;
     }
 }

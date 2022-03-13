@@ -54,6 +54,8 @@
         <lang.findUsagesProvider
           language="TLA+"
           implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusFindUsagesProvider"/>
+        <findUsagesHandlerFactory
+          implementation="com.mayreh.intellij.plugin.tlaplus.TLAplusFindUsagesHandlerFactory"/>
         <lang.refactoringSupport
           language="TLA+"
           implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusRefactoringSupportProvider"/>

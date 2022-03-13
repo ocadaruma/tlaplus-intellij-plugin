@@ -6,6 +6,7 @@ import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiReference;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModuleHeader;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModuleRef;
+import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNameFixness;
 
 public abstract class TLAplusModuleRefImplMixin extends TLAplusElementImpl implements TLAplusModuleRef {
     protected TLAplusModuleRefImplMixin(@NotNull ASTNode node) {
@@ -20,5 +21,10 @@ public abstract class TLAplusModuleRefImplMixin extends TLAplusElementImpl imple
     @Override
     public @NotNull String getReferenceName() {
         return getIdentifier().getText();
+    }
+
+    @Override
+    public @NotNull TLAplusNameFixness fixness() {
+        return TLAplusNameFixness.NONFIX;
     }
 }

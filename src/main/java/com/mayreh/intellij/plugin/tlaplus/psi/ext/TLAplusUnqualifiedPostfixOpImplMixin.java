@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiReference;
+import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNameFixness;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusUnqualifiedPostfixOp;
 
 public abstract class TLAplusUnqualifiedPostfixOpImplMixin extends TLAplusElementImpl implements TLAplusUnqualifiedPostfixOp {
@@ -19,5 +20,10 @@ public abstract class TLAplusUnqualifiedPostfixOpImplMixin extends TLAplusElemen
     @Override
     public @NotNull String getReferenceName() {
         return getPostfixOp().getText();
+    }
+
+    @Override
+    public @NotNull TLAplusNameFixness fixness() {
+        return TLAplusNameFixness.POSTFIX;
     }
 }

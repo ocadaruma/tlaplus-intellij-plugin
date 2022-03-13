@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiReference;
+import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNameFixness;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusUnqualifiedPrefixOp;
 
 public abstract class TLAplusUnqualifiedPrefixOpImplMixin extends TLAplusElementImpl implements TLAplusUnqualifiedPrefixOp {
@@ -19,5 +20,10 @@ public abstract class TLAplusUnqualifiedPrefixOpImplMixin extends TLAplusElement
     @Override
     public @NotNull String getReferenceName() {
         return getPrefixOp().getText();
+    }
+
+    @Override
+    public @NotNull TLAplusNameFixness fixness() {
+        return TLAplusNameFixness.PREFIX;
     }
 }

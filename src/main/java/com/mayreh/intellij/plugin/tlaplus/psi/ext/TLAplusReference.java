@@ -14,23 +14,21 @@ import org.jetbrains.annotations.Nullable;
 
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiReferenceBase;
+import com.intellij.psi.PsiElementResolveResult;
+import com.intellij.psi.PsiPolyVariantReferenceBase;
+import com.intellij.psi.ResolveResult;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.ArrayUtil;
 import com.intellij.util.IncorrectOperationException;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusDashdotOpName;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusInfixOpName;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusInstance;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModule;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModuleDefinition;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModuleRef;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPrefixOpName;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusPsiFactory;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusSubstitutingIdent;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusUnqualifiedInfixOp;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusUnqualifiedPrefixOp;
 
-public class TLAplusReference extends PsiReferenceBase<TLAplusReferenceElement> {
+public class TLAplusReference extends PsiPolyVariantReferenceBase<TLAplusReferenceElement> {
     private final Predicate<TLAplusNamedElement> variantFilter;
 
     public TLAplusReference(@NotNull TLAplusReferenceElement element,
@@ -91,23 +89,18 @@ public class TLAplusReference extends PsiReferenceBase<TLAplusReferenceElement> 
     }
 
     @Override
-    public @Nullable PsiElement resolve() {
+    public ResolveResult @NotNull [] multiResolve(boolean incompleteCode) {
         return variants()
                 .filter(variantFilter)
-                .filter(e -> getElement().getReferenceName().equals(e.getName()))
                 .filter(e -> {
-                    // `-` can be used as either prefix operator or infix operator.
-                    // We need to filter by prefix/infix here so that can be resolved to correct operator definition.
-                    if (getElement() instanceof TLAplusUnqualifiedInfixOp) {
-                        return e instanceof TLAplusInfixOpName;
+                    if (e.synonyms() != null) {
+                        return ArrayUtil.contains(getElement().getReferenceName(), e.synonyms());
                     }
-                    if (getElement() instanceof TLAplusUnqualifiedPrefixOp) {
-                        return e instanceof TLAplusPrefixOpName || e instanceof TLAplusDashdotOpName;
-                    }
-                    return true;
+                    return getElement().getReferenceName().equals(e.getName());
                 })
-                .findFirst()
-                .orElse(null);
+                .filter(e -> e.fixness() == getElement().fixness())
+                .map(PsiElementResolveResult::new)
+                .toArray(ResolveResult[]::new);
     }
 
     private static @NotNull Stream<TLAplusNamedElement> identifierVariants(
