@@ -52,6 +52,7 @@
         KEYWORD_THEOREM    = 'THEOREM'
         KEYWORD_LET        = 'LET'
         KEYWORD_LAMBDA     = 'LAMBDA'
+        KEYWORD_RECURSIVE  = 'RECURSIVE'
 
         LITERAL_NUMBER     = 'number'
         LITERAL_STRING     = 'string'
@@ -271,6 +272,7 @@ module_header ::= clear_indent 'MODULE_BEGIN' 'identifier' '----'
 
 private unit ::= variable_decl
                | constant_decl
+               | recursive_decl
                | clear_indent 'LOCAL' op_definition
                | op_definition
                | clear_indent 'LOCAL' func_definition
@@ -294,6 +296,7 @@ private unit_recover ::= !(
   | 'VARIABLES'
   | 'CONSTANT'
   | 'CONSTANTS'
+  | 'RECURSIVE'
   | 'LOCAL'
   | 'identifier'
   | 'INSTANCE'
@@ -461,6 +464,8 @@ variable_name ::= 'identifier'
 }
 
 constant_decl ::= clear_indent ('CONSTANT' | 'CONSTANTS') <<comma_list op_decl>> { pin = 2 }
+
+recursive_decl ::= clear_indent 'RECURSIVE' op_decl { pin = 2 }
 
 nonfix_lhs ::= clear_indent nonfix_lhs_name (clear_indent '(' <<comma_list op_decl>> clear_indent ')')?
 {

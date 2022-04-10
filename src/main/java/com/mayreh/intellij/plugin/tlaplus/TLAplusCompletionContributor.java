@@ -31,7 +31,7 @@ public class TLAplusCompletionContributor extends CompletionContributor implemen
         extend(CompletionType.BASIC,
                psiElement().withParent(psiElement(TLAplusModule.class))
                            .andNot(psiElement(PsiComment.class)),
-               new KeywordCompletionProvider("LOCAL", "VARIABLE", "VARIABLES", "CONSTANT", "CONSTANTS", "INSTANCE", "THEOREM", "ASSUME", "ASSUMPTION", "AXIOM"));
+               new KeywordCompletionProvider("LOCAL", "VARIABLE", "VARIABLES", "CONSTANT", "CONSTANTS", "INSTANCE", "THEOREM", "ASSUME", "ASSUMPTION", "AXIOM", "RECURSIVE"));
         extend(CompletionType.BASIC,
                tlaplusElement().afterSibling2(psiElement(TLAplusModuleHeader.class))
                                .andNot(psiElement(PsiComment.class)),

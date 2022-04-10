@@ -205,6 +205,7 @@ IDENTIFIER = [0-9a-zA-Z_]* [a-zA-Z] [0-9a-zA-Z_]*
   "THEOREM"    { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_THEOREM); }
   "LET"        { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_LET); }
   "LAMBDA"     { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_LAMBDA); }
+  "RECURSIVE"  { return maybeHandleIndent(TLAplusElementTypes.KEYWORD_RECURSIVE); }
 
   // quantifier
   \\EE         { return maybeHandleIndent(TLAplusElementTypes.QUANTIFIER_EE); }

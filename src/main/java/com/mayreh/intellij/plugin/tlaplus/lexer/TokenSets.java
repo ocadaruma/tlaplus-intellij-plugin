@@ -30,6 +30,7 @@ public interface TokenSets {
             TLAplusElementTypes.KEYWORD_WF_,
             TLAplusElementTypes.KEYWORD_WITH,
             TLAplusElementTypes.KEYWORD_LAMBDA,
+            TLAplusElementTypes.KEYWORD_RECURSIVE,
 
             TLAplusElementTypes.PLUS_CAL_KW_ALGORITHM,
             TLAplusElementTypes.PLUS_CAL_KW_ASSERT,
