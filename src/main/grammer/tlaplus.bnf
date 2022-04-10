@@ -997,6 +997,7 @@ plus_cal_defs ::= plus_cal_def*
 
 private plus_cal_def ::= variable_decl
                        | constant_decl
+                       | recursive_decl
                        | clear_indent 'LOCAL' op_definition
                        | op_definition
                        | clear_indent 'LOCAL' func_definition
