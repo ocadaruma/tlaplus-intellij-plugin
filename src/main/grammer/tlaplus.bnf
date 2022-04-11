@@ -307,6 +307,7 @@ bound_name ::= 'identifier'
   mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusIdentifierNamedElementImplMixin'
 }
 
+// Operator definitions with respecting precedence as described in https://lamport.azurewebsites.net/tla/summary-standalone.pdf
 prefix_op_4_4   ::= clear_indent ('~')
 prefix_op_4_15  ::= clear_indent ('ENABLED' | 'UNCHANGED' | '[]' | '<>')
 prefix_op_8_8   ::= clear_indent ('SUBSET' | 'UNION')
@@ -319,10 +320,10 @@ infix_op_1_1   ::= clear_indent ('=>')
 infix_op_2_2   ::= clear_indent ('-+->' | '<=>' | '~>')
 infix_op_3_3   ::= clear_indent ('\land' | '\lor') | (<<parseInfixOpLand>> | <<parseInfixOpLor>>)
 infix_op_5_5   ::= clear_indent ('/=' | '-|' | '::=' | ':=' | '<' | '=' | '=|' | '>'
-                               | '\approx' | '\doteq' | '>=' | '\gg' | '\in' | '\notin' | '=<' | '\ll'
-                               | '\prec' | '\preceq' | '\propto' | '\sim' | '\simeq' | '\sqsubset' | '\sqsubseteq' | '\sqsupset'
-                               | '\sqsupseteq' | '\subset' | '\subseteq' | '\succ' | '\succeq' | '\supset' | '\supseteq' | '|-'
-                               | '|=')
+                               | '\approx' | '\asymp' | '\cong' | '\doteq' | '>=' | '\gg' | '\in' | '\notin'
+                               | '=<' | '\ll' | '\prec' | '\preceq' | '\propto' | '\sim' | '\simeq' | '\sqsubset'
+                               | '\sqsubseteq' | '\sqsupset' | '\sqsupseteq' | '\subset' | '\subseteq' | '\succ' | '\succeq' | '\supset'
+                               | '\supseteq' | '|-' | '|=')
 infix_op_5_14  ::= clear_indent ('\cdot')
 infix_op_6_6   ::= clear_indent ('@@')
 infix_op_7_7   ::= clear_indent (':>' | '<:')
@@ -337,6 +338,8 @@ infix_op_11_11 ::= clear_indent ('(-)' | '-' | '--')
 infix_op_13_13 ::= clear_indent ('&' | '&&' | '(.)' | '(/)' | '(\X)' | '*' | '**' | '/'
                                | '//' | '\bigcirc' | '\bullet' | '\div' | '\circ' | '\star')
 infix_op_14_14 ::= clear_indent ('^' | '^^')
+// Precedence range for '.' is also defined in summary-standalone.pdf though,
+// we don't need it because we define field-access as another expr separately.
 //private infix_op_17_17 ::=
 //            '.'
 private infix_op ::= infix_op_1_1 | infix_op_2_2 | infix_op_3_3
