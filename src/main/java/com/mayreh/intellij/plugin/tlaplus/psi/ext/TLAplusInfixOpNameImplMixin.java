@@ -2,6 +2,8 @@ package com.mayreh.intellij.plugin.tlaplus.psi.ext;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -9,7 +11,6 @@ import org.jetbrains.annotations.Nullable;
 import com.intellij.lang.ASTNode;
 import com.intellij.psi.PsiElement;
 import com.intellij.util.IncorrectOperationException;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusInfixOp;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusInfixOpName;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNameFixness;
 
@@ -32,7 +33,25 @@ public abstract class TLAplusInfixOpNameImplMixin extends TLAplusNamedElementImp
 
     @Override
     public @Nullable PsiElement getNameIdentifier() {
-        return getInfixOpAll();
+        return Stream.of(getInfixOp11(),
+                         getInfixOp22(),
+                         getInfixOp33(),
+                         getInfixOp55(),
+                         getInfixOp514(),
+                         getInfixOp66(),
+                         getInfixOp77(),
+                         getInfixOp88(),
+                         getInfixOp99(),
+                         getInfixOp913(),
+                         getInfixOp914(),
+                         getInfixOp1010(),
+                         getInfixOp1011(),
+                         getInfixOp1111(),
+                         getInfixOp1313(),
+                         getInfixOp1414()
+                     ).filter(Objects::nonNull)
+                     .findFirst()
+                     .orElse(null);
     }
 
     @Override
@@ -47,43 +66,48 @@ public abstract class TLAplusInfixOpNameImplMixin extends TLAplusNamedElementImp
 
     @Override
     public String @Nullable [] synonyms() {
-        TLAplusInfixOp op = getInfixOpAll().getInfixOp();
-        if (op == null) {
-            return null;
+        if (getInfixOp55() != null) {
+            if (getInfixOp55().getOpLteq() != null) {
+                return LTEQ;
+            }
+            if (getInfixOp55().getOpGteq() != null) {
+                return GTEQ;
+            }
+            if (getInfixOp55().getOpNoteq() != null) {
+                return NOTEQ;
+            }
         }
-
-        if (op.getOpLteq() != null) {
-            return LTEQ;
+        if (getInfixOp88() != null) {
+            if (getInfixOp88().getOpCap() != null) {
+                return CAP;
+            }
+            if (getInfixOp88().getOpCup() != null) {
+                return CUP;
+            }
         }
-        if (op.getOpCap() != null) {
-            return CAP;
+        if (getInfixOp1010() != null) {
+            if (getInfixOp1010().getOpOplus() != null) {
+                return OPLUS;
+            }
         }
-        if (op.getOpOplus() != null) {
-            return OPLUS;
+        if (getInfixOp1111() != null) {
+            if (getInfixOp1111().getOpOminus() != null) {
+                return OMINUS;
+            }
         }
-        if (op.getOpOminus() != null) {
-            return OMINUS;
-        }
-        if (op.getOpOdot() != null) {
-            return ODOT;
-        }
-        if (op.getOpOtimes() != null) {
-            return OTIMES;
-        }
-        if (op.getOpSlash() != null) {
-            return OSLASH;
-        }
-        if (op.getOpGteq() != null) {
-            return GTEQ;
-        }
-        if (op.getOpCup() != null) {
-            return CUP;
-        }
-        if (op.getOpNoteq() != null) {
-            return NOTEQ;
-        }
-        if (op.getOpCirc() != null) {
-            return CIRC;
+        if (getInfixOp1313() != null) {
+            if (getInfixOp1313().getOpOdot() != null) {
+                return ODOT;
+            }
+            if (getInfixOp1313().getOpOtimes() != null) {
+                return OTIMES;
+            }
+            if (getInfixOp1313().getOpOslash() != null) {
+                return OSLASH;
+            }
+            if (getInfixOp1313().getOpCirc() != null) {
+                return CIRC;
+            }
         }
         return null;
     }

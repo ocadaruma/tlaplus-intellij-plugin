@@ -292,20 +292,10 @@ private unit_with_recover ::= !('====' | <<eof>>) unit
   recoverWhile = unit_recover
 }
 private unit_recover ::= !(
-    'VARIABLE'
-  | 'VARIABLES'
-  | 'CONSTANT'
-  | 'CONSTANTS'
-  | 'RECURSIVE'
-  | 'LOCAL'
-  | 'identifier'
-  | 'INSTANCE'
-  | 'ASSUME'
-  | 'ASSUMPTION'
-  | 'AXIOM'
-  | 'THEOREM'
-  | '===='
-  | '----'
+    'VARIABLE' | 'VARIABLES' | 'CONSTANT' | 'CONSTANTS'
+  | 'RECURSIVE' | 'LOCAL' | 'identifier' | 'INSTANCE'
+  | 'ASSUME' | 'ASSUMPTION' | 'AXIOM' | 'THEOREM'
+  | '====' | '----'
   | clear_indent
 )
 
@@ -317,112 +307,49 @@ bound_name ::= 'identifier'
   mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusIdentifierNamedElementImplMixin'
 }
 
-prefix_op ::= clear_indent (
-              '-'
-            | '~'
-            | '[]'
-            | '<>'
-            | 'DOMAIN'
-            | 'ENABLED'
-            | 'SUBSET'
-            | 'UNCHANGED'
-            | 'UNION')
+// Operator definitions with respecting precedence as described in https://lamport.azurewebsites.net/tla/summary-standalone.pdf
+prefix_op_4_4   ::= clear_indent ('~')
+prefix_op_4_15  ::= clear_indent ('ENABLED' | 'UNCHANGED' | '[]' | '<>')
+prefix_op_8_8   ::= clear_indent ('SUBSET' | 'UNION')
+prefix_op_9_9   ::= clear_indent ('DOMAIN')
+prefix_op_12_12 ::= clear_indent ('-')
+private prefix_op ::= prefix_op_4_4 | prefix_op_4_15 | prefix_op_8_8 | prefix_op_9_9
+                    | prefix_op_12_12
 
-infix_op ::= clear_indent (
-            '!'
-           | '/='
-           | '##'
-           | '$'
-           | '$$'
-           | '%'
-           | '%%'
-           | '&'
-           | '&&'
-           | '(+)'
-           | '(-)'
-           | '(.)'
-           | '(/)'
-           | '(\X)'
-           | '*'
-           | '**'
-           | '+'
-           | '++'
-           | '-'
-           | '-+->'
-           | '--'
-           | '-|'
-           | '..'
-           | '...'
-           | '/'
-           | '//'
-           | '\land'
-           | '::='
-           | ':='
-           | ':>'
-           | '<'
-           | '<:'
-           | '<=>'
-           | '\notin'
-           | '='
-           | '=<'
-           | '=>'
-           | '=|'
-           | '>'
-           | '>='
-           | '?'
-           | '??'
-           | '@@'
-           | '\'
-           | '\lor'
-           | '^'
-           | '^^'
-           | '|'
-           | '|-'
-           | '|='
-           | '||'
-           | '~>'
-           | '\approx'
-           | '\sqsupseteq'
-           | '\asymp'
-           | '\gg'
-           | '\star'
-           | '\bigcirc'
-           | '\in'
-           | '\prec'
-           | '\subset'
-           | '\bullet'
-           | '\cap'
-           | '\preceq'
-           | '\subseteq'
-           | '\propto'
-           | '\succ'
-           | '\cdot'
-           | '\sim'
-           | '\succeq'
-           | '\circ'
-           | '\ll'
-           | '\simeq'
-           | '\supset'
-           | '\cong'
-           | '\sqcap'
-           | '\supseteq'
-           | '\cup'
-           | '\sqcup'
-           | '\div'
-           | '\sqsubset'
-           | OP_UPLUS  // we can't use token value here since it causes illegal unicode escape in generated source
-           | '\doteq'
-           | '\sqsubseteq'
-           | '\wr'
-           | '\sqsupset')
+infix_op_1_1   ::= clear_indent ('=>')
+infix_op_2_2   ::= clear_indent ('-+->' | '<=>' | '~>')
+infix_op_3_3   ::= clear_indent ('\land' | '\lor') | (<<parseInfixOpLand>> | <<parseInfixOpLor>>)
+infix_op_5_5   ::= clear_indent ('/=' | '-|' | '::=' | ':=' | '<' | '=' | '=|' | '>'
+                               | '\approx' | '\asymp' | '\cong' | '\doteq' | '>=' | '\gg' | '\in' | '\notin'
+                               | '=<' | '\ll' | '\prec' | '\preceq' | '\propto' | '\sim' | '\simeq' | '\sqsubset'
+                               | '\sqsubseteq' | '\sqsupset' | '\sqsupseteq' | '\subset' | '\subseteq' | '\succ' | '\succeq' | '\supset'
+                               | '\supseteq' | '|-' | '|=')
+infix_op_5_14  ::= clear_indent ('\cdot')
+infix_op_6_6   ::= clear_indent ('@@')
+infix_op_7_7   ::= clear_indent (':>' | '<:')
+infix_op_8_8   ::= clear_indent ('\' | '\cap' | '\cup')
+infix_op_9_9   ::= clear_indent ('..' | '...')
+// we can't use symblic representation for OP_UPLUS here since it causes illegal unicode escape in generated source
+infix_op_9_13  ::= clear_indent ('!!' | '##' | '$' | '$$' | '??' | '\sqcap' | '\sqcup' | OP_UPLUS)
+infix_op_9_14  ::= clear_indent ('\wr')
+infix_op_10_10 ::= clear_indent ('(+)' | '+' | '++')
+infix_op_10_11 ::= clear_indent ('%' | '%%' | '|' | '||')
+infix_op_11_11 ::= clear_indent ('(-)' | '-' | '--')
+infix_op_13_13 ::= clear_indent ('&' | '&&' | '(.)' | '(/)' | '(\X)' | '*' | '**' | '/'
+                               | '//' | '\bigcirc' | '\bullet' | '\div' | '\circ' | '\star')
+infix_op_14_14 ::= clear_indent ('^' | '^^')
+// Precedence range for '.' is also defined in summary-standalone.pdf though,
+// we don't need it because we define field-access as another expr separately.
+//private infix_op_17_17 ::=
+//            '.'
+private infix_op ::= infix_op_1_1 | infix_op_2_2 | infix_op_3_3
+                   | infix_op_5_5 | infix_op_5_14 | infix_op_6_6 | infix_op_7_7
+                   | infix_op_8_8 | infix_op_9_9 | infix_op_9_13 | infix_op_9_14
+                   | infix_op_10_10 | infix_op_10_11 | infix_op_11_11 | infix_op_13_13
+                   | infix_op_14_14
 
-infix_op_all ::= infix_op | <<parseInfixOpLand>> | <<parseInfixOpLor>>
-
-postfix_op ::= clear_indent (
-               '^+'
-             | '^*'
-             | '^#'
-             | "'")
+postfix_op_15_15 ::= clear_indent ('^+' | '^*' | '^#' | "'")
+private postfix_op ::= postfix_op_15_15
 
 private op_suite ::= expr | prefix_op | infix_op | postfix_op | lambda_expr
 
@@ -440,7 +367,7 @@ private reduced_expr ::= no_op_extension
                        | action_expr
                        | tuple_expr
 
-anon_infix_op ::= clear_indent '_' infix_op_all clear_indent '_'
+anon_infix_op ::= clear_indent '_' infix_op clear_indent '_'
 anon_prefix_op ::= prefix_op clear_indent '_'
 anon_postfix_op ::= clear_indent '_' postfix_op
 
@@ -505,7 +432,7 @@ infix_op_lhs ::= clear_indent op_name infix_op_name clear_indent op_name
   implements = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusNamedLhs'
   mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusInfixOpLhsImplMixin'
 }
-infix_op_name ::= infix_op_all
+infix_op_name ::= infix_op
 {
   implements = 'com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement'
   mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusInfixOpNameImplMixin'
@@ -555,7 +482,7 @@ instance ::= clear_indent 'INSTANCE' clear_indent module_ref (clear_indent 'WITH
 
 private substitution ::= (clear_indent substituting_ident
                         | prefix_op
-                        | infix_op_all
+                        | infix_op
                         | postfix_op) clear_indent '<-' op_suite { pin = 1 }
 
 substituting_ident ::= 'identifier'
@@ -582,34 +509,36 @@ unqualified_ident ::= 'identifier'
   mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusUnqualifiedIdentImplMixin'
 }
 
-general_prefix_op ::= instance_prefix? unqualified_prefix_op
+meta general_prefix_op ::= instance_prefix? <<unqualified_prefix_op <<param>>>>
 {
   implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusGeneralReference"
 }
 
-unqualified_prefix_op ::= prefix_op
+meta unqualified_prefix_op ::= <<param>>
 {
   implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusReferenceElement"
   mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusUnqualifiedPrefixOpImplMixin'
 }
 
-general_infix_op ::= instance_prefix? unqualified_infix_op
+meta general_infix_op ::= instance_prefix? <<unqualified_infix_op <<param>>>>
 {
   implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusGeneralReference"
 }
 
-unqualified_infix_op ::= infix_op_all
+meta unqualified_infix_op ::= <<param>>
 {
   implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusReferenceElement"
   mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusUnqualifiedInfixOpImplMixin'
 }
 
-general_postfix_op ::= instance_prefix? unqualified_postfix_op
+// all postfix op have 15-15-precedence range so we don't need to parameterize here though,
+// we also use parameterization here to align with prefix/infix ops for simplicity.
+meta general_postfix_op ::= instance_prefix? <<unqualified_postfix_op <<param>>>>
 {
   implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusGeneralReference"
 }
 
-unqualified_postfix_op ::= postfix_op
+meta unqualified_postfix_op ::= <<param>>
 {
   implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusReferenceElement"
   mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusUnqualifiedPostfixOpImplMixin'
@@ -625,13 +554,32 @@ identifier_expr ::= general_identifier
 
 identifier_args_expr ::= general_identifier clear_indent '(' <<comma_list op_suite>> clear_indent ')' { pin = 3 }
 
-prefix_op_expr ::= general_prefix_op expr
+prefix_op_4_4_expr   ::= <<general_prefix_op prefix_op_4_4>> expr
+prefix_op_4_15_expr  ::= <<general_prefix_op prefix_op_4_15>> expr
+prefix_op_8_8_expr   ::= <<general_prefix_op prefix_op_8_8>> expr
+prefix_op_9_9_expr   ::= <<general_prefix_op prefix_op_9_9>> expr
+prefix_op_12_12_expr ::= <<general_prefix_op prefix_op_12_12>> expr
 
-infix_op_expr ::= expr general_infix_op expr
+infix_op_1_1_expr   ::= expr <<general_infix_op infix_op_1_1>> expr
+infix_op_2_2_expr   ::= expr <<general_infix_op infix_op_2_2>> expr
+infix_op_3_3_expr   ::= expr <<general_infix_op infix_op_3_3>> expr
+infix_op_5_5_expr   ::= expr <<general_infix_op infix_op_5_5>> expr
+infix_op_5_14_expr  ::= expr <<general_infix_op infix_op_5_14>> expr
+infix_op_6_6_expr   ::= expr <<general_infix_op infix_op_6_6>> expr
+infix_op_7_7_expr   ::= expr <<general_infix_op infix_op_7_7>> expr
+infix_op_8_8_expr   ::= expr <<general_infix_op infix_op_8_8>> expr
+infix_op_9_9_expr   ::= expr <<general_infix_op infix_op_9_9>> expr
+infix_op_9_13_expr  ::= expr <<general_infix_op infix_op_9_13>> expr
+infix_op_9_14_expr  ::= expr <<general_infix_op infix_op_9_14>> expr
+infix_op_10_10_expr ::= expr <<general_infix_op infix_op_10_10>> expr
+infix_op_10_11_expr ::= expr <<general_infix_op infix_op_10_11>> expr
+infix_op_11_11_expr ::= expr <<general_infix_op infix_op_11_11>> expr
+infix_op_13_13_expr ::= expr <<general_infix_op infix_op_13_13>> expr
+infix_op_14_14_expr ::= expr <<general_infix_op infix_op_14_14>> expr
 
 field_access_expr ::= expr clear_indent '.' clear_indent 'identifier'
 
-postfix_op_expr ::= expr general_postfix_op
+postfix_op_15_15_expr ::= expr <<general_postfix_op postfix_op_15_15>>
 
 paren_expr ::= clear_indent '(' expr clear_indent ')' { pin = 2 }
 
@@ -758,10 +706,29 @@ expr ::= if_expr
        | functions_expr
        | function_literal_expr
        | records_expr
-       | infix_op_expr
+       | infix_op_1_1_expr
+       | infix_op_2_2_expr
+       | infix_op_3_3_expr
+       | prefix_op_4_4_expr
+       | prefix_op_4_15_expr
+       | infix_op_5_5_expr
+       | infix_op_5_14_expr
+       | infix_op_6_6_expr
+       | infix_op_7_7_expr
+       | prefix_op_8_8_expr
+       | infix_op_8_8_expr
+       | prefix_op_9_9_expr
+       | infix_op_9_9_expr
+       | infix_op_9_13_expr
+       | infix_op_9_14_expr
+       | infix_op_10_10_expr
+       | infix_op_10_11_expr
+       | infix_op_11_11_expr
+       | prefix_op_12_12_expr
+       | infix_op_13_13_expr
+       | infix_op_14_14_expr
        | cartesian_product_expr
-       | prefix_op_expr
-       | postfix_op_expr
+       | postfix_op_15_15_expr
        | at_expr
        | junction_list_expr
        | action_expr

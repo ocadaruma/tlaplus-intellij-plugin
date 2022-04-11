@@ -1,5 +1,8 @@
 package com.mayreh.intellij.plugin.tlaplus.psi.ext;
 
+import java.util.Objects;
+import java.util.stream.Stream;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,7 +19,10 @@ public abstract class TLAplusPostfixOpNameImplMixin extends TLAplusNamedElementI
 
     @Override
     public @Nullable PsiElement getNameIdentifier() {
-        return getPostfixOp();
+        return Stream.of(getPostfixOp1515())
+                     .filter(Objects::nonNull)
+                     .findFirst()
+                     .orElse(null);
     }
 
     @Override

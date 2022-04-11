@@ -19,7 +19,7 @@ public abstract class TLAplusUnqualifiedPrefixOpImplMixin extends TLAplusElement
 
     @Override
     public @NotNull String getReferenceName() {
-        return getPrefixOp().getText();
+        return getText();
     }
 
     @Override

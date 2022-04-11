@@ -19,7 +19,7 @@ public abstract class TLAplusUnqualifiedPostfixOpImplMixin extends TLAplusElemen
 
     @Override
     public @NotNull String getReferenceName() {
-        return getPostfixOp().getText();
+        return getText();
     }
 
     @Override

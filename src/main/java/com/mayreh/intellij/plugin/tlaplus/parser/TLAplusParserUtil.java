@@ -1,6 +1,5 @@
 package com.mayreh.intellij.plugin.tlaplus.parser;
 
-import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes.INFIX_OP;
 import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes.JUNCTION_BEGIN;
 import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes.JUNCTION_BREAK;
 import static com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes.JUNCTION_CONT;
@@ -15,11 +14,11 @@ import com.intellij.psi.tree.IElementType;
 
 public class TLAplusParserUtil extends GeneratedParserUtilBase {
     public static boolean parseInfixOpLor(PsiBuilder b, int level) {
-        return parseInfixOpLAndOr(OP_LOR2, b, level);
+        return parseInfixOpLandLor(OP_LOR2, b, level);
     }
 
     public static boolean parseInfixOpLand(PsiBuilder b, int level) {
-        return parseInfixOpLAndOr(OP_LAND2, b, level);
+        return parseInfixOpLandLor(OP_LAND2, b, level);
     }
 
     /*
@@ -40,17 +39,17 @@ public class TLAplusParserUtil extends GeneratedParserUtilBase {
      * To address that, we remap "false" JUNCTION_BEGIN, JUNCTION_BREAK for \/ to WHITE_SPACE to be
      * ignored by parser if \/ is parsed as infix-op.
      */
-    private static boolean parseInfixOpLAndOr(
+    private static boolean parseInfixOpLandLor(
             IElementType opToken,
             PsiBuilder b, int level) {
-        if (!recursion_guard_(b, level, "infix_op")) {
+        if (!recursion_guard_(b, level, "infix_op_land_lor")) {
             return false;
         }
-        if (!nextTokenIs(b, "<infix op>", JUNCTION_BEGIN, opToken)) {
+        if (!nextTokenIs(b, "<infix op land lor>", JUNCTION_BEGIN, opToken)) {
             return false;
         }
 
-        Marker marker = enter_section_(b, level, _NONE_, INFIX_OP, "<infix op>");
+        Marker marker = enter_section_(b, level, _NONE_, "<infix op land lor>");
 
         final boolean falseJunctionBegin;
         boolean result = false;
