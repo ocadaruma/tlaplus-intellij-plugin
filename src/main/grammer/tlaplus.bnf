@@ -345,11 +345,8 @@ private infix_op ::= infix_op_1_1 | infix_op_2_2 | infix_op_3_3
                    | infix_op_10_10 | infix_op_10_11 | infix_op_11_11 | infix_op_13_13
                    | infix_op_14_14
 
-postfix_op ::= clear_indent (
-               '^+'
-             | '^*'
-             | '^#'
-             | "'")
+postfix_op_15_15 ::= clear_indent ('^+' | '^*' | '^#' | "'")
+private postfix_op ::= postfix_op_15_15
 
 private op_suite ::= expr | prefix_op | infix_op | postfix_op | lambda_expr
 
@@ -531,12 +528,14 @@ meta unqualified_infix_op ::= <<param>>
   mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusUnqualifiedInfixOpImplMixin'
 }
 
-general_postfix_op ::= instance_prefix? unqualified_postfix_op
+// all postfix op have 15-15-precedence range so we don't need to parameterize here though,
+// we also use parameterization here to align with prefix/infix ops for simplicity.
+meta general_postfix_op ::= instance_prefix? <<unqualified_postfix_op <<param>>>>
 {
   implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusGeneralReference"
 }
 
-unqualified_postfix_op ::= postfix_op
+meta unqualified_postfix_op ::= <<param>>
 {
   implements = "com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusReferenceElement"
   mixin = 'com.mayreh.intellij.plugin.tlaplus.psi.ext.TLAplusUnqualifiedPostfixOpImplMixin'
@@ -577,7 +576,7 @@ infix_op_14_14_expr ::= expr <<general_infix_op infix_op_14_14>> expr
 
 field_access_expr ::= expr clear_indent '.' clear_indent 'identifier'
 
-postfix_op_expr ::= expr general_postfix_op
+postfix_op_15_15_expr ::= expr <<general_postfix_op postfix_op_15_15>>
 
 paren_expr ::= clear_indent '(' expr clear_indent ')' { pin = 2 }
 
@@ -726,7 +725,7 @@ expr ::= if_expr
        | infix_op_13_13_expr
        | infix_op_14_14_expr
        | cartesian_product_expr
-       | postfix_op_expr
+       | postfix_op_15_15_expr
        | at_expr
        | junction_list_expr
        | action_expr
