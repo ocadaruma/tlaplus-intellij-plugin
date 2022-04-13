@@ -10,7 +10,7 @@ buildscript {
     }
 
     dependencies {
-        classpath "org.jetbrains.intellij.plugins:gradle-intellij-plugin:1.1.3"
+        classpath "org.jetbrains.intellij.plugins:gradle-intellij-plugin:1.5.2"
         classpath "gradle.plugin.org.jetbrains.intellij.plugins:gradle-grammarkit-plugin:2021.1.3"
     }
 }
@@ -48,6 +48,8 @@ intellij {
 
 patchPluginXml {
     version = project.version
+    sinceBuild = findProperty("sinceBuild")
+    untilBuild = findProperty("untilBuild")
 }
 
 sourceSets {
