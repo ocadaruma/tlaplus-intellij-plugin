@@ -13,7 +13,9 @@ import com.intellij.ui.treeStructure.treetable.TreeColumnInfo;
 import com.intellij.util.ui.ColumnInfo;
 
 class ErrorTraceModel extends ListTreeTableModel {
+    public static final int NAME_COLUMN_INDEX = 0;
     public static final int VALUE_COLUMN_INDEX = 1;
+
 
     private final DefaultMutableTreeNode rootNode;
     private final List<StateRootNode> stateRootNodes = new ArrayList<>();

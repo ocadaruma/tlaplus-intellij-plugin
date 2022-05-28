@@ -1,5 +1,6 @@
 package com.mayreh.intellij.plugin.tlaplus.run.ui.errortrace;
 
+import static com.mayreh.intellij.plugin.tlaplus.run.ui.errortrace.ErrorTraceModel.NAME_COLUMN_INDEX;
 import static com.mayreh.intellij.plugin.tlaplus.run.ui.errortrace.ErrorTraceModel.VALUE_COLUMN_INDEX;
 import static com.mayreh.intellij.plugin.tlaplus.run.ui.errortrace.ValueDiffType.Added;
 import static com.mayreh.intellij.plugin.tlaplus.run.ui.errortrace.ValueDiffType.Modified;
@@ -18,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.intellij.ui.SimpleColoredComponent;
 import com.intellij.ui.treeStructure.treetable.TreeTable;
+import com.intellij.ui.treeStructure.treetable.TreeTableCellRenderer;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusModule;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent;
 import com.mayreh.intellij.plugin.tlaplus.run.parsing.TLCEvent.ErrorTraceEvent.FunctionValue;
@@ -69,7 +71,10 @@ public class ErrorTraceTreeTable extends TreeTable {
         };
         addMouseListener(mouseListener);
         addMouseMotionListener(mouseListener);
-        getColumnModel().getColumn(VALUE_COLUMN_INDEX).setCellRenderer(new ValueColumnCellRenderer());
+        getColumnModel().getColumn(NAME_COLUMN_INDEX).setCellRenderer(
+                new StateSeparatingCellRenderer(new TreeTableCellRenderer(this, getTree())));
+        getColumnModel().getColumn(VALUE_COLUMN_INDEX).setCellRenderer(
+                new StateSeparatingCellRenderer(new ValueColumnCellRenderer()));
     }
 
     public ErrorTraceTreeTable(@Nullable TLAplusModule module) {
