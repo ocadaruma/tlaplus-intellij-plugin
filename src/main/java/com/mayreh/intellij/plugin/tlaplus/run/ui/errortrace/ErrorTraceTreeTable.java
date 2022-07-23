@@ -70,6 +70,7 @@ public class ErrorTraceTreeTable extends TreeTable {
             }
         };
         addMouseListener(mouseListener);
+        addMouseListener(new ErrorTraceMouseListener());
         addMouseMotionListener(mouseListener);
         getColumnModel().getColumn(NAME_COLUMN_INDEX).setCellRenderer(
                 new StateSeparatingCellRenderer(new TreeTableCellRenderer(this, getTree())));

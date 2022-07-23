@@ -6,6 +6,7 @@ import java.awt.event.MouseEvent;
 import java.util.Optional;
 
 import javax.swing.JComponent;
+import javax.swing.SwingUtilities;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -25,6 +26,9 @@ public abstract class ActionFormulaLinkListener extends MouseAdapter {
 
     @Override
     public void mouseClicked(MouseEvent e) {
+        if (!SwingUtilities.isLeftMouseButton(e)) {
+            return;
+        }
         ActionFormula formula = taggedActionFormula(e);
         if (formula != null && e.getClickCount() == 1) {
             Optional.ofNullable(module)
