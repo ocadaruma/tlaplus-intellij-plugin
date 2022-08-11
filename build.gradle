@@ -11,7 +11,7 @@ buildscript {
 
     dependencies {
         classpath "org.jetbrains.intellij.plugins:gradle-intellij-plugin:1.5.2"
-        classpath "gradle.plugin.org.jetbrains.intellij.plugins:gradle-grammarkit-plugin:2021.1.3"
+        classpath "org.jetbrains.intellij.plugins:gradle-grammarkit-plugin:2021.2.2"
     }
 }
 
@@ -27,12 +27,11 @@ repositories {
 }
 
 ext {
-    lombokVersion = '1.18.22'
+    lombokVersion = '1.18.24'
 }
 
 dependencies {
     implementation files('libs/tla2tools.jar')
-    implementation "org.scilab.forge:jlatexmath:1.0.7"
     compileOnly "org.projectlombok:lombok:$lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$lombokVersion"
     testCompileOnly "org.projectlombok:lombok:$lombokVersion"
@@ -43,7 +42,7 @@ dependencies {
 
 intellij {
     version = "211.7628.21"
-    plugins = ["com.intellij.java", "org.intellij.intelliLang"]
+    plugins = ["org.intellij.intelliLang"]
     updateSinceUntilBuild = false
 }
 
@@ -64,35 +63,35 @@ task prepareLib(type: Exec) {
     commandLine './setup.sh'
 }
 
-task generateTLAplusLexer(type: GenerateLexer) {
+task generateTLAplusLexer(type: GenerateLexerTask) {
     source = "src/main/grammar/tlaplus.flex"
     targetDir = "src/gen/com/mayreh/intellij/plugin/tlaplus/lexer"
     targetClass = "_TLAplusLexer"
     purgeOldFiles = true
 }
 
-task generateTLAplusModuleBeginLexer(type: GenerateLexer) {
+task generateTLAplusModuleBeginLexer(type: GenerateLexerTask) {
     source = "src/main/grammar/tlaplus_modulebegin.flex"
     targetDir = "src/gen/com/mayreh/intellij/plugin/tlaplus/lexer"
     targetClass = "_TLAplusModuleBeginLexer"
     purgeOldFiles = true
 }
 
-task generateTLAplusPlusCalCommentLexer(type: GenerateLexer) {
+task generateTLAplusPlusCalCommentLexer(type: GenerateLexerTask) {
     source = "src/main/grammar/tlaplus_plus_cal_comment.flex"
     targetDir = "src/gen/com/mayreh/intellij/plugin/tlaplus/lexer"
     targetClass = "_TLAplusPlusCalCommentLexer"
     purgeOldFiles = true
 }
 
-task generateTLCErrorTraceLexer(type: GenerateLexer) {
+task generateTLCErrorTraceLexer(type: GenerateLexerTask) {
     source = "src/main/grammar/tlc_error_trace.flex"
     targetDir = "src/gen/com/mayreh/intellij/plugin/tlaplus/tlc/lexer"
     targetClass = "_TLCErrorTraceLexer"
     purgeOldFiles = true
 }
 
-task generateTLAplusParser(type: GenerateParser) {
+task generateTLAplusParser(type: GenerateParserTask) {
     source = "src/main/grammar/tlaplus.bnf"
     targetRoot = "src/gen"
     pathToParser = "/com/mayreh/intellij/plugin/tlaplus/parser/TLAplusParser.java"
@@ -100,7 +99,7 @@ task generateTLAplusParser(type: GenerateParser) {
     purgeOldFiles = true
 }
 
-task generateTLCConfigParser(type: GenerateParser) {
+task generateTLCConfigParser(type: GenerateParserTask) {
     source = "src/main/grammar/tlc_config.bnf"
     targetRoot = "src/gen"
     pathToParser = "/com/mayreh/intellij/plugin/tlc/parser/TLCConfigParser.java"
@@ -108,14 +107,14 @@ task generateTLCConfigParser(type: GenerateParser) {
     purgeOldFiles = true
 }
 
-task generateTLCConfigLexer(type: GenerateLexer) {
+task generateTLCConfigLexer(type: GenerateLexerTask) {
     source = "src/main/grammar/tlc_config.flex"
     targetDir = "src/gen/com/mayreh/intellij/plugin/tlc/lexer"
     targetClass = "_TLCConfigLexer"
     purgeOldFiles = true
 }
 
-task generatePlusCalAlgorithmBeginLexer(type: GenerateLexer) {
+task generatePlusCalAlgorithmBeginLexer(type: GenerateLexerTask) {
     source = "src/main/grammar/plus_cal_algorithmbegin.flex"
     targetDir = "src/gen/com/mayreh/intellij/plugin/pluscal/lexer"
     targetClass = "_PlusCalAlgorithmBeginLexer"

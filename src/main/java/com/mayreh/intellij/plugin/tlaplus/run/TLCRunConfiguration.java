@@ -8,23 +8,31 @@ import org.jetbrains.annotations.Nullable;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
+import com.intellij.execution.configurations.CommandLineState;
 import com.intellij.execution.configurations.ConfigurationFactory;
-import com.intellij.execution.configurations.JavaCommandLineState;
-import com.intellij.execution.configurations.JavaParameters;
+import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.configurations.LocatableConfigurationBase;
 import com.intellij.execution.configurations.ParametersList;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.configurations.RunProfileState;
+import com.intellij.execution.configurations.SimpleJavaParameters;
 import com.intellij.execution.filters.Filter;
 import com.intellij.execution.filters.TextConsoleBuilder;
+import com.intellij.execution.process.OSProcessHandler;
+import com.intellij.execution.process.ProcessHandler;
+import com.intellij.execution.process.ProcessHandlerFactory;
+import com.intellij.execution.process.ProcessTerminatedListener;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.testframework.TestConsoleProperties;
 import com.intellij.execution.testframework.actions.ConsolePropertiesProvider;
 import com.intellij.execution.ui.ConsoleView;
-import com.intellij.execution.util.JavaParametersUtil;
 import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.projectRoots.SimpleJavaSdkType;
+import com.intellij.openapi.projectRoots.ex.PathUtilEx;
+import com.intellij.util.SystemProperties;
 import com.mayreh.intellij.plugin.tlaplus.run.ui.TLCOutputConsoleView;
 import com.mayreh.intellij.plugin.tlaplus.run.ui.TLCSettingsEditor;
 import com.mayreh.intellij.plugin.tlaplus.run.ui.TLCTestConsoleProperties;
@@ -69,15 +77,21 @@ public class TLCRunConfiguration extends LocatableConfigurationBase<TLCRunConfig
                                               @NotNull ExecutionEnvironment environment)
             throws ExecutionException {
         TLCRunConfiguration that = this;
-        return new JavaCommandLineState(environment) {
+        return new CommandLineState(environment) {
             @Override
-            protected JavaParameters createJavaParameters() throws ExecutionException {
-                {
-                    setConsoleBuilder(new TLCConsoleBuilder(that, executor));
+            protected @NotNull ProcessHandler startProcess() throws ExecutionException {
+                setConsoleBuilder(new TLCConsoleBuilder(that, executor));
+
+                SimpleJavaParameters params = new SimpleJavaParameters();
+
+                Sdk jdk = PathUtilEx.getAnyJdk(getProject());
+                if (jdk == null) {
+                    jdk = SimpleJavaSdkType.getInstance().createJdk(
+                            "tmp",
+                            SystemProperties.getJavaHome());
                 }
 
-                JavaParameters params = new JavaParameters();
-                params.setJdk(JavaParametersUtil.createProjectJdk(getProject(), null));
+                params.setJdk(jdk);
                 params.getClassPath().add(PathManager.getJarPathForClass(tlc2.TLC.class));
                 params.setWorkingDirectory(getWorkingDirectory());
                 params.setMainClass("tlc2.TLC");
@@ -87,7 +101,13 @@ public class TLCRunConfiguration extends LocatableConfigurationBase<TLCRunConfig
                 args.add("-modelcheck");
                 args.add("-coverage", "1");
                 args.add(getFile());
-                return params;
+
+                GeneralCommandLine commandLine = params.toCommandLine();
+
+                ProcessHandlerFactory factory = ProcessHandlerFactory.getInstance();
+                OSProcessHandler handler = factory.createProcessHandler(commandLine);
+                ProcessTerminatedListener.attach(handler);
+                return handler;
             }
         };
     }
