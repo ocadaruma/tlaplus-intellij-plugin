@@ -66,7 +66,10 @@ public class TLCBeforeRunTaskProvider extends BeforeRunTaskProvider<TLCBeforeRun
 
     @Override
     public @Nullable TLCBeforeRunTask createTask(@NotNull RunConfiguration runConfiguration) {
-        return new TLCBeforeRunTask();
+        if (runConfiguration instanceof TLCRunConfiguration) {
+            return new TLCBeforeRunTask();
+        }
+        return null;
     }
 
     @Override
