@@ -16,13 +16,7 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusSynonymElement;
 public class TLAplusFindUsagesHandlerFactory extends FindUsagesHandlerFactory {
     @Override
     public boolean canFindUsages(@NotNull PsiElement element) {
-        if (!element.isValid()) {
-            return false;
-        }
-        if (element instanceof PsiFileSystemItem) {
-            return ((PsiFileSystemItem)element).getVirtualFile() != null;
-        }
-        return LanguageFindUsages.canFindUsagesFor(element);
+        return TLAplusFindUsagesProvider.canFindUsages(element);
     }
 
     @Override

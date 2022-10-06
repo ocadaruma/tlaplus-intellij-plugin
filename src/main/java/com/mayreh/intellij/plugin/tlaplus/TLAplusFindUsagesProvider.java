@@ -23,6 +23,10 @@ import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement;
 
 public class TLAplusFindUsagesProvider implements FindUsagesProvider {
+    public static boolean canFindUsages(@NotNull PsiElement psiElement) {
+        return psiElement instanceof TLAplusNamedElement;
+    }
+
     @Override
     public @Nullable WordsScanner getWordsScanner() {
         return new TLAplusWordsScanner();
@@ -30,7 +34,7 @@ public class TLAplusFindUsagesProvider implements FindUsagesProvider {
 
     @Override
     public boolean canFindUsagesFor(@NotNull PsiElement psiElement) {
-        return psiElement instanceof TLAplusNamedElement;
+        return canFindUsages(psiElement);
     }
 
     @Override
