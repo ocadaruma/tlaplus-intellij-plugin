@@ -759,7 +759,7 @@ tlc_sequence_empty_value ::= '<<' '>>'
 tlc_sequence_value ::= '<<' tlc_value (',' tlc_value)* '>>'
 
 tlc_function_value ::= '(' tlc_function_pair ('@@' tlc_function_pair)* ')'
-tlc_function_pair ::= 'identifier' ':>' tlc_value
+tlc_function_pair ::= tlc_value ':>' tlc_value
 
 tlc_value ::= tlc_function_value
             | tlc_sequence_value

@@ -1,0 +1,7 @@
+5: <OnPartitionsAssigned line 77, col 5 to line 90, col 99 of module ProcessorSpec>
+/\ assignedPartitions = {2, 3}
+/\ reloadRequested = TRUE
+/\ currentRebalance = NULL
+/\ pc = "L2"
+/\ partitionContexts = ( 2 :> [revoked |-> FALSE, pendingRecords |-> 0, paused |-> FALSE] @@
+  3 :> [revoked |-> FALSE, pendingRecords |-> 0, paused |-> FALSE] )

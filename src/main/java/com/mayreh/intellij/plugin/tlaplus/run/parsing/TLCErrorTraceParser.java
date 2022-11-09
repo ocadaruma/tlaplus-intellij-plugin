@@ -179,10 +179,10 @@ public class TLCErrorTraceParser {
                     Arrays.stream(node.getChildren(TokenSet.create(TLC_FUNCTION_PAIR)))
                           .flatMap(pairNode -> {
                               Optional<String> keyOpt =
-                                      Optional.ofNullable(pairNode.findChildByType(IDENTIFIER))
+                                      Optional.ofNullable(pairNode.getFirstChildNode())
                                               .map(ASTNode::getText);
                               Optional<TraceVariableValue> valueOpt =
-                                      Optional.ofNullable(pairNode.findChildByType(TLC_VALUE))
+                                      Optional.ofNullable(pairNode.getLastChildNode())
                                               .map(TLCErrorTraceParser::parseVariableValue);
                               return keyOpt.flatMap(key -> valueOpt.map(value -> new FunctionValue.Entry(key, value)))
                                            .stream();

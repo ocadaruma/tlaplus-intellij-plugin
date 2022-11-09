@@ -79,4 +79,36 @@ public class TLCErrorTraceParserTest extends BasePlatformTestCase {
                         )))
         )), result.get());
     }
+
+    public void testNonIdentifierDomainFunction() {
+        Optional<ErrorTraceEvent> result = new TLCErrorTraceParser().parse(
+                TestUtils.resourceToString("tlc/errortrace/fixtures/non_identifier_domain_function.out")
+                         .lines().collect(toList()));
+        Assert.assertEquals(new SimpleErrorTrace(
+                5,
+                "ProcessorSpec",
+                "OnPartitionsAssigned",
+                new Range<>(new SourceLocation(76, 4), new SourceLocation(89, 99)),
+                asList(
+                        new TraceVariable("assignedPartitions", new SetValue(asList(
+                                new PrimitiveValue("2"),
+                                new PrimitiveValue("3")
+                        ))),
+                        new TraceVariable("reloadRequested", new PrimitiveValue("TRUE")),
+                        new TraceVariable("currentRebalance", new PrimitiveValue("NULL")),
+                        new TraceVariable("pc", new PrimitiveValue("\"L2\"")),
+                        new TraceVariable("partitionContexts", new FunctionValue(asList(
+                                new FunctionValue.Entry("2", new RecordValue(asList(
+                                        new RecordValue.Entry("revoked", new PrimitiveValue("FALSE")),
+                                        new RecordValue.Entry("pendingRecords", new PrimitiveValue("0")),
+                                        new RecordValue.Entry("paused", new PrimitiveValue("FALSE"))
+                                ))),
+                                new FunctionValue.Entry("3", new RecordValue(asList(
+                                        new RecordValue.Entry("revoked", new PrimitiveValue("FALSE")),
+                                        new RecordValue.Entry("pendingRecords", new PrimitiveValue("0")),
+                                        new RecordValue.Entry("paused", new PrimitiveValue("FALSE"))
+                                )))
+                        )))
+                )), result.get());
+    }
 }

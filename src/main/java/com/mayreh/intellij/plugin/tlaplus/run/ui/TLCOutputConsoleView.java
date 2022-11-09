@@ -41,6 +41,49 @@ import lombok.experimental.Accessors;
  * The implementation is mostly taken from {@link BaseTestsOutputConsoleView}
  */
 public class TLCOutputConsoleView implements ConsoleView, HelpIdProvider {
+    static class TLCProcessAdapter extends ProcessAdapter {
+        private final TLCOutputConsoleView consoleView;
+        private StringBuilder buffer;
+        private TLCEventParser currentParser;
+
+        TLCProcessAdapter(TLCOutputConsoleView consoleView) {
+            this.consoleView = consoleView;
+            currentParser = TLCEventParser.create(consoleView.resultPanel);
+            buffer = new StringBuilder();
+        }
+
+        @Override
+        public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
+            ApplicationManager.getApplication().invokeLater(
+                    () -> consoleView.resultPanel.printInConsole(event.getText()));
+
+            // Since onTextAvailable might be called in the middle of the line,
+            // we have to buffer it and aggregate to the line here
+            buffer.append(event.getText());
+            int idx = buffer.indexOf("\n");
+            if (idx >= 0) {
+                String line = buffer.substring(0, idx + 1);
+                buffer = new StringBuilder(buffer.substring(idx + 1));
+                ApplicationManager.getApplication().invokeLater(
+                        () -> currentParser = currentParser.addLine(line));
+            }
+        }
+
+        @Override
+        public void processTerminated(@NotNull ProcessEvent event) {
+            if (buffer.length() > 0) {
+                ApplicationManager.getApplication().invokeLater(
+                        () -> consoleView.resultPanel.printInConsole(buffer.toString()));
+                for (String line : buffer.toString().split("\n")) {
+                    ApplicationManager.getApplication().invokeLater(
+                            () -> currentParser.addLine(line));
+                }
+            }
+            ApplicationManager.getApplication().invokeLater(
+                    () -> currentParser.notifyProcessExit(event.getExitCode()));
+        }
+    }
+
     interface State {
         @NotNull State dispose();
         @NotNull State attachTo(TLCOutputConsoleView consoleView, ProcessHandler processHandler);
@@ -64,25 +107,7 @@ public class TLCOutputConsoleView implements ConsoleView, HelpIdProvider {
 
             public Running(TLCOutputConsoleView consoleView, ProcessHandler processHandler) {
                 this.processHandler = processHandler;
-                listener = new ProcessAdapter() {
-                    private TLCEventParser currentParser = TLCEventParser.create(
-                            consoleView.resultPanel);
-                    @Override
-                    public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
-                        ApplicationManager.getApplication().invokeLater(
-                                () -> {
-                                    consoleView.resultPanel.printInConsole(event.getText());
-                                    currentParser = currentParser.addLine(event.getText());
-                                });
-                    }
-
-                    @Override
-                    public void processTerminated(@NotNull ProcessEvent event) {
-                        ApplicationManager.getApplication().invokeLater(
-                                () -> currentParser.notifyProcessExit(event.getExitCode()));
-
-                    }
-                };
+                listener = new TLCProcessAdapter(consoleView);
                 processHandler.addProcessListener(listener);
             }
 
