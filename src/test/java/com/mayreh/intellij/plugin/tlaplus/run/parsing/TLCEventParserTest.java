@@ -16,6 +16,10 @@ public class TLCEventParserTest extends BasePlatformTestCase {
         doTest("PaxosCommit_success");
     }
 
+    public void testCoverageWithLocation() {
+        doTest("CoverageWithLocation");
+    }
+
     private void doTest(String fileName) {
         List<TLCEvent> events = new ArrayList<>();
         Consumer<String> parserOuter = new Consumer<>() {

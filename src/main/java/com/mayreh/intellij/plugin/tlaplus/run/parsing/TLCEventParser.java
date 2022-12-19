@@ -256,7 +256,7 @@ public abstract class TLCEventParser {
 
     private static class CoverageItemParser {
         private static final Pattern PATTERN = Pattern.compile(
-                "<(\\w+) line (\\d+), col (\\d+) to line (\\d+), col (\\d+) of module (\\w+)>: (\\d+):(\\d+)");
+                "<(\\w+) line (\\d+), col (\\d+) to line (\\d+), col (\\d+) of module (\\w+)(?: \\(\\d+ \\d+ \\d+ \\d+\\))?>: (\\d+):(\\d+)");
 
         static Optional<TLCEvent.CoverageItem> parse(List<String> lines) {
             return maybeMatch(PATTERN, String.join("", lines)).map(matcher -> {
