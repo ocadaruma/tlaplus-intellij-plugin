@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="com.mayreh.intellij.plugin.tlaplus.run.ui.TLCSettingsEditor">
-  <grid id="27dc6" binding="panel" layout-manager="GridLayoutManager" row-count="3" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+  <grid id="27dc6" binding="panel" layout-manager="GridLayoutManager" row-count="7" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="0" left="0" bottom="0" right="0"/>
     <constraints>
       <xy x="20" y="20" width="500" height="400"/>
@@ -14,12 +14,12 @@
         </constraints>
         <properties>
           <labelLocation value="West"/>
-          <text value="File"/>
+          <text value="Spec file"/>
         </properties>
       </component>
       <vspacer id="53e0d">
         <constraints>
-          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+          <grid row="6" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
         </constraints>
       </vspacer>
       <component id="c5b4c" class="com.intellij.openapi.ui.LabeledComponent" binding="workingDirectoryField" custom-create="true">
@@ -30,6 +30,34 @@
           <labelLocation value="West"/>
           <requestFocusEnabled value="false"/>
           <text value="Working directory"/>
+        </properties>
+      </component>
+      <vspacer id="27c12">
+        <constraints>
+          <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+        </constraints>
+      </vspacer>
+      <component id="b9648" class="com.intellij.openapi.ui.LabeledComponent" binding="tlcArgumentsEditor" custom-create="true">
+        <constraints>
+          <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <labelLocation value="West"/>
+          <text value="Additional TLC arguments"/>
+        </properties>
+      </component>
+      <vspacer id="e920a">
+        <constraints>
+          <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+        </constraints>
+      </vspacer>
+      <component id="a040c" class="com.intellij.openapi.ui.LabeledComponent" binding="jvmOptionsEditor" custom-create="true">
+        <constraints>
+          <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <labelLocation value="West"/>
+          <text value="JVM options"/>
         </properties>
       </component>
     </children>

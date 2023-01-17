@@ -67,6 +67,22 @@ public class TLCRunConfiguration extends LocatableConfigurationBase<TLCRunConfig
         options().setFile(value);
     }
 
+    public String getTlcArguments() {
+        return options().getTlcArguments();
+    }
+
+    public void setTlcArguments(String value) {
+        options().setTlcArguments(value);
+    }
+
+    public String getJvmOptions() {
+        return options().getJvmOptions();
+    }
+
+    public void setJvmOptions(String value) {
+        options().setJvmOptions(value);
+    }
+
     @Override
     public @NotNull SettingsEditor<? extends RunConfiguration> getConfigurationEditor() {
         return new TLCSettingsEditor();
@@ -94,12 +110,19 @@ public class TLCRunConfiguration extends LocatableConfigurationBase<TLCRunConfig
                 params.setJdk(jdk);
                 params.getClassPath().add(PathManager.getJarPathForClass(tlc2.TLC.class));
                 params.setWorkingDirectory(getWorkingDirectory());
+                params.getVMParametersList().addParametersString(getJvmOptions());
                 params.setMainClass("tlc2.TLC");
 
                 ParametersList args = params.getProgramParametersList();
                 args.add("-tool");
                 args.add("-modelcheck");
-                args.add("-coverage", "1");
+
+                ParametersList tlcArguments = new ParametersList();
+                tlcArguments.addParametersString(getTlcArguments());
+                if (!tlcArguments.hasParameter("-coverage")) {
+                    tlcArguments.add("-coverage", "1");
+                }
+                args.addAll(tlcArguments.getParameters());
                 args.add(getFile());
 
                 GeneralCommandLine commandLine = params.toCommandLine();

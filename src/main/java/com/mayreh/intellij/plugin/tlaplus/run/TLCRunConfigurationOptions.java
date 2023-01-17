@@ -10,6 +10,12 @@ public class TLCRunConfigurationOptions extends LocatableRunConfigurationOptions
     private final StoredProperty<String> file = string("")
             .provideDelegate(this, "file");
 
+    private final StoredProperty<String> tlcArguments = string("")
+            .provideDelegate(this, "tlcArguments");
+
+    private final StoredProperty<String> jvmOptions = string("")
+            .provideDelegate(this, "jvmOptions");
+
     public String getWorkingDirectory() {
         return workingDirectory.getValue(this);
     }
@@ -24,5 +30,21 @@ public class TLCRunConfigurationOptions extends LocatableRunConfigurationOptions
 
     public void setFile(String value) {
         file.setValue(this, value);
+    }
+
+    public String getTlcArguments() {
+        return tlcArguments.getValue(this);
+    }
+
+    public void setTlcArguments(String value) {
+        tlcArguments.setValue(this, value);
+    }
+
+    public String getJvmOptions() {
+        return jvmOptions.getValue(this);
+    }
+
+    public void setJvmOptions(String value) {
+        jvmOptions.setValue(this, value);
     }
 }
