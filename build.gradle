@@ -1,5 +1,6 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.jetbrains.grammarkit.tasks.*
 
 buildscript {
     repositories {
@@ -67,35 +68,35 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
-generateLexer {
+task generateTLAplusLexer(type: GenerateLexerTask) {
     sourceFile.set(file("src/main/grammar/tlaplus.flex"))
     targetDir.set("src/gen/com/mayreh/intellij/plugin/tlaplus/lexer")
     targetClass.set("_TLAplusLexer")
     purgeOldFiles.set(true)
 }
 
-generateLexer {
+task generateTLAplusModuleBeginLexer(type: GenerateLexerTask) {
     sourceFile.set(file("src/main/grammar/tlaplus_modulebegin.flex"))
     targetDir.set("src/gen/com/mayreh/intellij/plugin/tlaplus/lexer")
     targetClass.set("_TLAplusModuleBeginLexer")
     purgeOldFiles.set(true)
 }
 
-generateLexer {
+task generateTLAplusPlusCalCommentLexer(type: GenerateLexerTask) {
     sourceFile.set(file("src/main/grammar/tlaplus_plus_cal_comment.flex"))
     targetDir.set("src/gen/com/mayreh/intellij/plugin/tlaplus/lexer")
     targetClass.set("_TLAplusPlusCalCommentLexer")
     purgeOldFiles.set(true)
 }
 
-generateLexer {
+task generateTLCErrorTraceLexer(type: GenerateLexerTask) {
     sourceFile.set(file("src/main/grammar/tlc_error_trace.flex"))
     targetDir.set("src/gen/com/mayreh/intellij/plugin/tlaplus/tlc/lexer")
     targetClass.set("_TLCErrorTraceLexer")
     purgeOldFiles.set(true)
 }
 
-generateParser {
+task generateTLAplusParser(type: GenerateParserTask) {
     sourceFile.set(file("src/main/grammar/tlaplus.bnf"))
     targetRoot.set("src/gen")
     pathToParser.set("/com/mayreh/intellij/plugin/tlaplus/parser/TLAplusParser.java")
@@ -103,7 +104,7 @@ generateParser {
     purgeOldFiles.set(true)
 }
 
-generateParser {
+task generateTLCConfigParser(type: GenerateParserTask) {
     sourceFile.set(file("src/main/grammar/tlc_config.bnf"))
     targetRoot.set("src/gen")
     pathToParser.set("/com/mayreh/intellij/plugin/tlc/parser/TLCConfigParser.java")
@@ -111,21 +112,30 @@ generateParser {
     purgeOldFiles.set(true)
 }
 
-generateLexer {
+task generateTLCConfigLexer(type: GenerateLexerTask) {
     sourceFile.set(file("src/main/grammar/tlc_config.flex"))
     targetDir.set("src/gen/com/mayreh/intellij/plugin/tlc/lexer")
     targetClass.set("_TLCConfigLexer")
     purgeOldFiles.set(true)
 }
 
-generateLexer {
+task generatePlusCalAlgorithmBeginLexer(type: GenerateLexerTask) {
     sourceFile.set(file("src/main/grammar/plus_cal_algorithmbegin.flex"))
     targetDir.set("src/gen/com/mayreh/intellij/plugin/pluscal/lexer")
     targetClass.set("_PlusCalAlgorithmBeginLexer")
     purgeOldFiles.set(true)
 }
 
-compileJava.dependsOn(prepareLib, generateLexer, generateParser)
+compileJava.dependsOn(
+        prepareLib,
+        generateTLAplusLexer,
+        generateTLAplusModuleBeginLexer,
+        generateTLAplusPlusCalCommentLexer,
+        generateTLCErrorTraceLexer,
+        generateTLAplusParser,
+        generateTLCConfigParser,
+        generateTLCConfigLexer,
+        generatePlusCalAlgorithmBeginLexer)
 
 tasks.withType(Test) {
     testLogging {
