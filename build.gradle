@@ -40,7 +40,7 @@ dependencies {
 }
 
 intellij {
-    version = "231.8109.175"
+    version = "223.7571.182"
     plugins = ["org.intellij.intelliLang"]
     updateSinceUntilBuild = false
 }
@@ -60,6 +60,11 @@ sourceSets {
 task prepareLib(type: Exec) {
     workingDir project.rootDir
     commandLine './setup.sh'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 generateLexer {
