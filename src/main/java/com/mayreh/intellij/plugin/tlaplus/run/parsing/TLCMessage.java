@@ -1,6 +1,6 @@
 package com.mayreh.intellij.plugin.tlaplus.run.parsing;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import lombok.Value;
 import lombok.experimental.Accessors;
