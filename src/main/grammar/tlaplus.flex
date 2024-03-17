@@ -84,13 +84,14 @@ import com.mayreh.intellij.plugin.util.StringUtil;
         }
         JunctionIndentation i = zzIndentationStack.isEmpty() ? null : zzIndentationStack.peek();
         int column = StringUtil.offsetToColumn(zzBuffer, zzCurrentPos);
-        if (i == null || i.column() < column) {
-            zzIndentationStack.push(JunctionIndentation.and(column));
+        JunctionIndentation newI = JunctionIndentation.from(operator, column);
+        if (i == null || i.column() < newI.column()) {
+            zzIndentationStack.push(newI);
             yybegin(lexerMode.handleIndentState);
             yypushback(yylength());
             return TLAplusElementTypes.JUNCTION_BEGIN;
         }
-        if (i.type() == Type.And && i.column() == column) {
+        if (i.type() == newI.type() && i.column() == newI.column()) {
             yybegin(lexerMode.handleIndentState);
             yypushback(yylength());
             return TLAplusElementTypes.JUNCTION_CONT;
