@@ -686,8 +686,9 @@ private junc_break ::= 'JUNCTION_BREAK' {
 }
 
 // Junction-arm can be terminated by other tokens than JUNCTION_BREAK like braces, parenthesis
-junction_list_expr ::= (junc_begin '/\' expr (junc_cont '/\' expr)* junc_break?)
-                     | (junc_begin '\/' expr (junc_cont '\/' expr)* junc_break?)
+junction_list_expr ::= clear_indent (
+                         (junc_begin '/\' expr (junc_cont '/\' expr)* junc_break?)
+                       | (junc_begin '\/' expr (junc_cont '\/' expr)* junc_break?))
 
 literal_expr ::= clear_indent ('string' | 'number')
 

@@ -16,6 +16,10 @@ public class TLAplusParserTest extends ParserTestCaseBase {
         doTest();
     }
 
+    public void test_Junction2() {
+        doTest();
+    }
+
     public void test_fairness() {
         doTest();
     }
@@ -49,6 +53,10 @@ public class TLAplusParserTest extends ParserTestCaseBase {
     }
 
     public void test_recursive() {
+        doTest();
+    }
+
+    public void test_case() {
         doTest();
     }
 }

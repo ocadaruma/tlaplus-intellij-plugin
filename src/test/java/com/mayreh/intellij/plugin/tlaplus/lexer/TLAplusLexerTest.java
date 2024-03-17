@@ -37,6 +37,10 @@ public class TLAplusLexerTest extends LexerTestCaseBase {
         doTest();
     }
 
+    public void test_Junction4() {
+        doTest();
+    }
+
     public void test_fairness() {
         doTest();
     }
