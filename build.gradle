@@ -41,7 +41,7 @@ dependencies {
 }
 
 intellij {
-    version = "223.7571.182"
+    version = findProperty("sinceBuild")
     plugins = ["org.intellij.intelliLang"]
     updateSinceUntilBuild = false
 }
