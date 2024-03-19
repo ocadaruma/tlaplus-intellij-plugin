@@ -12,6 +12,14 @@ jobs:
     strategy:
       fail-fast: false
     steps:
+    # Free GitHub Actions Environment Disk Space
+    # Since runPluginVerifier task requires a lot of disk space for downloading IDEs,
+    # without this, the build will fail due to disk full.
+    - name: Maximize Build Space
+      uses: jlumbroso/free-disk-space@main
+      with:
+        tool-cache: false
+        large-packages: false
     - uses: actions/checkout@v2
     - name: Setup java
       uses: actions/setup-java@v1
