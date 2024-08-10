@@ -14,10 +14,10 @@ begin Baz:
     call foo()
 end process
 end algorithm;*)
-\* BEGIN TRANSLATION (chksum(pcal) = "83c39aa4" /\ chksum(tla) = "a4310d13")
-VARIABLES x, pc, stack
+\* BEGIN TRANSLATION (chksum(pcal) = "83c39aa4" /\ chksum(tla) = "3e50108c")
+VARIABLES pc, x, stack
 
-vars == << x, pc, stack >>
+vars == << pc, x, stack >>
 
 ProcSet == {"One"}
 
