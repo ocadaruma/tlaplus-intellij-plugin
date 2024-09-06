@@ -11,7 +11,7 @@ buildscript {
 
     dependencies {
         classpath "org.jetbrains.intellij.plugins:gradle-intellij-plugin:1.13.3"
-        classpath "org.jetbrains.intellij.plugins:gradle-grammarkit-plugin:2022.3.1"
+        classpath "org.jetbrains.intellij.plugins:gradle-grammarkit-plugin:2022.3.2.2"
     }
 }
 
@@ -70,35 +70,29 @@ java {
 
 task generateTLAplusLexer(type: GenerateLexerTask) {
     sourceFile.set(file("src/main/grammar/tlaplus.flex"))
-    targetDir.set("src/gen/com/mayreh/intellij/plugin/tlaplus/lexer")
-    targetClass.set("_TLAplusLexer")
+    targetOutputDir.set(layout.projectDirectory.dir("src/gen/com/mayreh/intellij/plugin/tlaplus/lexer"))
     purgeOldFiles.set(true)
 }
 
 task generateTLAplusModuleBeginLexer(type: GenerateLexerTask) {
     sourceFile.set(file("src/main/grammar/tlaplus_modulebegin.flex"))
-    targetDir.set("src/gen/com/mayreh/intellij/plugin/tlaplus/lexer")
-    targetClass.set("_TLAplusModuleBeginLexer")
-    purgeOldFiles.set(true)
+    targetOutputDir.set(layout.projectDirectory.dir("src/gen/com/mayreh/intellij/plugin/tlaplus/lexer"))
 }
 
 task generateTLAplusPlusCalCommentLexer(type: GenerateLexerTask) {
     sourceFile.set(file("src/main/grammar/tlaplus_plus_cal_comment.flex"))
-    targetDir.set("src/gen/com/mayreh/intellij/plugin/tlaplus/lexer")
-    targetClass.set("_TLAplusPlusCalCommentLexer")
-    purgeOldFiles.set(true)
+    targetOutputDir.set(layout.projectDirectory.dir("src/gen/com/mayreh/intellij/plugin/tlaplus/lexer"))
 }
 
 task generateTLCErrorTraceLexer(type: GenerateLexerTask) {
     sourceFile.set(file("src/main/grammar/tlc_error_trace.flex"))
-    targetDir.set("src/gen/com/mayreh/intellij/plugin/tlaplus/tlc/lexer")
-    targetClass.set("_TLCErrorTraceLexer")
+    targetOutputDir.set(layout.projectDirectory.dir("src/gen/com/mayreh/intellij/plugin/tlaplus/tlc/lexer"))
     purgeOldFiles.set(true)
 }
 
 task generateTLAplusParser(type: GenerateParserTask) {
     sourceFile.set(file("src/main/grammar/tlaplus.bnf"))
-    targetRoot.set("src/gen")
+    targetRootOutputDir.set(layout.projectDirectory.dir("src/gen"))
     pathToParser.set("/com/mayreh/intellij/plugin/tlaplus/parser/TLAplusParser.java")
     pathToPsiRoot.set("/com/mayreh/intellij/plugin/tlaplus/psi")
     purgeOldFiles.set(true)
@@ -106,23 +100,19 @@ task generateTLAplusParser(type: GenerateParserTask) {
 
 task generateTLCConfigParser(type: GenerateParserTask) {
     sourceFile.set(file("src/main/grammar/tlc_config.bnf"))
-    targetRoot.set("src/gen")
+    targetRootOutputDir.set(layout.projectDirectory.dir("src/gen"))
     pathToParser.set("/com/mayreh/intellij/plugin/tlc/parser/TLCConfigParser.java")
     pathToPsiRoot.set("/com/mayreh/intellij/plugin/tlc/psi")
-    purgeOldFiles.set(true)
 }
 
 task generateTLCConfigLexer(type: GenerateLexerTask) {
     sourceFile.set(file("src/main/grammar/tlc_config.flex"))
-    targetDir.set("src/gen/com/mayreh/intellij/plugin/tlc/lexer")
-    targetClass.set("_TLCConfigLexer")
-    purgeOldFiles.set(true)
+    targetOutputDir.set(layout.projectDirectory.dir("src/gen/com/mayreh/intellij/plugin/tlc/lexer"))
 }
 
 task generatePlusCalAlgorithmBeginLexer(type: GenerateLexerTask) {
     sourceFile.set(file("src/main/grammar/plus_cal_algorithmbegin.flex"))
-    targetDir.set("src/gen/com/mayreh/intellij/plugin/pluscal/lexer")
-    targetClass.set("_PlusCalAlgorithmBeginLexer")
+    targetOutputDir.set(layout.projectDirectory.dir("src/gen/com/mayreh/intellij/plugin/pluscal/lexer"))
     purgeOldFiles.set(true)
 }
 

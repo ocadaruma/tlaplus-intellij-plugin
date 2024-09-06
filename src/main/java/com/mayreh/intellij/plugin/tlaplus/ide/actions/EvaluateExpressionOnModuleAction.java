@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.Project;
@@ -44,7 +45,7 @@ public class EvaluateExpressionOnModuleAction extends TLAplusActionBase {
         }
 
         Pair<Context, PsiDirectory> context = maybeContext(currentModuleName, document);
-        FileDocumentManager.getInstance().saveAllDocuments();
+        ApplicationManager.getApplication().invokeLater(() -> FileDocumentManager.getInstance().saveAllDocuments());
 
         new EvaluateExpressionDialog(project, context == null ? null : context.first, new XDebuggerEditorsProviderBase() {
             @Override

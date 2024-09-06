@@ -21,7 +21,7 @@ public class TLCRunLineMarkerContributor extends RunLineMarkerContributor {
             return null;
         }
         AnAction[] actions = ExecutorAction.getActions(0);
-        return new Info(TestState.Run, e ->
-                StringUtil.join(ContainerUtil.mapNotNull(actions, a -> getText(a, e)), "\n"), actions);
+        return new Info(TestState.Run, actions, e ->
+                StringUtil.join(ContainerUtil.mapNotNull(actions, a -> getText(a, e)), "\n"));
     }
 }
