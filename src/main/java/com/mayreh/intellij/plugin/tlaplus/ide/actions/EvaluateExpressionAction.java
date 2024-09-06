@@ -4,6 +4,7 @@ package com.mayreh.intellij.plugin.tlaplus.ide.actions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import com.intellij.openapi.actionSystem.ActionUpdateThread;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.DumbAwareAction;
@@ -28,6 +29,11 @@ public class EvaluateExpressionAction extends DumbAwareAction {
     public void update(@NotNull AnActionEvent e) {
         super.update(e);
         e.getPresentation().setEnabled(e.getProject() != null);
+    }
+
+    @Override
+    public @NotNull ActionUpdateThread getActionUpdateThread() {
+        return ActionUpdateThread.BGT;
     }
 
     @Override

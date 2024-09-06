@@ -3,12 +3,12 @@ package com.mayreh.intellij.plugin.tlaplus.ide.actions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import com.intellij.openapi.actionSystem.ActionUpdateThread;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
-import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -42,6 +42,11 @@ public abstract class TLAplusActionBase extends DumbAwareAction {
     }
 
     @Override
+    public @NotNull ActionUpdateThread getActionUpdateThread() {
+        return ActionUpdateThread.BGT;
+    }
+
+    @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
         TLAplusDocument document = currentDocument(e);
         Project project = e.getProject();
@@ -57,10 +62,7 @@ public abstract class TLAplusActionBase extends DumbAwareAction {
         if (project == null) {
             return null;
         }
-        Editor editor = e.getData(CommonDataKeys.EDITOR_EVEN_IF_INACTIVE);
-        if (editor == null) {
-            editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-        }
+        Editor editor = e.getData(CommonDataKeys.EDITOR);
         if (editor == null) {
             return null;
         }

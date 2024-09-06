@@ -220,6 +220,7 @@ public class TLAplusSynonymElement implements TLAplusNamedElement {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public void checkAdd(@NotNull PsiElement element) {
         delegate.checkAdd(element);
     }
@@ -245,6 +246,7 @@ public class TLAplusSynonymElement implements TLAplusNamedElement {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public void checkDelete() {
         delegate.checkDelete();
     }
