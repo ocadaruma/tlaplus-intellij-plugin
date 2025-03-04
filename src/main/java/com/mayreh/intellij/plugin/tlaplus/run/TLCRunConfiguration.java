@@ -16,6 +16,7 @@ import com.intellij.execution.configurations.ParametersList;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.configurations.SimpleJavaParameters;
+import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.filters.Filter;
 import com.intellij.execution.filters.TextConsoleBuilder;
 import com.intellij.execution.process.OSProcessHandler;
@@ -32,6 +33,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SimpleJavaSdkType;
 import com.intellij.openapi.projectRoots.ex.PathUtilEx;
+import com.intellij.openapi.util.Key;
 import com.intellij.util.SystemProperties;
 import com.mayreh.intellij.plugin.tlaplus.run.ui.TLCOutputConsoleView;
 import com.mayreh.intellij.plugin.tlaplus.run.ui.TLCSettingsEditor;
@@ -41,6 +43,8 @@ import lombok.RequiredArgsConstructor;
 
 public class TLCRunConfiguration extends LocatableConfigurationBase<TLCRunConfigurationOptions>
         implements ConsolePropertiesProvider {
+    public static final Key<Integer> DEBUGGER_PORT = Key.create("TLC_DEBUGGER_PORT");
+
     TLCRunConfiguration(@NotNull Project project,
                         @NotNull ConfigurationFactory factory,
                         @Nullable String name) {
@@ -92,12 +96,10 @@ public class TLCRunConfiguration extends LocatableConfigurationBase<TLCRunConfig
     public @Nullable RunProfileState getState(@NotNull Executor executor,
                                               @NotNull ExecutionEnvironment environment)
             throws ExecutionException {
-        TLCRunConfiguration that = this;
-        return new CommandLineState(environment) {
+        boolean debugMode = DefaultDebugExecutor.EXECUTOR_ID.equals(executor.getId());
+        CommandLineState state = new CommandLineState(environment) {
             @Override
             protected @NotNull ProcessHandler startProcess() throws ExecutionException {
-                setConsoleBuilder(new TLCConsoleBuilder(that, executor));
-
                 SimpleJavaParameters params = new SimpleJavaParameters();
 
                 Sdk jdk = PathUtilEx.getAnyJdk(getProject());
@@ -116,6 +118,12 @@ public class TLCRunConfiguration extends LocatableConfigurationBase<TLCRunConfig
                 ParametersList args = params.getProgramParametersList();
                 args.add("-tool");
                 args.add("-modelcheck");
+                if (debugMode) {
+                    // TLCDebugRunner will set this port
+                    int port = environment.getUserData(DEBUGGER_PORT);
+                    args.add("-debugger");
+                    args.add("port=" + port);
+                }
 
                 ParametersList tlcArguments = new ParametersList();
                 tlcArguments.addParametersString(getTlcArguments());
@@ -133,6 +141,8 @@ public class TLCRunConfiguration extends LocatableConfigurationBase<TLCRunConfig
                 return handler;
             }
         };
+        state.setConsoleBuilder(new TLCConsoleBuilder(this, executor));
+        return state;
     }
 
     @Override

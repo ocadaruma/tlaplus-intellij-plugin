@@ -32,6 +32,8 @@ ext {
 
 dependencies {
     implementation files('libs/tla2tools.jar')
+    // We need to use same version of lsp4j as tla2tools to avoid incompatibility
+    implementation "org.eclipse.lsp4j:org.eclipse.lsp4j.debug:0.21.1"
     compileOnly "org.projectlombok:lombok:$lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$lombokVersion"
     testCompileOnly "org.projectlombok:lombok:$lombokVersion"

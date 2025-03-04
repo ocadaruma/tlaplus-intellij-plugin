@@ -97,6 +97,8 @@
           language="TLC config"
           implementationClass="com.mayreh.intellij.plugin.tlc.TLCConfigCompletionContributor"/>
         <stepsBeforeRunProvider implementation="com.mayreh.intellij.plugin.tlaplus.run.TLCBeforeRunTaskProvider"/>
+        <programRunner id="TLCDebugRunner" implementation="com.mayreh.intellij.plugin.tlaplus.run.debugger.TLCDebugRunner" />
+        <xdebugger.breakpointType implementation="com.mayreh.intellij.plugin.tlaplus.run.debugger.TLCBreakpointType" />
 
         <!-- PlusCal -->
         <lang.parserDefinition
