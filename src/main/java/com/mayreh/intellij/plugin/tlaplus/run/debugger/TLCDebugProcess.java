@@ -1,10 +1,25 @@
 package com.mayreh.intellij.plugin.tlaplus.run.debugger;
 
+import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.event.HyperlinkListener;
 
+import org.eclipse.lsp4j.debug.InitializeRequestArguments;
+import org.eclipse.lsp4j.debug.ScopesArguments;
+import org.eclipse.lsp4j.debug.ScopesResponse;
+import org.eclipse.lsp4j.debug.StackTraceArguments;
+import org.eclipse.lsp4j.debug.StackTraceResponse;
+import org.eclipse.lsp4j.debug.ThreadsResponse;
+import org.eclipse.lsp4j.debug.VariablesArguments;
+import org.eclipse.lsp4j.debug.VariablesResponse;
 import org.eclipse.lsp4j.debug.services.IDebugProtocolServer;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
@@ -16,11 +31,18 @@ import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.ui.ExecutionConsole;
 import com.intellij.ide.plugins.IdeaPluginDescriptor;
 import com.intellij.openapi.actionSystem.DefaultActionGroup;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.util.Computable;
+import com.intellij.openapi.vfs.VfsUtil;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugSession;
+import com.intellij.xdebugger.XDebuggerManager;
 import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.breakpoints.XBreakpointHandler;
+import com.intellij.xdebugger.breakpoints.XBreakpointManager;
+import com.intellij.xdebugger.breakpoints.XLineBreakpoint;
 import com.intellij.xdebugger.evaluation.XDebuggerEditorsProvider;
 import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.intellij.xdebugger.frame.XDropFrameHandler;
@@ -28,35 +50,65 @@ import com.intellij.xdebugger.frame.XSuspendContext;
 import com.intellij.xdebugger.frame.XValueMarkerProvider;
 import com.intellij.xdebugger.stepping.XSmartStepIntoHandler;
 import com.intellij.xdebugger.ui.XDebugTabLayouter;
+import com.mayreh.intellij.plugin.tlaplus.run.debugger.DebuggerMessage.StoppedEvent;
 
 public class TLCDebugProcess extends XDebugProcess {
     private static final Logger log = Logger.getInstance(TLCDebugProcess.class);
 
     private final ExecutionResult executionResult;
 //    private final IDebugProtocolServer remoteProxy;
-//    private final BlockingQueue<DebuggerMessage> messageQueue;
+    private final BlockingQueue<DebuggerMessage> messageQueue;
+    private final ExecutorService executorService;
+    private final AtomicBoolean terminated = new AtomicBoolean(false);
 
-    public TLCDebugProcess(@NotNull XDebugSession session, ExecutionResult executionResult) {
+    public TLCDebugProcess(@NotNull XDebugSession session,
+                           BlockingQueue<DebuggerMessage> messageQueue,
+                           IDebugProtocolServer remoteProxy,
+                           ExecutionResult executionResult) {
         super(session);
         this.executionResult = executionResult;
-
-//        Executors.newSingleThreadExecutor().execute(() -> {
-//            while (true) {
-//                DebuggerMessage message = messageQueue.poll();
-//                if (message instanceof DebuggerMessage.InitializedEvent) {
-//                    remoteProxy.initialized();
-//                } else if (message instanceof DebuggerMessage.StoppedEvent) {
-//                    remoteProxy.stopped(((DebuggerMessage.StoppedEvent) message).getArgs());
-//                } else if (message instanceof DebuggerMessage.TerminatedEvent) {
-//                    remoteProxy.terminated(((DebuggerMessage.TerminatedEvent) message).getArgs());
-//                    break;
-//                } else if (message instanceof DebuggerMessage.OutputEvent) {
-//
-//                } else if (message instanceof DebuggerMessage.CapabilitiesEvent) {
-//                    remoteProxy.capabilities(((DebuggerMessage.CapabilitiesEvent) message).getArgs());
-//                }
-//            }
-//        });
+        this.messageQueue = messageQueue;
+        executorService = Executors.newSingleThreadExecutor(r -> {
+            Thread th = new Thread(r);
+            th.setName(String.format("TLCDebuggerMessagePoller-%d", System.identityHashCode(this)));
+            return th;
+        });
+        executorService.execute(() -> {
+            while (!terminated.get()) {
+                DebuggerMessage message;
+                try {
+                    message = messageQueue.take();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException(e);
+                }
+                if (message instanceof DebuggerMessage.InitializedEvent) {
+                    System.out.println(message);
+                } else if (message instanceof DebuggerMessage.StoppedEvent) {
+//                    XBreakpointManager breakpointManager = XDebuggerManager.getInstance(session.getProject())
+//                                                                           .getBreakpointManager();
+//                    Collection<? extends XLineBreakpoint<TLCBreakpointProperties>> breakpoints =
+//                            ApplicationManager.getApplication().runReadAction(
+//                                    (Computable<Collection<? extends XLineBreakpoint<TLCBreakpointProperties>>>)
+//                                            () -> breakpointManager.getBreakpoints(TLCBreakpointType.class));
+//                    for (XLineBreakpoint<TLCBreakpointProperties> breakpoint : breakpoints) {
+//                    }
+                    ThreadsResponse threadsResponse = remoteProxy.threads().join();
+                    StackTraceArguments stackTraceArguments = new StackTraceArguments();
+                    StackTraceResponse stackTraceResponse = remoteProxy.stackTrace(stackTraceArguments).join();
+                    ScopesArguments scopesArguments = new ScopesArguments();
+                    ScopesResponse scopesResponse = remoteProxy.scopes(scopesArguments).join();
+                    VariablesArguments variablesArguments = new VariablesArguments();
+                    VariablesResponse variablesResponse = remoteProxy.variables(variablesArguments).join();
+                } else if (message instanceof DebuggerMessage.TerminatedEvent) {
+                } else if (message instanceof DebuggerMessage.OutputEvent) {
+                } else if (message instanceof DebuggerMessage.CapabilitiesEvent) {
+                }
+            }
+        });
+        InitializeRequestArguments initArgs = new InitializeRequestArguments();
+        remoteProxy.initialize(initArgs).join();
+        remoteProxy.launch(Map.of()).join();
     }
 
     // Intellij's debugger feature depends on the process handler returned from here (e.g. XDebugSessionImpl)
@@ -125,7 +177,9 @@ public class TLCDebugProcess extends XDebugProcess {
 
     @Override
     public void stop() {
-        super.stop();
+        terminated.set(true);
+        executorService.shutdown();
+//        executorService.awaitTermination()
     }
 
     @Override

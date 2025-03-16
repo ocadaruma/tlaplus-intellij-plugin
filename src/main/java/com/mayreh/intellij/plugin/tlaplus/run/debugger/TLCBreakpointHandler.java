@@ -13,6 +13,7 @@ public class TLCBreakpointHandler extends XBreakpointHandler<XLineBreakpoint<TLC
 
     @Override
     public void registerBreakpoint(@NotNull XLineBreakpoint<TLCBreakpointProperties> breakpoint) {
+        System.out.println(breakpoint);
     }
 
     @Override

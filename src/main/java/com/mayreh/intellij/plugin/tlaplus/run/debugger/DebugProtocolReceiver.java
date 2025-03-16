@@ -11,7 +11,7 @@ import org.eclipse.lsp4j.debug.services.IDebugProtocolClient;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class TLCDebuggerClient implements IDebugProtocolClient {
+public class DebugProtocolReceiver implements IDebugProtocolClient {
     private final BlockingQueue<DebuggerMessage> messageQueue;
 
     @Override
