@@ -1,25 +1,20 @@
 package com.mayreh.intellij.plugin.tlaplus.run.debugger;
 
-import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.event.HyperlinkListener;
 
+import org.eclipse.lsp4j.debug.ConfigurationDoneArguments;
+import org.eclipse.lsp4j.debug.ContinueArguments;
 import org.eclipse.lsp4j.debug.InitializeRequestArguments;
-import org.eclipse.lsp4j.debug.ScopesArguments;
-import org.eclipse.lsp4j.debug.ScopesResponse;
-import org.eclipse.lsp4j.debug.StackTraceArguments;
-import org.eclipse.lsp4j.debug.StackTraceResponse;
-import org.eclipse.lsp4j.debug.ThreadsResponse;
-import org.eclipse.lsp4j.debug.VariablesArguments;
-import org.eclipse.lsp4j.debug.VariablesResponse;
+import org.eclipse.lsp4j.debug.NextArguments;
+import org.eclipse.lsp4j.debug.StepInArguments;
+import org.eclipse.lsp4j.debug.StepOutArguments;
 import org.eclipse.lsp4j.debug.services.IDebugProtocolServer;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
@@ -29,37 +24,36 @@ import org.jetbrains.concurrency.Promise;
 import com.intellij.execution.ExecutionResult;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.ui.ExecutionConsole;
+import com.intellij.execution.ui.RunnerLayoutUi;
 import com.intellij.ide.plugins.IdeaPluginDescriptor;
 import com.intellij.openapi.actionSystem.DefaultActionGroup;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.util.Computable;
-import com.intellij.openapi.vfs.VfsUtil;
-import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.util.concurrency.AppExecutorUtil;
 import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugSession;
 import com.intellij.xdebugger.XDebuggerManager;
 import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.breakpoints.XBreakpointHandler;
-import com.intellij.xdebugger.breakpoints.XBreakpointManager;
-import com.intellij.xdebugger.breakpoints.XLineBreakpoint;
 import com.intellij.xdebugger.evaluation.XDebuggerEditorsProvider;
 import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.intellij.xdebugger.frame.XDropFrameHandler;
 import com.intellij.xdebugger.frame.XSuspendContext;
 import com.intellij.xdebugger.frame.XValueMarkerProvider;
+import com.intellij.xdebugger.impl.XDebugSessionImpl;
 import com.intellij.xdebugger.stepping.XSmartStepIntoHandler;
 import com.intellij.xdebugger.ui.XDebugTabLayouter;
+import com.mayreh.intellij.plugin.tlaplus.run.debugger.DebuggerMessage.CapabilitiesEvent;
 import com.mayreh.intellij.plugin.tlaplus.run.debugger.DebuggerMessage.StoppedEvent;
 
 public class TLCDebugProcess extends XDebugProcess {
     private static final Logger log = Logger.getInstance(TLCDebugProcess.class);
 
     private final ExecutionResult executionResult;
-//    private final IDebugProtocolServer remoteProxy;
+    private final IDebugProtocolServer remoteProxy;
     private final BlockingQueue<DebuggerMessage> messageQueue;
     private final ExecutorService executorService;
     private final AtomicBoolean terminated = new AtomicBoolean(false);
+    private final TLCDropFrameHandler dropFrameHandler;
 
     public TLCDebugProcess(@NotNull XDebugSession session,
                            BlockingQueue<DebuggerMessage> messageQueue,
@@ -68,6 +62,9 @@ public class TLCDebugProcess extends XDebugProcess {
         super(session);
         this.executionResult = executionResult;
         this.messageQueue = messageQueue;
+        this.remoteProxy = remoteProxy;
+        dropFrameHandler = new TLCDropFrameHandler(remoteProxy);
+        dropFrameHandler.setCanDrop(false);
         executorService = Executors.newSingleThreadExecutor(r -> {
             Thread th = new Thread(r);
             th.setName(String.format("TLCDebuggerMessagePoller-%d", System.identityHashCode(this)));
@@ -84,6 +81,10 @@ public class TLCDebugProcess extends XDebugProcess {
                 }
                 if (message instanceof DebuggerMessage.InitializedEvent) {
                     System.out.println(message);
+                    remoteProxy.configurationDone(new ConfigurationDoneArguments()).thenAcceptAsync(response -> {
+                        System.out.println(response);
+                        remoteProxy.launch(Map.of());
+                    }, AppExecutorUtil.getAppExecutorService());
                 } else if (message instanceof DebuggerMessage.StoppedEvent) {
 //                    XBreakpointManager breakpointManager = XDebuggerManager.getInstance(session.getProject())
 //                                                                           .getBreakpointManager();
@@ -93,22 +94,39 @@ public class TLCDebugProcess extends XDebugProcess {
 //                                            () -> breakpointManager.getBreakpoints(TLCBreakpointType.class));
 //                    for (XLineBreakpoint<TLCBreakpointProperties> breakpoint : breakpoints) {
 //                    }
-                    ThreadsResponse threadsResponse = remoteProxy.threads().join();
-                    StackTraceArguments stackTraceArguments = new StackTraceArguments();
-                    StackTraceResponse stackTraceResponse = remoteProxy.stackTrace(stackTraceArguments).join();
-                    ScopesArguments scopesArguments = new ScopesArguments();
-                    ScopesResponse scopesResponse = remoteProxy.scopes(scopesArguments).join();
-                    VariablesArguments variablesArguments = new VariablesArguments();
-                    VariablesResponse variablesResponse = remoteProxy.variables(variablesArguments).join();
+                    remoteProxy.threads().thenAcceptAsync(response -> {
+                        Arrays.stream(response.getThreads())
+                              .filter(t -> t.getId() == ((StoppedEvent) message).args().getThreadId())
+                              .findFirst()
+                              .ifPresent(thread -> {
+                                  XSuspendContext xContext = session.getSuspendContext();
+                                  if (xContext == null) {
+                                      xContext = new TLCSuspendContext(remoteProxy);
+                                  }
+                                  if (xContext instanceof TLCSuspendContext) {
+                                      ((TLCSuspendContext) xContext).activateThread(thread);
+                                      if (session instanceof XDebugSessionImpl) {
+                                          // TLC may send stopped event without breakpoint (e.g. first encounter of evaluation after launch).
+                                          // In such case, we want to focus debug tab so passing true to attract arg
+                                          ((XDebugSessionImpl) session).positionReached(xContext, true);
+                                      }
+                                  }
+                                  dropFrameHandler.setCanDrop(!dropFrameHandler.isCanDrop());
+                              });
+                    }, AppExecutorUtil.getAppExecutorService());
                 } else if (message instanceof DebuggerMessage.TerminatedEvent) {
                 } else if (message instanceof DebuggerMessage.OutputEvent) {
                 } else if (message instanceof DebuggerMessage.CapabilitiesEvent) {
+                    dropFrameHandler.setCanDrop(((CapabilitiesEvent) message).args().getCapabilities().getSupportsStepBack());
                 }
             }
         });
+        // TODO: Fill mandatory fields
         InitializeRequestArguments initArgs = new InitializeRequestArguments();
-        remoteProxy.initialize(initArgs).join();
-        remoteProxy.launch(Map.of()).join();
+        remoteProxy.initialize(initArgs).thenAccept(cap -> {
+            dropFrameHandler.setCanDrop(cap.getSupportsStepBack());
+//            getSession().rebuildViews();
+        });
     }
 
     // Intellij's debugger feature depends on the process handler returned from here (e.g. XDebugSessionImpl)
@@ -147,7 +165,12 @@ public class TLCDebugProcess extends XDebugProcess {
 
     @Override
     public void startStepOver(@Nullable XSuspendContext context) {
-        super.startStepOver(context);
+        org.eclipse.lsp4j.debug.Thread thread = activeThread(context);
+        if (thread != null) {
+            NextArguments args = new NextArguments();
+            args.setThreadId(thread.getId());
+            remoteProxy.next(args);
+        }
     }
 
     @Override
@@ -157,22 +180,27 @@ public class TLCDebugProcess extends XDebugProcess {
 
     @Override
     public void startStepInto(@Nullable XSuspendContext context) {
-        super.startStepInto(context);
+        org.eclipse.lsp4j.debug.Thread thread = activeThread(context);
+        if (thread != null) {
+            StepInArguments args = new StepInArguments();
+            args.setThreadId(thread.getId());
+            remoteProxy.stepIn(args);
+        }
     }
 
     @Override
     public void startStepOut(@Nullable XSuspendContext context) {
-        super.startStepOut(context);
-    }
-
-    @Override
-    public @Nullable XSmartStepIntoHandler<?> getSmartStepIntoHandler() {
-        return super.getSmartStepIntoHandler();
+        org.eclipse.lsp4j.debug.Thread thread = activeThread(context);
+        if (thread != null) {
+            StepOutArguments args = new StepOutArguments();
+            args.setThreadId(thread.getId());
+            remoteProxy.stepOut(args);
+        }
     }
 
     @Override
     public @Nullable XDropFrameHandler getDropFrameHandler() {
-        return super.getDropFrameHandler();
+        return dropFrameHandler;
     }
 
     @Override
@@ -189,7 +217,12 @@ public class TLCDebugProcess extends XDebugProcess {
 
     @Override
     public void resume(@Nullable XSuspendContext context) {
-        super.resume(context);
+        org.eclipse.lsp4j.debug.Thread thread = activeThread(context);
+        if (thread != null) {
+            ContinueArguments args = new ContinueArguments();
+            args.setThreadId(thread.getId());
+            remoteProxy.continue_(args);
+        }
     }
 
     @Override
@@ -257,5 +290,12 @@ public class TLCDebugProcess extends XDebugProcess {
     @Override
     public boolean dependsOnPlugin(@NotNull IdeaPluginDescriptor descriptor) {
         return super.dependsOnPlugin(descriptor);
+    }
+
+    private static @Nullable org.eclipse.lsp4j.debug.Thread activeThread(XSuspendContext context) {
+        if (context instanceof TLCSuspendContext) {
+            return ((TLCSuspendContext) context).activeThread();
+        }
+        return null;
     }
 }

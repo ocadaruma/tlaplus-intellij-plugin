@@ -66,7 +66,7 @@ public class TLCDebugRunner extends AsyncProgramRunner {
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
             Socket socket;
             try {
-                socket = connect(port);
+                socket = connect(port); // FIXME: Better not to block here to open the console quickly
             } catch (IOException e) {
                 promise.setError(e);
                 return;
@@ -115,7 +115,7 @@ public class TLCDebugRunner extends AsyncProgramRunner {
             try {
                 return new Socket("localhost", port);
             } catch (IOException e) {
-                Thread.sleep(100);
+                Thread.sleep(10);
             }
         }
         throw new IOException("Failed to connect to debugger");

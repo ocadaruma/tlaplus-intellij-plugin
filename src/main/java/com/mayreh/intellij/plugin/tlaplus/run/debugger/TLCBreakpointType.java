@@ -135,6 +135,6 @@ public class TLCBreakpointType extends XLineBreakpointType<TLCBreakpointProperti
         if (elementRef.isNull()) {
             return null;
         }
-        return new TLCXSourcePosition(file, elementRef.get());
+        return new TLCXSourcePosition(file, elementRef.get().getTextRange());
     }
 }

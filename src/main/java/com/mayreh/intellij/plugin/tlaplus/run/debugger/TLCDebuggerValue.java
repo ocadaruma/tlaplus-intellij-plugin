@@ -5,6 +5,7 @@ import org.eclipse.lsp4j.debug.VariablesArguments;
 import org.eclipse.lsp4j.debug.services.IDebugProtocolServer;
 import org.jetbrains.annotations.NotNull;
 
+import com.intellij.util.concurrency.AppExecutorUtil;
 import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XNamedValue;
 import com.intellij.xdebugger.frame.XValueChildrenList;
@@ -36,12 +37,12 @@ public class TLCDebuggerValue extends XNamedValue {
         }
         VariablesArguments args = new VariablesArguments();
         args.setVariablesReference(variable.getVariablesReference());
-        remoteProxy.variables(args).thenAccept(response -> {
+        remoteProxy.variables(args).thenAcceptAsync(response -> {
             XValueChildrenList children = new XValueChildrenList();
             for (Variable variable : response.getVariables()) {
                 children.add(variable.getName(), new TLCDebuggerValue(remoteProxy, variable));
             }
             node.addChildren(children, true);
-        });
+        }, AppExecutorUtil.getAppExecutorService());
     }
 }

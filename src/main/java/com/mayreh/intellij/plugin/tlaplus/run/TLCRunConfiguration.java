@@ -112,6 +112,8 @@ public class TLCRunConfiguration extends LocatableConfigurationBase<TLCRunConfig
                 params.setJdk(jdk);
                 params.getClassPath().add(PathManager.getJarPathForClass(tlc2.TLC.class));
                 params.setWorkingDirectory(getWorkingDirectory());
+                // TLC suggests using parallel GC for throughput
+                params.getVMParametersList().add("-XX:+UseParallelGC");
                 params.getVMParametersList().addParametersString(getJvmOptions());
                 params.setMainClass("tlc2.TLC");
 
