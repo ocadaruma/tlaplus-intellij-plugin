@@ -24,7 +24,6 @@ import org.jetbrains.concurrency.Promise;
 import com.intellij.execution.ExecutionResult;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.ui.ExecutionConsole;
-import com.intellij.execution.ui.RunnerLayoutUi;
 import com.intellij.ide.plugins.IdeaPluginDescriptor;
 import com.intellij.openapi.actionSystem.DefaultActionGroup;
 import com.intellij.openapi.diagnostic.Logger;
@@ -40,7 +39,6 @@ import com.intellij.xdebugger.frame.XDropFrameHandler;
 import com.intellij.xdebugger.frame.XSuspendContext;
 import com.intellij.xdebugger.frame.XValueMarkerProvider;
 import com.intellij.xdebugger.impl.XDebugSessionImpl;
-import com.intellij.xdebugger.stepping.XSmartStepIntoHandler;
 import com.intellij.xdebugger.ui.XDebugTabLayouter;
 import com.mayreh.intellij.plugin.tlaplus.run.debugger.DebuggerMessage.CapabilitiesEvent;
 import com.mayreh.intellij.plugin.tlaplus.run.debugger.DebuggerMessage.StoppedEvent;
@@ -80,20 +78,19 @@ public class TLCDebugProcess extends XDebugProcess {
                     throw new RuntimeException(e);
                 }
                 if (message instanceof DebuggerMessage.InitializedEvent) {
-                    System.out.println(message);
                     remoteProxy.configurationDone(new ConfigurationDoneArguments()).thenAcceptAsync(response -> {
                         System.out.println(response);
                         remoteProxy.launch(Map.of());
                     }, AppExecutorUtil.getAppExecutorService());
                 } else if (message instanceof DebuggerMessage.StoppedEvent) {
-//                    XBreakpointManager breakpointManager = XDebuggerManager.getInstance(session.getProject())
-//                                                                           .getBreakpointManager();
-//                    Collection<? extends XLineBreakpoint<TLCBreakpointProperties>> breakpoints =
-//                            ApplicationManager.getApplication().runReadAction(
-//                                    (Computable<Collection<? extends XLineBreakpoint<TLCBreakpointProperties>>>)
-//                                            () -> breakpointManager.getBreakpoints(TLCBreakpointType.class));
-//                    for (XLineBreakpoint<TLCBreakpointProperties> breakpoint : breakpoints) {
-//                    }
+                    // NOTE: We give up looking-up hit breakpoint on stopped event at all so
+                    // always call positionReached instead of breakpointReached, because
+                    // Some TLCDebugger's breakpoint types (e.g. Spec breakpoint) happen on different line
+                    // from the breakpoint's line, which is hard to look-up without re-implementing
+                    // similar logic with TLCDebugger's halt-condition.
+                    //
+                    // Ideally, TLCDebugger should fill StoppedEventArguments#hitBreakpointIds so
+                    // we can look up hit breakpoint easily.
                     remoteProxy.threads().thenAcceptAsync(response -> {
                         Arrays.stream(response.getThreads())
                               .filter(t -> t.getId() == ((StoppedEvent) message).args().getThreadId())
@@ -107,11 +104,12 @@ public class TLCDebugProcess extends XDebugProcess {
                                       ((TLCSuspendContext) xContext).activateThread(thread);
                                       if (session instanceof XDebugSessionImpl) {
                                           // TLC may send stopped event without breakpoint (e.g. first encounter of evaluation after launch).
-                                          // In such case, we want to focus debug tab so passing true to attract arg
+                                          // In such case, we want to focus debug tab so passing true to attract arg.
+                                          // TODO: Intuitively, this may cause the debugger-tab to be focused even on user-initiated stepping undesirably,
+                                          // but seems this just works (i.e. doesn't cause undesirable focus). Why?
                                           ((XDebugSessionImpl) session).positionReached(xContext, true);
                                       }
                                   }
-                                  dropFrameHandler.setCanDrop(!dropFrameHandler.isCanDrop());
                               });
                     }, AppExecutorUtil.getAppExecutorService());
                 } else if (message instanceof DebuggerMessage.TerminatedEvent) {
@@ -125,7 +123,6 @@ public class TLCDebugProcess extends XDebugProcess {
         InitializeRequestArguments initArgs = new InitializeRequestArguments();
         remoteProxy.initialize(initArgs).thenAccept(cap -> {
             dropFrameHandler.setCanDrop(cap.getSupportsStepBack());
-//            getSession().rebuildViews();
         });
     }
 
@@ -154,16 +151,6 @@ public class TLCDebugProcess extends XDebugProcess {
     }
 
     @Override
-    public void sessionInitialized() {
-        super.sessionInitialized();
-    }
-
-    @Override
-    public void startPausing() {
-        super.startPausing();
-    }
-
-    @Override
     public void startStepOver(@Nullable XSuspendContext context) {
         org.eclipse.lsp4j.debug.Thread thread = activeThread(context);
         if (thread != null) {
@@ -171,11 +158,6 @@ public class TLCDebugProcess extends XDebugProcess {
             args.setThreadId(thread.getId());
             remoteProxy.next(args);
         }
-    }
-
-    @Override
-    public void startForceStepInto(@Nullable XSuspendContext context) {
-        super.startForceStepInto(context);
     }
 
     @Override
@@ -226,70 +208,8 @@ public class TLCDebugProcess extends XDebugProcess {
     }
 
     @Override
-    public void runToPosition(@NotNull XSourcePosition position, @Nullable XSuspendContext context) {
-        super.runToPosition(position, context);
-    }
-
-    @Override
-    public boolean checkCanPerformCommands() {
-        return super.checkCanPerformCommands();
-    }
-
-    @Override
-    public boolean checkCanInitBreakpoints() {
-        return super.checkCanInitBreakpoints();
-    }
-
-    @Override
-    public @Nullable XValueMarkerProvider<?, ?> createValueMarkerProvider() {
-        return super.createValueMarkerProvider();
-    }
-
-    @Override
-    public void registerAdditionalActions(@NotNull DefaultActionGroup leftToolbar,
-                                          @NotNull DefaultActionGroup topToolbar,
-                                          @NotNull DefaultActionGroup settings) {
-        super.registerAdditionalActions(leftToolbar, topToolbar, settings);
-    }
-
-    @Override
-    public @Nls String getCurrentStateMessage() {
-        return super.getCurrentStateMessage();
-    }
-
-    @Override
-    public @Nullable HyperlinkListener getCurrentStateHyperlinkListener() {
-        return super.getCurrentStateHyperlinkListener();
-    }
-
-    @Override
-    public @NotNull XDebugTabLayouter createTabLayouter() {
-        return super.createTabLayouter();
-    }
-
-    @Override
-    public boolean isValuesCustomSorted() {
-        return super.isValuesCustomSorted();
-    }
-
-    @Override
     public @Nullable XDebuggerEvaluator getEvaluator() {
         return super.getEvaluator();
-    }
-
-    @Override
-    public boolean isLibraryFrameFilterSupported() {
-        return super.isLibraryFrameFilterSupported();
-    }
-
-    @Override
-    public void logStack(@NotNull XSuspendContext suspendContext, @NotNull XDebugSession session) {
-        super.logStack(suspendContext, session);
-    }
-
-    @Override
-    public boolean dependsOnPlugin(@NotNull IdeaPluginDescriptor descriptor) {
-        return super.dependsOnPlugin(descriptor);
     }
 
     private static @Nullable org.eclipse.lsp4j.debug.Thread activeThread(XSuspendContext context) {
