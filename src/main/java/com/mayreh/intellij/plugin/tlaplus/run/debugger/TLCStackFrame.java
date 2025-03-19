@@ -8,6 +8,8 @@ import org.eclipse.lsp4j.debug.services.IDebugProtocolServer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import com.intellij.ui.ColoredTextContainer;
+import com.intellij.ui.SimpleTextAttributes;
 import com.intellij.util.concurrency.AppExecutorUtil;
 import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.frame.XCompositeNode;
@@ -29,6 +31,11 @@ public class TLCStackFrame extends XStackFrame {
     @Override
     public @Nullable XSourcePosition getSourcePosition() {
         return TLCXSourcePosition.createByStackFrame(dapStackFrame);
+    }
+
+    @Override
+    public void customizePresentation(@NotNull ColoredTextContainer component) {
+        component.append(dapStackFrame.getName(), SimpleTextAttributes.REGULAR_ATTRIBUTES);
     }
 
     @Override

@@ -12,7 +12,6 @@ import org.jetbrains.annotations.Nullable;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -110,7 +109,7 @@ public class TLCBreakpointType extends XLineBreakpointType<TLCBreakpointProperti
                 document.getLineEndOffset(position.getLine()));
 
         Ref<TextRange> opDefNameRange = Ref.create(TextRange.EMPTY_RANGE);
-        Ref<TextRange> formulaRange = Ref.create(TextRange.EMPTY_RANGE);
+        Ref<TextRange> exprRange = Ref.create(TextRange.EMPTY_RANGE);
         XDebuggerUtil.getInstance().iterateLine(project, document, position.getLine(), element -> {
             if (element instanceof PsiComment ||
                 element instanceof PsiWhiteSpace) {
@@ -150,10 +149,10 @@ public class TLCBreakpointType extends XLineBreakpointType<TLCBreakpointProperti
                 TextRange range = expr.getTextRange().intersection(lineRange);
                 // initialize with fist encountered expr's range, because
                 // EMPTY.union starts with offset 0 (i.e. the beginning of the document) which is undesirable.
-                if (formulaRange.get().isEmpty()) {
-                    formulaRange.set(range);
+                if (exprRange.get().isEmpty()) {
+                    exprRange.set(range);
                 }
-                formulaRange.set(formulaRange.get().union(range));
+                exprRange.set(exprRange.get().union(range));
             }
 
             return true;
@@ -161,8 +160,8 @@ public class TLCBreakpointType extends XLineBreakpointType<TLCBreakpointProperti
         if (!opDefNameRange.get().isEmpty()) {
             variants.add(new TextRangeBreakpointVariant("Action/Spec", opDefNameRange.get()));
         }
-        if (!formulaRange.get().isEmpty()) {
-            variants.add(new TextRangeBreakpointVariant("Formula", formulaRange.get()));
+        if (!exprRange.get().isEmpty()) {
+            variants.add(new TextRangeBreakpointVariant("Expression", exprRange.get()));
         }
 
         return variants;
@@ -183,24 +182,8 @@ public class TLCBreakpointType extends XLineBreakpointType<TLCBreakpointProperti
         if (file == null) {
             return null;
         }
-        Document document = FileDocumentManager.getInstance().getDocument(file);
-        if (document == null) {
-            return null;
-        }
 
-        Ref<PsiElement> elementRef = new Ref<>();
-        XDebuggerUtil.getInstance().iterateLine(
-                ProjectUtil.guessProjectForFile(file), document, delegate.getLine(), element -> {
-                    if (element.getTextRange().equals(breakpoint.getProperties().getTextRange())) {
-                        elementRef.set(element);
-                        return false;
-                    }
-                    return true;
-                });
-        if (elementRef.isNull()) {
-            return null;
-        }
-        return new TLCXSourcePosition(file, elementRef.get().getTextRange());
+        return new TLCXSourcePosition(file, breakpoint.getProperties().getTextRange());
     }
 
     @Override

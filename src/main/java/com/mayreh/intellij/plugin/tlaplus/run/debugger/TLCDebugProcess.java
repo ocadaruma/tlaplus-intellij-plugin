@@ -52,6 +52,7 @@ public class TLCDebugProcess extends XDebugProcess {
     private final ExecutorService executorService;
     private final AtomicBoolean terminated = new AtomicBoolean(false);
     private final TLCDropFrameHandler dropFrameHandler;
+    private final TLCBreakpointHandler breakpointHandler;
 
     public TLCDebugProcess(@NotNull XDebugSession session,
                            BlockingQueue<DebuggerMessage> messageQueue,
@@ -63,6 +64,7 @@ public class TLCDebugProcess extends XDebugProcess {
         this.remoteProxy = remoteProxy;
         dropFrameHandler = new TLCDropFrameHandler(remoteProxy);
         dropFrameHandler.setCanDrop(false);
+        breakpointHandler = new TLCBreakpointHandler(session, remoteProxy);
         executorService = Executors.newSingleThreadExecutor(r -> {
             Thread th = new Thread(r);
             th.setName(String.format("TLCDebuggerMessagePoller-%d", System.identityHashCode(this)));
@@ -147,7 +149,7 @@ public class TLCDebugProcess extends XDebugProcess {
 
     @Override
     public XBreakpointHandler<?> @NotNull [] getBreakpointHandlers() {
-        return super.getBreakpointHandlers();
+        return new TLCBreakpointHandler[] { breakpointHandler };
     }
 
     @Override
