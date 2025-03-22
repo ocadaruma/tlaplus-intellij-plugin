@@ -99,7 +99,7 @@
         <stepsBeforeRunProvider implementation="com.mayreh.intellij.plugin.tlaplus.run.TLCBeforeRunTaskProvider"/>
         <programRunner id="TLCDebugRunner" implementation="com.mayreh.intellij.plugin.tlaplus.run.debugger.TLCDebugRunner" />
         <xdebugger.breakpointType implementation="com.mayreh.intellij.plugin.tlaplus.run.debugger.TLCBreakpointType" />
-        <dynamicActionConfigurationCustomizer implementation="com.mayreh.intellij.plugin.tlaplus.run.debugger.TLCActionConfigurationCustomizer" />
+        <xdebugger.breakpointType implementation="com.mayreh.intellij.plugin.tlaplus.run.debugger.TLCExceptionBreakpointType" />
 
         <!-- PlusCal -->
         <lang.parserDefinition

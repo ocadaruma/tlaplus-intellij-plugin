@@ -12,6 +12,7 @@ import com.intellij.ui.ColoredTextContainer;
 import com.intellij.ui.SimpleTextAttributes;
 import com.intellij.util.concurrency.AppExecutorUtil;
 import com.intellij.xdebugger.XSourcePosition;
+import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XStackFrame;
 import com.intellij.xdebugger.frame.XValueChildrenList;
@@ -52,5 +53,10 @@ public class TLCStackFrame extends XStackFrame {
             }
             node.addChildren(children, true);
         }, AppExecutorUtil.getAppExecutorService());
+    }
+
+    @Override
+    public @Nullable XDebuggerEvaluator getEvaluator() {
+        return new TLCDebuggerEvaluator(remoteProxy, dapStackFrame);
     }
 }
