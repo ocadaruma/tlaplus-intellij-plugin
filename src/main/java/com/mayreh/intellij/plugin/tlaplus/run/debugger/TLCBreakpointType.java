@@ -183,7 +183,9 @@ public class TLCBreakpointType extends XLineBreakpointType<TLCBreakpointProperti
             return null;
         }
 
-        return new TLCXSourcePosition(file, breakpoint.getProperties().getTextRange());
+        return new TLCXSourcePosition(file,
+                                      ((XLineBreakpoint<TLCBreakpointProperties>) breakpoint).getLine(),
+                                      breakpoint.getProperties().getTextRange());
     }
 
     @Override

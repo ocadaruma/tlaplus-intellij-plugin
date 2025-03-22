@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.eclipse.lsp4j.debug.ContinueArguments;
 import org.eclipse.lsp4j.debug.InitializeRequestArguments;
 import org.eclipse.lsp4j.debug.NextArguments;
+import org.eclipse.lsp4j.debug.StackTraceArguments;
 import org.eclipse.lsp4j.debug.StepInArguments;
 import org.eclipse.lsp4j.debug.StepOutArguments;
 import org.eclipse.lsp4j.debug.StoppedEventArguments;
@@ -24,7 +25,6 @@ import com.intellij.execution.ExecutionResult;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.ui.ExecutionConsole;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.util.concurrency.AppExecutorUtil;
 import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugSession;
 import com.intellij.xdebugger.XDebuggerManager;
@@ -33,7 +33,6 @@ import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.breakpoints.XBreakpoint;
 import com.intellij.xdebugger.breakpoints.XBreakpointHandler;
 import com.intellij.xdebugger.evaluation.XDebuggerEditorsProvider;
-import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.intellij.xdebugger.frame.XDropFrameHandler;
 import com.intellij.xdebugger.frame.XSuspendContext;
 import com.intellij.xdebugger.impl.XDebugSessionImpl;
@@ -45,11 +44,11 @@ public class TLCDebugProcess extends XDebugProcess {
 
     private final ExecutionResult executionResult;
     private final IDebugProtocolServer remoteProxy;
-    private final BlockingQueue<DebuggerMessage> messageQueue;
     private final ExecutorService executorService;
     private final AtomicBoolean terminated = new AtomicBoolean(false);
     private final TLCDropFrameHandler dropFrameHandler;
-    private final XBreakpointHandler<?>[] breakpointHandlers;
+    private final TLCBreakpointHandler breakpointHandler;
+    private final TLCExceptionBreakpointHandler exceptionBreakpointHandler;
 
     public TLCDebugProcess(@NotNull XDebugSession session,
                            BlockingQueue<DebuggerMessage> messageQueue,
@@ -57,94 +56,72 @@ public class TLCDebugProcess extends XDebugProcess {
                            ExecutionResult executionResult) {
         super(session);
         this.executionResult = executionResult;
-        this.messageQueue = messageQueue;
         this.remoteProxy = remoteProxy;
         dropFrameHandler = new TLCDropFrameHandler(remoteProxy);
         dropFrameHandler.setCanDrop(false);
-        breakpointHandlers = new XBreakpointHandler<?>[]{
-                new TLCBreakpointHandler(session, remoteProxy),
-                new TLCExceptionBreakpointHandler(session, remoteProxy) };
+        breakpointHandler = new TLCBreakpointHandler(session, remoteProxy);
+        exceptionBreakpointHandler = new TLCExceptionBreakpointHandler(session, remoteProxy);
         executorService = Executors.newSingleThreadExecutor(r -> {
             Thread th = new Thread(r);
             th.setName(String.format("TLCDebuggerMessagePoller-%d", System.identityHashCode(this)));
-            th.setUncaughtExceptionHandler((t, e) -> {
-                log.error("Uncaught exception in " + t.getName(), e);
-            });
             return th;
         });
         executorService.execute(() -> {
-            System.out.println("starting");
             while (!terminated.get()) {
+                DebuggerMessage message;
                 try {
-                    DebuggerMessage message;
-                    try {
-                        message = messageQueue.take();
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        throw new RuntimeException(e);
-                    }
-                    System.out.println(message);
-                    if (message instanceof DebuggerMessage.InitializedEvent) {
-//                    remoteProxy.configurationDone(new ConfigurationDoneArguments()).thenAcceptAsync(response -> {
-//                        System.out.println(response);
-//                        remoteProxy.launch(Map.of());
-//                    }, AppExecutorUtil.getAppExecutorService());
-                    } else if (message instanceof DebuggerMessage.StoppedEvent) {
-                        ((TLCBreakpointHandler)breakpointHandlers[0]).unregisterRunToCursor();
-                        StoppedEventArguments stoppedEventArgs = ((StoppedEvent) message).args();
-                        if (StoppedEventArgumentsReason.EXCEPTION.equals(stoppedEventArgs.getReason())) {
-                            TLCExceptionBreakpointType breakpointType =
-                                    XDebuggerUtil.getInstance().findBreakpointType(
-                                            TLCExceptionBreakpointType.class);
-                            Set<XBreakpoint<TLCExceptionBreakpointProperties>> breakpoints =
-                                    XDebuggerManager.getInstance(session.getProject())
-                                                    .getBreakpointManager()
-                                                    .getDefaultBreakpoints(breakpointType);
-                            XBreakpoint<TLCExceptionBreakpointProperties> breakpoint = breakpoints.stream().findFirst().get();
-                            remoteProxy.threads().thenAcceptAsync(response -> {
-                                Arrays.stream(response.getThreads())
-                                      .filter(t -> t.getId() == stoppedEventArgs.getThreadId())
-                                      .findFirst()
-                                      .ifPresent(thread -> {
-                                          XSuspendContext xContext = session.getSuspendContext();
-                                          if (xContext == null) {
-                                              xContext = new TLCSuspendContext(remoteProxy);
-                                          }
-                                          if (xContext instanceof TLCSuspendContext) {
-                                              ((TLCSuspendContext) xContext).activateThread(thread);
-                                              session.breakpointReached(breakpoint, null, xContext);
-//                                          if (session instanceof XDebugSessionImpl) {
-//                                              // TLC may send stopped event without breakpoint (e.g. first encounter of evaluation after launch).
-//                                              // In such case, we want to focus debug tab so passing true to attract arg.
-//                                              // TODO: Intuitively, this may cause the debugger-tab to be focused even on user-initiated stepping undesirably,
-//                                              // but seems this just works (i.e. doesn't cause undesirable focus). Why?
-//                                              ((XDebugSessionImpl) session).positionReached(xContext, true);
-//                                          }
-                                          }
-                                      });
-                            }, AppExecutorUtil.getAppExecutorService());
-                            continue;
-                        }
+                    message = messageQueue.take();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException(e);
+                }
+                if (message instanceof DebuggerMessage.InitializedEvent) {
+                    // TODO
+                } else if (message instanceof DebuggerMessage.StoppedEvent) {
+                    // When debugger suspends by any reason, we no longer need run-to-cursor breakpoint.
+                    // - Case when run-to-cursor is reached: of course we don't need it anymore.
+                    // - Case when other breakpoint hits before reaching run-to-cursor:
+                    //     If we don't clean up, it might be hit later unexpectedly because
+                    //     the breakpoint is not shown in anywhere, so need clean up.
+                    breakpointHandler.unregisterRunToCursor();
+                    StoppedEventArguments stoppedEventArgs = ((StoppedEvent) message).args();
 
-                        // NOTE: We give up looking-up hit breakpoint on stopped event at all so
-                        // always call positionReached instead of breakpointReached, because
-                        // Some TLCDebugger's breakpoint types (e.g. Spec breakpoint) happen on different line
-                        // from the breakpoint's line, which is hard to look-up without re-implementing
-                        // similar logic with TLCDebugger's halt-condition.
-                        //
-                        // Ideally, TLCDebugger should fill StoppedEventArguments#hitBreakpointIds so
-                        // we can look up hit breakpoint easily.
-                        remoteProxy.threads().thenAcceptAsync(response -> {
-                            Arrays.stream(response.getThreads())
-                                  .filter(t -> t.getId() == stoppedEventArgs.getThreadId())
-                                  .findFirst()
-                                  .ifPresent(thread -> {
+                    remoteProxy.threads().thenAccept(response -> {
+                        Arrays.stream(response.getThreads())
+                              .filter(t -> t.getId() == stoppedEventArgs.getThreadId())
+                              .findFirst()
+                              .ifPresent(thread -> {
+                                  StackTraceArguments args = new StackTraceArguments();
+                                  args.setThreadId(thread.getId());
+                                  remoteProxy.stackTrace(args).thenAccept(stackTraceResponse -> {
                                       XSuspendContext xContext = session.getSuspendContext();
                                       if (xContext == null) {
                                           xContext = new TLCSuspendContext(remoteProxy);
                                       }
                                       if (xContext instanceof TLCSuspendContext) {
-                                          ((TLCSuspendContext) xContext).activateThread(thread);
+                                          ((TLCSuspendContext) xContext).addExecutionStack(thread, Arrays.asList(stackTraceResponse.getStackFrames()));
+                                      }
+
+                                      if (StoppedEventArgumentsReason.EXCEPTION.equals(stoppedEventArgs.getReason())) {
+                                          // TODO: Invariant/Error/Unsatisfied
+                                          TLCExceptionBreakpointType breakpointType =
+                                                  XDebuggerUtil.getInstance().findBreakpointType(
+                                                          TLCExceptionBreakpointType.class);
+                                          Set<XBreakpoint<TLCExceptionBreakpointProperties>> breakpoints =
+                                                  XDebuggerManager.getInstance(session.getProject())
+                                                                  .getBreakpointManager()
+                                                                  .getDefaultBreakpoints(breakpointType);
+                                          XBreakpoint<TLCExceptionBreakpointProperties> breakpoint = breakpoints.stream().findFirst().get();
+                                          session.breakpointReached(breakpoint, null, xContext);
+                                      } else {
+                                          // NOTE: We give up looking-up hit breakpoint (except exception breakpoints above) on stopped event so
+                                          // always call positionReached instead of breakpointReached, because
+                                          // Some TLCDebugger's breakpoint types (e.g. Spec breakpoint) happen on different line
+                                          // from the breakpoint's line, which is hard to look-up without re-implementing
+                                          // similar logic with TLCDebugger's halt-condition.
+                                          //
+                                          // Ideally, TLCDebugger should fill StoppedEventArguments#hitBreakpointIds so
+                                          // we can look up hit breakpoint easily.
                                           if (session instanceof XDebugSessionImpl) {
                                               // TLC may send stopped event without breakpoint (e.g. first encounter of evaluation after launch).
                                               // In such case, we want to focus debug tab so passing true to attract arg.
@@ -154,18 +131,14 @@ public class TLCDebugProcess extends XDebugProcess {
                                           }
                                       }
                                   });
-                        }, AppExecutorUtil.getAppExecutorService());
-                    } else if (message instanceof DebuggerMessage.TerminatedEvent) {
-                    } else if (message instanceof DebuggerMessage.OutputEvent) {
-                    } else if (message instanceof DebuggerMessage.CapabilitiesEvent) {
-                        dropFrameHandler.setCanDrop(((CapabilitiesEvent) message).args().getCapabilities().getSupportsStepBack());
-                    }
-                } catch (Throwable e) {
-                    log.error("Error while processing debugger message", e);
+                              });
+                    });
+                } else if (message instanceof DebuggerMessage.TerminatedEvent) {
+                } else if (message instanceof DebuggerMessage.OutputEvent) {
+                } else if (message instanceof DebuggerMessage.CapabilitiesEvent) {
+                    dropFrameHandler.setCanDrop(((CapabilitiesEvent) message).args().getCapabilities().getSupportsStepBack());
                 }
-                System.out.println("loop end");
             }
-            System.out.println("end");
         });
         // TODO: Fill mandatory fields
         InitializeRequestArguments initArgs = new InitializeRequestArguments();
@@ -196,7 +169,7 @@ public class TLCDebugProcess extends XDebugProcess {
 
     @Override
     public XBreakpointHandler<?> @NotNull [] getBreakpointHandlers() {
-        return breakpointHandlers;
+        return new XBreakpointHandler<?>[] { breakpointHandler, exceptionBreakpointHandler };
     }
 
     @Override
@@ -236,7 +209,7 @@ public class TLCDebugProcess extends XDebugProcess {
 
     @Override
     public void runToPosition(@NotNull XSourcePosition position, @Nullable XSuspendContext context) {
-        ((TLCBreakpointHandler)breakpointHandlers[0]).registerRunToCursor(position);
+        breakpointHandler.registerRunToCursor(position);
         org.eclipse.lsp4j.debug.Thread thread = activeThread(context);
         if (thread != null) {
             ContinueArguments args = new ContinueArguments();
@@ -265,11 +238,6 @@ public class TLCDebugProcess extends XDebugProcess {
             args.setThreadId(thread.getId());
             remoteProxy.continue_(args);
         }
-    }
-
-    @Override
-    public @Nullable XDebuggerEvaluator getEvaluator() {
-        return super.getEvaluator();
     }
 
     private static @Nullable org.eclipse.lsp4j.debug.Thread activeThread(XSuspendContext context) {

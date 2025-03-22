@@ -10,7 +10,6 @@ import com.intellij.xdebugger.frame.XStackFrame;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import lombok.experimental.Accessors;
 
 @RequiredArgsConstructor
 public class TLCDropFrameHandler implements XDropFrameHandler {

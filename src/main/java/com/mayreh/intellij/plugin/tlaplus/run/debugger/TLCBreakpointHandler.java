@@ -3,7 +3,6 @@ package com.mayreh.intellij.plugin.tlaplus.run.debugger;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -19,6 +18,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.util.Computable;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VfsUtilCore;
@@ -35,6 +35,15 @@ public class TLCBreakpointHandler extends XBreakpointHandler<XLineBreakpoint<TLC
     private final XDebugSession debugSession;
     private final IDebugProtocolServer remoteProxy;
     private final Map<SourceAndUrl, List<BreakpointInfo>> breakpoints;
+    // Run-to-cursor is implemented as a "temporary" breakpoint which will not be registered
+    // in IDE but only on the remote side.
+    // Though there will be only one run-to-cursor position at a time because we
+    // cleanup the temporary breakpoint every time suspending, we still use a map
+    // to deal with the case where multiple run-to-cursor requests are made before the
+    // suspension. (UI doesn't allow this though)
+    // If we store only latest position, garbage breakpoint will remain on the remote side when
+    // multiple run-to-cursor requests are made because we have no way to include previously
+    // requested positions in the SetBreakpointsArguments.
     private final Map<SourceAndUrl, List<BreakpointInfo>> runToCursorPositions;
 
     public TLCBreakpointHandler(XDebugSession debugSession, IDebugProtocolServer remoteProxy) {
@@ -92,10 +101,7 @@ public class TLCBreakpointHandler extends XBreakpointHandler<XLineBreakpoint<TLC
         breakpoints = new HashMap<>(this.breakpoints);
         breakpoints.putAll(runToCursorPositions);
 
-        Iterator<Entry<SourceAndUrl, List<BreakpointInfo>>> iterator =
-                breakpoints.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Entry<SourceAndUrl, List<BreakpointInfo>> entry = iterator.next();
+        for (Entry<SourceAndUrl, List<BreakpointInfo>> entry : breakpoints.entrySet()) {
             VirtualFile file = VirtualFileManager.getInstance().findFileByUrl(entry.getKey().fileUrl);
             if (file == null) {
                 continue;
@@ -121,12 +127,18 @@ public class TLCBreakpointHandler extends XBreakpointHandler<XLineBreakpoint<TLC
                     sbp.setColumn(column + 1);
                 } else {
                     XLineBreakpoint<TLCBreakpointProperties> breakpoint = breakpointInfo.breakpoint;
-                    // TODO: getStartOffset is nullable
-                    int line = document.getLineNumber(breakpoint.getProperties().getStartOffset());
-                    // DAP is 1-origin by default
+                    int line = breakpoint.getLine();
                     sbp.setLine(line + 1);
-                    if (breakpoint.getProperties().getTextRange() != null) {
-                        int column = breakpoint.getProperties().getTextRange().getStartOffset() - document.getLineStartOffset(line);
+
+                    // For now, textRange is supposed to be always non-null
+                    // but we defensively check it because we can't ensure non-null at type-level
+                    // and also we may change Expression-breakpoint to be set on line-level
+                    // rather than current text-range level in the future.
+                    // (e.g. If TLCDebugger accepts to set breakpoint on the line where no expression exists)
+                    TextRange textRange = breakpoint.getProperties().getTextRange();
+                    if (textRange != null) {
+                        int column = textRange.getStartOffset()
+                                     - document.getLineStartOffset(line);
                         sbp.setColumn(column + 1);
                     }
                 }
@@ -182,6 +194,7 @@ public class TLCBreakpointHandler extends XBreakpointHandler<XLineBreakpoint<TLC
     }
 
     // Same logic as XLineBreakpointImpl#getPresentableFilePath and getShortFilePath
+    // to get consistent SourceAndUrl for the temporary run-to-cursor breakpoint and the normal breakpoint.
     private static SourceAndUrl sourceAndUrl(Position position) {
         String url = position.fileUrl;
         String presentableFilePath;

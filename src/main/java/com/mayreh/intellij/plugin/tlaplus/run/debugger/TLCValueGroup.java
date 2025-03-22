@@ -6,7 +6,6 @@ import org.eclipse.lsp4j.debug.VariablesArguments;
 import org.eclipse.lsp4j.debug.services.IDebugProtocolServer;
 import org.jetbrains.annotations.NotNull;
 
-import com.intellij.util.concurrency.AppExecutorUtil;
 import com.intellij.xdebugger.frame.XCompositeNode;
 import com.intellij.xdebugger.frame.XValueChildrenList;
 import com.intellij.xdebugger.frame.XValueGroup;
@@ -29,7 +28,6 @@ public class TLCValueGroup extends XValueGroup {
 
     @Override
     public void computeChildren(@NotNull XCompositeNode node) {
-        // TODO: Add obsolete check anywhere necessary not only here
         if (node.isObsolete()) {
             return;
         }
@@ -38,12 +36,12 @@ public class TLCValueGroup extends XValueGroup {
         }
         VariablesArguments args = new VariablesArguments();
         args.setVariablesReference(scope.getVariablesReference());
-        remoteProxy.variables(args).thenAcceptAsync(response -> {
+        remoteProxy.variables(args).thenAccept(response -> {
             XValueChildrenList children = new XValueChildrenList();
             for (Variable variable : response.getVariables()) {
                 children.add(variable.getName(), new TLCDebuggerValue(remoteProxy, variable));
             }
             node.addChildren(children, true);
-        }, AppExecutorUtil.getAppExecutorService());
+        });
     }
 }

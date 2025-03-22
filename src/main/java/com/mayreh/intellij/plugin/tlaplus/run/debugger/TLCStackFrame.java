@@ -10,7 +10,6 @@ import org.jetbrains.annotations.Nullable;
 
 import com.intellij.ui.ColoredTextContainer;
 import com.intellij.ui.SimpleTextAttributes;
-import com.intellij.util.concurrency.AppExecutorUtil;
 import com.intellij.xdebugger.XSourcePosition;
 import com.intellij.xdebugger.evaluation.XDebuggerEvaluator;
 import com.intellij.xdebugger.frame.XCompositeNode;
@@ -46,13 +45,13 @@ public class TLCStackFrame extends XStackFrame {
         }
         ScopesArguments scopesArguments = new ScopesArguments();
         scopesArguments.setFrameId(dapStackFrame.getId());
-        remoteProxy.scopes(scopesArguments).thenAcceptAsync(response -> {
+        remoteProxy.scopes(scopesArguments).thenAccept(response -> {
             XValueChildrenList children = new XValueChildrenList();
             for (Scope scope : response.getScopes()) {
                 children.addBottomGroup(new TLCValueGroup(remoteProxy, scope));
             }
             node.addChildren(children, true);
-        }, AppExecutorUtil.getAppExecutorService());
+        });
     }
 
     @Override
