@@ -1,7 +1,6 @@
 package com.mayreh.intellij.plugin.tlaplus.run.debugger;
 
 import org.eclipse.lsp4j.debug.StepBackArguments;
-import org.eclipse.lsp4j.debug.services.IDebugProtocolServer;
 import org.jetbrains.annotations.NotNull;
 
 import com.intellij.xdebugger.frame.XDropFrameHandler;
@@ -13,7 +12,7 @@ import lombok.Setter;
 
 @RequiredArgsConstructor
 public class TLCDropFrameHandler implements XDropFrameHandler {
-    private final IDebugProtocolServer remoteProxy;
+    private final ServerConnection serverConnection;
 
     @Getter
     @Setter
@@ -30,7 +29,7 @@ public class TLCDropFrameHandler implements XDropFrameHandler {
             int threadId = ((TLCStackFrame) frame).dapThread().getId();
             StepBackArguments args = new StepBackArguments();
             args.setThreadId(threadId);
-            remoteProxy.stepBack(args);
+            serverConnection.sendRequest(remoteProxy -> remoteProxy.stepBack(args));
         }
     }
 }

@@ -4,7 +4,6 @@ import org.eclipse.lsp4j.debug.EvaluateArguments;
 import org.eclipse.lsp4j.debug.EvaluateArgumentsContext;
 import org.eclipse.lsp4j.debug.StackFrame;
 import org.eclipse.lsp4j.debug.Variable;
-import org.eclipse.lsp4j.debug.services.IDebugProtocolServer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class TLCDebuggerEvaluator extends XDebuggerEvaluator {
-    private final IDebugProtocolServer remoteProxy;
+    private final ServerConnection serverConnection;
     private final StackFrame dapStackFrame;
 
     @Override
@@ -26,14 +25,16 @@ public class TLCDebuggerEvaluator extends XDebuggerEvaluator {
         args.setExpression(expression);
         args.setFrameId(dapStackFrame.getId());
         args.setContext(EvaluateArgumentsContext.WATCH);
-        remoteProxy.evaluate(args).thenAccept(response -> {
-            Variable variable = new Variable();
-            variable.setName(expression);
-            variable.setValue(response.getResult());
-            variable.setVariablesReference(response.getVariablesReference());
-            variable.setNamedVariables(response.getNamedVariables());
-            variable.setIndexedVariables(response.getIndexedVariables());
-            callback.evaluated(new TLCDebuggerValue(remoteProxy, variable));
+        serverConnection.sendRequest(remoteProxy -> {
+            remoteProxy.evaluate(args).thenAccept(response -> {
+                Variable variable = new Variable();
+                variable.setName(expression);
+                variable.setValue(response.getResult());
+                variable.setVariablesReference(response.getVariablesReference());
+                variable.setNamedVariables(response.getNamedVariables());
+                variable.setIndexedVariables(response.getIndexedVariables());
+                callback.evaluated(new TLCDebuggerValue(remoteProxy, variable));
+            });
         });
     }
 }

@@ -3,7 +3,6 @@ package com.mayreh.intellij.plugin.tlaplus.run.debugger;
 import org.eclipse.lsp4j.debug.Scope;
 import org.eclipse.lsp4j.debug.Variable;
 import org.eclipse.lsp4j.debug.VariablesArguments;
-import org.eclipse.lsp4j.debug.services.IDebugProtocolServer;
 import org.jetbrains.annotations.NotNull;
 
 import com.intellij.xdebugger.frame.XCompositeNode;
@@ -11,12 +10,12 @@ import com.intellij.xdebugger.frame.XValueChildrenList;
 import com.intellij.xdebugger.frame.XValueGroup;
 
 public class TLCValueGroup extends XValueGroup {
-    private final IDebugProtocolServer remoteProxy;
+    private final ServerConnection serverConnection;
     private final Scope scope;
 
-    public TLCValueGroup(IDebugProtocolServer remoteProxy, Scope scope) {
+    public TLCValueGroup(ServerConnection serverConnection, Scope scope) {
         super(scope.getName());
-        this.remoteProxy = remoteProxy;
+        this.serverConnection = serverConnection;
         this.scope = scope;
     }
 
@@ -36,12 +35,14 @@ public class TLCValueGroup extends XValueGroup {
         }
         VariablesArguments args = new VariablesArguments();
         args.setVariablesReference(scope.getVariablesReference());
-        remoteProxy.variables(args).thenAccept(response -> {
-            XValueChildrenList children = new XValueChildrenList();
-            for (Variable variable : response.getVariables()) {
-                children.add(variable.getName(), new TLCDebuggerValue(remoteProxy, variable));
-            }
-            node.addChildren(children, true);
+        serverConnection.sendRequest(remoteProxy -> {
+            remoteProxy.variables(args).thenAccept(response -> {
+                XValueChildrenList children = new XValueChildrenList();
+                for (Variable variable : response.getVariables()) {
+                    children.add(variable.getName(), new TLCDebuggerValue(remoteProxy, variable));
+                }
+                node.addChildren(children, true);
+            });
         });
     }
 }

@@ -6,8 +6,10 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.eclipse.lsp4j.debug.ConfigurationDoneArguments;
 import org.eclipse.lsp4j.debug.ContinueArguments;
 import org.eclipse.lsp4j.debug.InitializeRequestArguments;
 import org.eclipse.lsp4j.debug.NextArguments;
@@ -16,7 +18,6 @@ import org.eclipse.lsp4j.debug.StepInArguments;
 import org.eclipse.lsp4j.debug.StepOutArguments;
 import org.eclipse.lsp4j.debug.StoppedEventArguments;
 import org.eclipse.lsp4j.debug.StoppedEventArgumentsReason;
-import org.eclipse.lsp4j.debug.services.IDebugProtocolServer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.concurrency.Promise;
@@ -24,6 +25,7 @@ import org.jetbrains.concurrency.Promise;
 import com.intellij.execution.ExecutionResult;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.ui.ExecutionConsole;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugSession;
@@ -43,7 +45,7 @@ public class TLCDebugProcess extends XDebugProcess {
     private static final Logger log = Logger.getInstance(TLCDebugProcess.class);
 
     private final ExecutionResult executionResult;
-    private final IDebugProtocolServer remoteProxy;
+    private final ServerConnection serverConnection;
     private final ExecutorService executorService;
     private final AtomicBoolean terminated = new AtomicBoolean(false);
     private final TLCDropFrameHandler dropFrameHandler;
@@ -52,15 +54,15 @@ public class TLCDebugProcess extends XDebugProcess {
 
     public TLCDebugProcess(@NotNull XDebugSession session,
                            BlockingQueue<DebuggerMessage> messageQueue,
-                           IDebugProtocolServer remoteProxy,
+                           ServerConnection serverConnection,
                            ExecutionResult executionResult) {
         super(session);
         this.executionResult = executionResult;
-        this.remoteProxy = remoteProxy;
-        dropFrameHandler = new TLCDropFrameHandler(remoteProxy);
+        this.serverConnection = serverConnection;
+        dropFrameHandler = new TLCDropFrameHandler(serverConnection);
         dropFrameHandler.setCanDrop(false);
-        breakpointHandler = new TLCBreakpointHandler(session, remoteProxy);
-        exceptionBreakpointHandler = new TLCExceptionBreakpointHandler(session, remoteProxy);
+        breakpointHandler = new TLCBreakpointHandler(session, serverConnection);
+        exceptionBreakpointHandler = new TLCExceptionBreakpointHandler(session, serverConnection);
         executorService = Executors.newSingleThreadExecutor(r -> {
             Thread th = new Thread(r);
             th.setName(String.format("TLCDebuggerMessagePoller-%d", System.identityHashCode(this)));
@@ -73,10 +75,16 @@ public class TLCDebugProcess extends XDebugProcess {
                     message = messageQueue.take();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    throw new RuntimeException(e);
+                    message = null;
+                }
+                if (message == null) {
+                    continue;
                 }
                 if (message instanceof DebuggerMessage.InitializedEvent) {
-                    // TODO
+                    ApplicationManager.getApplication().runReadAction(session::initBreakpoints);
+                    serverConnection.sendRequest(remoteProxy -> {
+                        remoteProxy.configurationDone(new ConfigurationDoneArguments());
+                    });
                 } else if (message instanceof DebuggerMessage.StoppedEvent) {
                     // When debugger suspends by any reason, we no longer need run-to-cursor breakpoint.
                     // - Case when run-to-cursor is reached: of course we don't need it anymore.
@@ -86,70 +94,84 @@ public class TLCDebugProcess extends XDebugProcess {
                     breakpointHandler.unregisterRunToCursor();
                     StoppedEventArguments stoppedEventArgs = ((StoppedEvent) message).args();
 
-                    remoteProxy.threads().thenAccept(response -> {
-                        Arrays.stream(response.getThreads())
-                              .filter(t -> t.getId() == stoppedEventArgs.getThreadId())
-                              .findFirst()
-                              .ifPresent(thread -> {
-                                  StackTraceArguments args = new StackTraceArguments();
-                                  args.setThreadId(thread.getId());
-                                  remoteProxy.stackTrace(args).thenAccept(stackTraceResponse -> {
-                                      XSuspendContext xContext = session.getSuspendContext();
-                                      if (xContext == null) {
-                                          xContext = new TLCSuspendContext(remoteProxy);
-                                      }
-                                      if (xContext instanceof TLCSuspendContext) {
-                                          ((TLCSuspendContext) xContext).addExecutionStack(thread, Arrays.asList(stackTraceResponse.getStackFrames()));
-                                      }
-
-                                      if (StoppedEventArgumentsReason.EXCEPTION.equals(stoppedEventArgs.getReason())) {
-                                          // TODO: Invariant/Error/Unsatisfied
-                                          TLCExceptionBreakpointType breakpointType =
-                                                  XDebuggerUtil.getInstance().findBreakpointType(
-                                                          TLCExceptionBreakpointType.class);
-                                          Set<XBreakpoint<TLCExceptionBreakpointProperties>> breakpoints =
-                                                  XDebuggerManager.getInstance(session.getProject())
-                                                                  .getBreakpointManager()
-                                                                  .getDefaultBreakpoints(breakpointType);
-                                          XBreakpoint<TLCExceptionBreakpointProperties> breakpoint = breakpoints.stream().findFirst().get();
-                                          session.breakpointReached(breakpoint, null, xContext);
-                                      } else {
-                                          // NOTE: We give up looking-up hit breakpoint (except exception breakpoints above) on stopped event so
-                                          // always call positionReached instead of breakpointReached, because
-                                          // Some TLCDebugger's breakpoint types (e.g. Spec breakpoint) happen on different line
-                                          // from the breakpoint's line, which is hard to look-up without re-implementing
-                                          // similar logic with TLCDebugger's halt-condition.
-                                          //
-                                          // Ideally, TLCDebugger should fill StoppedEventArguments#hitBreakpointIds so
-                                          // we can look up hit breakpoint easily.
-                                          if (session instanceof XDebugSessionImpl) {
-                                              // TLC may send stopped event without breakpoint (e.g. first encounter of evaluation after launch).
-                                              // In such case, we want to focus debug tab so passing true to attract arg.
-                                              // TODO: Intuitively, this may cause the debugger-tab to be focused even on user-initiated stepping undesirably,
-                                              // but seems this just works (i.e. doesn't cause undesirable focus). Why?
-                                              ((XDebugSessionImpl) session).positionReached(xContext, true);
+                    serverConnection.sendRequest(remoteProxy -> {
+                        remoteProxy.threads().thenAccept(response -> {
+                            Arrays.stream(response.getThreads())
+                                  .filter(t -> t.getId() == stoppedEventArgs.getThreadId())
+                                  .findFirst()
+                                  .ifPresent(thread -> {
+                                      StackTraceArguments args = new StackTraceArguments();
+                                      args.setThreadId(thread.getId());
+                                      remoteProxy.stackTrace(args).thenAccept(stackTraceResponse -> {
+                                          XSuspendContext xContext = session.getSuspendContext();
+                                          if (xContext == null) {
+                                              xContext = new TLCSuspendContext(serverConnection);
                                           }
-                                      }
+                                          if (xContext instanceof TLCSuspendContext) {
+                                              ((TLCSuspendContext) xContext).addExecutionStack(thread, Arrays.asList(stackTraceResponse.getStackFrames()));
+                                          }
+
+                                          if (StoppedEventArgumentsReason.EXCEPTION.equals(stoppedEventArgs.getReason())) {
+                                              // TODO: Invariant/Error/Unsatisfied
+                                              TLCExceptionBreakpointType breakpointType =
+                                                      XDebuggerUtil.getInstance().findBreakpointType(
+                                                              TLCExceptionBreakpointType.class);
+                                              Set<XBreakpoint<TLCExceptionBreakpointProperties>> breakpoints =
+                                                      XDebuggerManager.getInstance(session.getProject())
+                                                                      .getBreakpointManager()
+                                                                      .getDefaultBreakpoints(breakpointType);
+                                              XBreakpoint<TLCExceptionBreakpointProperties> breakpoint = breakpoints.stream().findFirst().get();
+                                              session.breakpointReached(breakpoint, null, xContext);
+                                          } else {
+                                              // NOTE: We give up looking-up hit breakpoint (except exception breakpoints above) on stopped event so
+                                              // always call positionReached instead of breakpointReached, because
+                                              // Some TLCDebugger's breakpoint types (e.g. Spec breakpoint) happen on different line
+                                              // from the breakpoint's line, which is hard to look-up without re-implementing
+                                              // similar logic with TLCDebugger's halt-condition.
+                                              //
+                                              // Ideally, TLCDebugger should fill StoppedEventArguments#hitBreakpointIds so
+                                              // we can look up hit breakpoint easily.
+                                              if (session instanceof XDebugSessionImpl) {
+                                                  // TLC may send stopped event without breakpoint (e.g. first encounter of evaluation after launch).
+                                                  // In such case, we want to focus debug tab so passing true to attract arg.
+                                                  // TODO: Intuitively, this may cause the debugger-tab to be focused even on user-initiated stepping undesirably,
+                                                  // but seems this just works (i.e. doesn't cause undesirable focus). Why?
+                                                  ((XDebugSessionImpl) session).positionReached(xContext, true);
+                                              }
+                                          }
+                                      });
                                   });
-                              });
+                        });
                     });
                 } else if (message instanceof DebuggerMessage.TerminatedEvent) {
+                    // noop
+                    // terminate sequence is expected to be already ongoing in stop() method
+                    // so we don't need to do anything here.
                 } else if (message instanceof DebuggerMessage.OutputEvent) {
+                    // noop
+                    // TODO: Output to dedicated console might be helpful
                 } else if (message instanceof DebuggerMessage.CapabilitiesEvent) {
                     dropFrameHandler.setCanDrop(((CapabilitiesEvent) message).args().getCapabilities().getSupportsStepBack());
                 }
             }
         });
-        // TODO: Fill mandatory fields
+
+        // We don't set any capability flags because TLC debugger doesn't check them at all
         InitializeRequestArguments initArgs = new InitializeRequestArguments();
-        remoteProxy.initialize(initArgs).thenAccept(cap -> {
-            dropFrameHandler.setCanDrop(cap.getSupportsStepBack());
-            remoteProxy.launch(Map.of());
+        initArgs.setAdapterID("tlaplus-intellij-plugin");
+        serverConnection.sendRequest(remoteProxy -> {
+            remoteProxy.initialize(initArgs).thenAccept(cap -> {
+                dropFrameHandler.setCanDrop(cap.getSupportsStepBack());
+                // Command line args for TLC debugger are passed when starting the process as usual
+                // rather than launch request, so we don't need to pass any args here.
+                remoteProxy.launch(Map.of());
+            });
         });
     }
 
-    // Intellij's debugger feature depends on the process handler returned from here (e.g. XDebugSessionImpl)
-    // to manage the lifecycle of the debug process, while default implementation returns dummy-like DefaultDebugProcessHandler.
+    // Intellij's debugger engine uses the process handler returned from here (e.g. XDebugSessionImpl)
+    // to manage the lifecycle of the debug process rather than ExecutionResult's process handler,
+    // while default implementation returns dummy-like DefaultDebugProcessHandler.
     // To tell debugger system attach the real process handler, we need to override this method.
     @Override
     protected @Nullable ProcessHandler doGetProcessHandler() {
@@ -178,7 +200,7 @@ public class TLCDebugProcess extends XDebugProcess {
         if (thread != null) {
             NextArguments args = new NextArguments();
             args.setThreadId(thread.getId());
-            remoteProxy.next(args);
+            serverConnection.sendRequest(remoteProxy -> remoteProxy.next(args));
         }
     }
 
@@ -188,7 +210,7 @@ public class TLCDebugProcess extends XDebugProcess {
         if (thread != null) {
             StepInArguments args = new StepInArguments();
             args.setThreadId(thread.getId());
-            remoteProxy.stepIn(args);
+            serverConnection.sendRequest(remoteProxy -> remoteProxy.stepIn(args));
         }
     }
 
@@ -198,13 +220,21 @@ public class TLCDebugProcess extends XDebugProcess {
         if (thread != null) {
             StepOutArguments args = new StepOutArguments();
             args.setThreadId(thread.getId());
-            remoteProxy.stepOut(args);
+            serverConnection.sendRequest(remoteProxy -> remoteProxy.stepOut(args));
         }
     }
 
     @Override
     public @Nullable XDropFrameHandler getDropFrameHandler() {
         return dropFrameHandler;
+    }
+
+    // DAP launch sequence requires to init breakpoints after initialized event is received
+    // before sending configurationDone request.
+    // So we call initBreakpoints manually instead of relying on auto call by Intellij's debugger engine.
+    @Override
+    public boolean checkCanInitBreakpoints() {
+        return false;
     }
 
     @Override
@@ -214,15 +244,19 @@ public class TLCDebugProcess extends XDebugProcess {
         if (thread != null) {
             ContinueArguments args = new ContinueArguments();
             args.setThreadId(thread.getId());
-            remoteProxy.continue_(args);
+            serverConnection.sendRequest(remoteProxy -> remoteProxy.continue_(args));
         }
     }
 
     @Override
     public void stop() {
         terminated.set(true);
-        executorService.shutdown();
-//        executorService.awaitTermination()
+        executorService.shutdownNow();
+        try {
+            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     @Override
@@ -236,7 +270,7 @@ public class TLCDebugProcess extends XDebugProcess {
         if (thread != null) {
             ContinueArguments args = new ContinueArguments();
             args.setThreadId(thread.getId());
-            remoteProxy.continue_(args);
+            serverConnection.sendRequest(remoteProxy -> remoteProxy.continue_(args));
         }
     }
 

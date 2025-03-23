@@ -4,7 +4,6 @@ import org.eclipse.lsp4j.debug.Scope;
 import org.eclipse.lsp4j.debug.ScopesArguments;
 import org.eclipse.lsp4j.debug.StackFrame;
 import org.eclipse.lsp4j.debug.Thread;
-import org.eclipse.lsp4j.debug.services.IDebugProtocolServer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,7 +25,7 @@ public class TLCStackFrame extends XStackFrame {
     @Accessors(fluent = true)
     private final Thread dapThread;
     private final StackFrame dapStackFrame;
-    private final IDebugProtocolServer remoteProxy;
+    private final ServerConnection serverConnection;
 
     @Override
     public @Nullable XSourcePosition getSourcePosition() {
@@ -45,17 +44,19 @@ public class TLCStackFrame extends XStackFrame {
         }
         ScopesArguments scopesArguments = new ScopesArguments();
         scopesArguments.setFrameId(dapStackFrame.getId());
-        remoteProxy.scopes(scopesArguments).thenAccept(response -> {
-            XValueChildrenList children = new XValueChildrenList();
-            for (Scope scope : response.getScopes()) {
-                children.addBottomGroup(new TLCValueGroup(remoteProxy, scope));
-            }
-            node.addChildren(children, true);
+        serverConnection.sendRequest(remoteProxy -> {
+            remoteProxy.scopes(scopesArguments).thenAccept(response -> {
+                XValueChildrenList children = new XValueChildrenList();
+                for (Scope scope : response.getScopes()) {
+                    children.addBottomGroup(new TLCValueGroup(serverConnection, scope));
+                }
+                node.addChildren(children, true);
+            });
         });
     }
 
     @Override
     public @Nullable XDebuggerEvaluator getEvaluator() {
-        return new TLCDebuggerEvaluator(remoteProxy, dapStackFrame);
+        return new TLCDebuggerEvaluator(serverConnection, dapStackFrame);
     }
 }

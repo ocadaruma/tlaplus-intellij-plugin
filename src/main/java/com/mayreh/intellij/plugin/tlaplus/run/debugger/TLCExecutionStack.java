@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.eclipse.lsp4j.debug.StackFrame;
 import org.eclipse.lsp4j.debug.Thread;
-import org.eclipse.lsp4j.debug.services.IDebugProtocolServer;
 import org.jetbrains.annotations.Nullable;
 
 import com.intellij.openapi.util.text.StringUtil;
@@ -19,11 +18,11 @@ public class TLCExecutionStack extends XExecutionStack {
     private final Thread dapThread;
     private final List<TLCStackFrame> stackFrames;
 
-    public TLCExecutionStack(IDebugProtocolServer remoteProxy, Thread dapThread, List<StackFrame> stackFrames) {
+    public TLCExecutionStack(ServerConnection serverConnection, Thread dapThread, List<StackFrame> stackFrames) {
         super(getThreadName(dapThread));
         this.dapThread = dapThread;
         this.stackFrames = stackFrames.stream()
-                                      .map(f -> new TLCStackFrame(dapThread, f, remoteProxy))
+                                      .map(f -> new TLCStackFrame(dapThread, f, serverConnection))
                                       .toList();
     }
 

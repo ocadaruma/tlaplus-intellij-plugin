@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import org.eclipse.lsp4j.debug.StackFrame;
 import org.eclipse.lsp4j.debug.Thread;
-import org.eclipse.lsp4j.debug.services.IDebugProtocolServer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -17,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class TLCSuspendContext extends XSuspendContext {
-    private final IDebugProtocolServer remoteProxy;
+    private final ServerConnection serverConnection;
     private final List<TLCExecutionStack> stacks = ContainerUtil.createConcurrentList();
 
     @Override
@@ -32,6 +31,6 @@ public class TLCSuspendContext extends XSuspendContext {
     }
 
     public void addExecutionStack(@NotNull Thread dapThread, @NotNull List<StackFrame> stackFrames) {
-        stacks.add(new TLCExecutionStack(remoteProxy, dapThread, stackFrames));
+        stacks.add(new TLCExecutionStack(serverConnection, dapThread, stackFrames));
     }
 }

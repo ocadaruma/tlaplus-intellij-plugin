@@ -11,7 +11,6 @@ import org.eclipse.lsp4j.debug.Breakpoint;
 import org.eclipse.lsp4j.debug.SetBreakpointsArguments;
 import org.eclipse.lsp4j.debug.Source;
 import org.eclipse.lsp4j.debug.SourceBreakpoint;
-import org.eclipse.lsp4j.debug.services.IDebugProtocolServer;
 import org.jetbrains.annotations.NotNull;
 
 import com.intellij.openapi.application.ApplicationManager;
@@ -33,7 +32,7 @@ import lombok.Value;
 
 public class TLCBreakpointHandler extends XBreakpointHandler<XLineBreakpoint<TLCBreakpointProperties>> {
     private final XDebugSession debugSession;
-    private final IDebugProtocolServer remoteProxy;
+    private final ServerConnection serverConnection;
     private final Map<SourceAndUrl, List<BreakpointInfo>> breakpoints;
     // Run-to-cursor is implemented as a "temporary" breakpoint which will not be registered
     // in IDE but only on the remote side.
@@ -46,10 +45,10 @@ public class TLCBreakpointHandler extends XBreakpointHandler<XLineBreakpoint<TLC
     // requested positions in the SetBreakpointsArguments.
     private final Map<SourceAndUrl, List<BreakpointInfo>> runToCursorPositions;
 
-    public TLCBreakpointHandler(XDebugSession debugSession, IDebugProtocolServer remoteProxy) {
+    public TLCBreakpointHandler(XDebugSession debugSession, ServerConnection serverConnection) {
         super(TLCBreakpointType.class);
         this.debugSession = debugSession;
-        this.remoteProxy = remoteProxy;
+        this.serverConnection = serverConnection;
         breakpoints = new HashMap<>();
         runToCursorPositions = new HashMap<>();
     }
@@ -146,18 +145,20 @@ public class TLCBreakpointHandler extends XBreakpointHandler<XLineBreakpoint<TLC
             }
             args.setBreakpoints(sbps);
 
-            remoteProxy.setBreakpoints(args).thenAccept(response -> {
-                for (int i = 0; i < response.getBreakpoints().length; i++) {
-                    BreakpointInfo info = entry.getValue().get(i);
-                    Breakpoint res = response.getBreakpoints()[i];
-                    if (info.breakpoint != null) {
-                        if (res.isVerified()) {
-                            debugSession.setBreakpointVerified(info.breakpoint);
-                        } else {
-                            debugSession.setBreakpointInvalid(info.breakpoint, res.getMessage());
+            serverConnection.sendRequest(remoteProxy -> {
+                remoteProxy.setBreakpoints(args).thenAccept(response -> {
+                    for (int i = 0; i < response.getBreakpoints().length; i++) {
+                        BreakpointInfo info = entry.getValue().get(i);
+                        Breakpoint res = response.getBreakpoints()[i];
+                        if (info.breakpoint != null) {
+                            if (res.isVerified()) {
+                                debugSession.setBreakpointVerified(info.breakpoint);
+                            } else {
+                                debugSession.setBreakpointInvalid(info.breakpoint, res.getMessage());
+                            }
                         }
                     }
-                }
+                });
             });
         }
         // garbage collection
