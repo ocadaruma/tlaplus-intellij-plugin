@@ -34,7 +34,7 @@ import lombok.RequiredArgsConstructor;
 
 public class TLCBreakpointType extends XLineBreakpointType<TLCBreakpointProperties> {
     public TLCBreakpointType() {
-        super("TLCBreakpointType", "TLC Breakpoint");
+        super("TLCBreakpointType", "TLC Breakpoints");
     }
 
     @Override

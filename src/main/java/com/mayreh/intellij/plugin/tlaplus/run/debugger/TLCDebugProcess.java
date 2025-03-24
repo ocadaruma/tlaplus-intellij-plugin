@@ -1,13 +1,15 @@
 package com.mayreh.intellij.plugin.tlaplus.run.debugger;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
 
 import org.eclipse.lsp4j.debug.ConfigurationDoneArguments;
 import org.eclipse.lsp4j.debug.ContinueArguments;
@@ -27,6 +29,7 @@ import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.ui.ExecutionConsole;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.util.Computable;
 import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugSession;
 import com.intellij.xdebugger.XDebuggerManager;
@@ -43,6 +46,7 @@ import com.mayreh.intellij.plugin.tlaplus.run.debugger.DebuggerMessage.StoppedEv
 
 public class TLCDebugProcess extends XDebugProcess {
     private static final Logger log = Logger.getInstance(TLCDebugProcess.class);
+    private static final Pattern VIOLATION_PATTERN = Pattern.compile("^Invariant.*is violated.$");
 
     private final ExecutionResult executionResult;
     private final ServerConnection serverConnection;
@@ -112,16 +116,38 @@ public class TLCDebugProcess extends XDebugProcess {
                                           }
 
                                           if (StoppedEventArgumentsReason.EXCEPTION.equals(stoppedEventArgs.getReason())) {
-                                              // TODO: Invariant/Error/Unsatisfied
                                               TLCExceptionBreakpointType breakpointType =
                                                       XDebuggerUtil.getInstance().findBreakpointType(
                                                               TLCExceptionBreakpointType.class);
-                                              Set<XBreakpoint<TLCExceptionBreakpointProperties>> breakpoints =
-                                                      XDebuggerManager.getInstance(session.getProject())
-                                                                      .getBreakpointManager()
-                                                                      .getDefaultBreakpoints(breakpointType);
-                                              XBreakpoint<TLCExceptionBreakpointProperties> breakpoint = breakpoints.stream().findFirst().get();
-                                              session.breakpointReached(breakpoint, null, xContext);
+                                              Collection<? extends XBreakpoint<TLCExceptionBreakpointProperties>> breakpoints =
+                                                      ApplicationManager.getApplication().runReadAction(
+                                                              (Computable<? extends Collection<? extends XBreakpoint<TLCExceptionBreakpointProperties>>>)
+                                                                      () -> XDebuggerManager.getInstance(session.getProject())
+                                                                                            .getBreakpointManager()
+                                                                                            .getBreakpoints(breakpointType));
+
+                                              // FIXME: This logic to lookup the hit breakpoint is clearly dumb.
+                                              // Ideally, TLCDebugger should fill StoppedEventArguments#hitBreakpointIds so
+                                              // we can look up hit exception breakpoint easily.
+                                              // Whenever we fail to lookup breakpoint, we just call positionReached instead of breakpointReached.
+                                              if (stoppedEventArgs.getText() != null &&
+                                                  VIOLATION_PATTERN.matcher(stoppedEventArgs.getText().trim()).matches()) {
+                                                  Optional<XBreakpoint<TLCExceptionBreakpointProperties>> breakpoint =
+                                                          exceptionBreakpointHandler.findBreakpointByFilterId("InvariantBreakpointsFilter");
+                                                  if (breakpoint.isPresent()) {
+                                                      session.breakpointReached(breakpoint.get(), null, xContext);
+                                                      return;
+                                                  }
+                                              }
+                                              Optional<XBreakpoint<TLCExceptionBreakpointProperties>> breakpoint =
+                                                      exceptionBreakpointHandler.findBreakpointByFilterId("ExceptionBreakpointsFilter");
+                                              if (breakpoint.isPresent()) {
+                                                  session.breakpointReached(breakpoint.get(), null, xContext);
+                                              } else {
+                                                  if (session instanceof XDebugSessionImpl) {
+                                                      ((XDebugSessionImpl) session).positionReached(xContext, true);
+                                                  }
+                                              }
                                           } else {
                                               // NOTE: We give up looking-up hit breakpoint (except exception breakpoints above) on stopped event so
                                               // always call positionReached instead of breakpointReached, because
@@ -162,6 +188,7 @@ public class TLCDebugProcess extends XDebugProcess {
         serverConnection.sendRequest(remoteProxy -> {
             remoteProxy.initialize(initArgs).thenAccept(cap -> {
                 dropFrameHandler.setCanDrop(cap.getSupportsStepBack());
+                exceptionBreakpointHandler.createOrRemoveBreakpoints(cap);
                 // Command line args for TLC debugger are passed when starting the process as usual
                 // rather than launch request, so we don't need to pass any args here.
                 remoteProxy.launch(Map.of());
