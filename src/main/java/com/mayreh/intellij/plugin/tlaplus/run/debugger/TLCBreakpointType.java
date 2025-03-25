@@ -130,11 +130,11 @@ public class TLCBreakpointType extends XLineBreakpointType<TLCBreakpointProperti
 
             return true;
         });
-        if (!opDefNameRange.get().isEmpty()) {
-            variants.add(new TextRangeBreakpointVariant("Action/Spec", opDefNameRange.get()));
-        }
         if (hitLine.get()) {
             variants.add(new TextRangeBreakpointVariant("Expression", null));
+        }
+        if (!opDefNameRange.get().isEmpty()) {
+            variants.add(new TextRangeBreakpointVariant("Action/Spec", opDefNameRange.get()));
         }
 
         return variants;
