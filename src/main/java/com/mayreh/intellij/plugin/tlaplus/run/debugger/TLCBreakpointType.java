@@ -17,7 +17,6 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.psi.PsiComment;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.xdebugger.XDebuggerUtil;
@@ -26,7 +25,6 @@ import com.intellij.xdebugger.breakpoints.XBreakpoint;
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint;
 import com.intellij.xdebugger.breakpoints.XLineBreakpointType;
 import com.mayreh.intellij.plugin.tlaplus.TLAplusFileType;
-import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusExpr;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusNamedElement;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusOpDefinition;
 
@@ -59,33 +57,15 @@ public class TLCBreakpointType extends XLineBreakpointType<TLCBreakpointProperti
         }
         Ref<Boolean> canPut = new Ref<>(false);
 
-        int lineStartOffset = document.getLineStartOffset(line);
-        // We only sanity check that the line corresponds to any expr node,
-        // which mimic the verification in TLCDebugger (https://github.com/tlaplus/tlaplus/blob/a649facaac46a79c86b664073920e9762a5c6f0a/tlatools/org.lamport.tlatools/src/tlc2/debug/TLCDebugger.java#L434-L436)
+        // We only sanity check that the line corresponds to any AST node except comment and whitespace.
         // More complete check (e.g. hitCount) will be done when registering breakpoint after TLC debugger starts up.
-        //
-        // NOTE: There are two special breakpoint types Action (i.e. inline) breakpoint and Spec breakpoint.
-        // Semantically, these breakpoints should be valid even when the line doesn't have any expr IMO
-        // but seems TLCDebugger just marks such line unverified for now, so we respect that behavior here.
-        // Let's see this by following example:
-        //   L1: FooAction ==
-        //   L2:              /\ foo = 0
-        //   L3:              /\ foo' = foo + 1
-        // For now, TLCDebugger refuses to set action (inline) breakpoint on L1 because
-        // L1 doesn't have any expression, which sounds not semantically correct.
         XDebuggerUtil.getInstance().iterateLine(project, document, line, element -> {
             if (element instanceof PsiComment ||
                 element instanceof PsiWhiteSpace) {
                 return true;
             }
-            if (PsiTreeUtil.getParentOfType(element,
-                                            TLAplusExpr.class,
-                                            false,
-                                            lineStartOffset) != null) {
-                canPut.set(true);
-                return false;
-            }
-            return true;
+            canPut.set(true);
+            return false;
         });
 
         return canPut.get();
@@ -107,52 +87,45 @@ public class TLCBreakpointType extends XLineBreakpointType<TLCBreakpointProperti
         TextRange lineRange = TextRange.create(
                 document.getLineStartOffset(position.getLine()),
                 document.getLineEndOffset(position.getLine()));
-
         Ref<TextRange> opDefNameRange = Ref.create(TextRange.EMPTY_RANGE);
-        Ref<TextRange> exprRange = Ref.create(TextRange.EMPTY_RANGE);
+        Ref<Boolean> hitLine = Ref.create(false);
         XDebuggerUtil.getInstance().iterateLine(project, document, position.getLine(), element -> {
             if (element instanceof PsiComment ||
                 element instanceof PsiWhiteSpace) {
                 return true;
             }
-            // (Unlikely though) when there are multiple opdef in single line (which is syntactically possible),
-            // we take only first opdef for simplicity (e.g. how to handle multiple text ranges for multiple opdef..)
-            if (opDefNameRange.get().isEmpty()) {
-                TLAplusOpDefinition opDef = PsiTreeUtil.getParentOfType(
-                        element,
-                        TLAplusOpDefinition.class,
-                        false,
-                        lineRange.getStartOffset());
-                if (opDef != null) {
-                    TLAplusNamedElement name = null;
-                    if (opDef.getDashdotOpLhs() != null) {
-                        name = opDef.getDashdotOpLhs().getDashdotOpName();
-                    } else if (opDef.getNonfixLhs() != null) {
-                        name = opDef.getNonfixLhs().getNonfixLhsName();
-                    } else if (opDef.getInfixOpLhs() != null) {
-                        name = opDef.getInfixOpLhs().getInfixOpName();
-                    } else if (opDef.getPostfixOpLhs() != null) {
-                        name = opDef.getPostfixOpLhs().getPostfixOpName();
-                    } else if (opDef.getPrefixOpLhs() != null) {
-                        name = opDef.getPrefixOpLhs().getPrefixOpName();
-                    } else {
-                        // Unexpected!!
-                    }
 
-                    if (name != null) {
-                        opDefNameRange.set(name.getTextRange());
-                    }
+            // Any non-comment, non-whitespace element is a candidate for breakpoint
+            hitLine.set(true);
+
+            TLAplusOpDefinition opDef = PsiTreeUtil.getParentOfType(
+                    element,
+                    TLAplusOpDefinition.class,
+                    false,
+                    lineRange.getStartOffset());
+            if (opDef != null) {
+                TLAplusNamedElement name = null;
+                if (opDef.getDashdotOpLhs() != null) {
+                    name = opDef.getDashdotOpLhs().getDashdotOpName();
+                } else if (opDef.getNonfixLhs() != null) {
+                    name = opDef.getNonfixLhs().getNonfixLhsName();
+                } else if (opDef.getInfixOpLhs() != null) {
+                    name = opDef.getInfixOpLhs().getInfixOpName();
+                } else if (opDef.getPostfixOpLhs() != null) {
+                    name = opDef.getPostfixOpLhs().getPostfixOpName();
+                } else if (opDef.getPrefixOpLhs() != null) {
+                    name = opDef.getPrefixOpLhs().getPrefixOpName();
+                } else {
+                    // Unexpected!!
                 }
-            }
-            TLAplusExpr expr = getRootExpr(element, lineRange.getStartOffset());
-            if (expr != null) {
-                TextRange range = expr.getTextRange().intersection(lineRange);
-                // initialize with fist encountered expr's range, because
-                // EMPTY.union starts with offset 0 (i.e. the beginning of the document) which is undesirable.
-                if (exprRange.get().isEmpty()) {
-                    exprRange.set(range);
+
+                if (name != null) {
+                    // (Unlikely though) when there are multiple opdef in single line (which is syntactically possible),
+                    // we take only first opdef for simplicity (e.g. how to handle multiple text ranges for multiple opdef..)
+                    // and return immediately.
+                    opDefNameRange.set(name.getTextRange());
+                    return false;
                 }
-                exprRange.set(exprRange.get().union(range));
             }
 
             return true;
@@ -160,8 +133,8 @@ public class TLCBreakpointType extends XLineBreakpointType<TLCBreakpointProperti
         if (!opDefNameRange.get().isEmpty()) {
             variants.add(new TextRangeBreakpointVariant("Action/Spec", opDefNameRange.get()));
         }
-        if (!exprRange.get().isEmpty()) {
-            variants.add(new TextRangeBreakpointVariant("Expression", exprRange.get()));
+        if (hitLine.get()) {
+            variants.add(new TextRangeBreakpointVariant("Expression", null));
         }
 
         return variants;
@@ -217,22 +190,10 @@ public class TLCBreakpointType extends XLineBreakpointType<TLCBreakpointProperti
         @Override
         public @Nullable TLCBreakpointProperties createProperties() {
             TLCBreakpointProperties properties = new TLCBreakpointProperties();
-            properties.setTextRange(range);
+            if (range != null) {
+                properties.setTextRange(range);
+            }
             return properties;
         }
-    }
-
-    private static @Nullable TLAplusExpr getRootExpr(PsiElement element, int minStartOffset) {
-        TLAplusExpr current = PsiTreeUtil.getParentOfType(
-                element, TLAplusExpr.class, false, minStartOffset);
-        while (current != null) {
-            TLAplusExpr parent = PsiTreeUtil.getParentOfType(
-                    current, TLAplusExpr.class, true, minStartOffset);
-            if (parent == null) {
-                return current;
-            }
-            current = parent;
-        }
-        return null;
     }
 }

@@ -20,7 +20,6 @@ import com.intellij.xdebugger.XDebuggerUtil;
 import com.intellij.xdebugger.breakpoints.XBreakpoint;
 import com.intellij.xdebugger.breakpoints.XBreakpointHandler;
 import com.intellij.xdebugger.breakpoints.XBreakpointManager;
-import com.mayreh.intellij.plugin.tlaplus.run.debugger.TLCExceptionBreakpointProperties.ExceptionFilter;
 
 public class TLCExceptionBreakpointHandler extends XBreakpointHandler<XBreakpoint<TLCExceptionBreakpointProperties>> {
     private final XDebugSession debugSession;
@@ -36,10 +35,9 @@ public class TLCExceptionBreakpointHandler extends XBreakpointHandler<XBreakpoin
 
     @Override
     public void registerBreakpoint(@NotNull XBreakpoint<TLCExceptionBreakpointProperties> breakpoint) {
-        ExceptionFilter filter = breakpoint.getProperties().getFilter();
-        if (filter != null) {
+        if (breakpoint.getProperties().getExceptionFilterId() != null) {
             ExceptionFilterOptions options = new ExceptionFilterOptions();
-            options.setFilterId(filter.getFilterId());
+            options.setFilterId(breakpoint.getProperties().getExceptionFilterId());
             exceptionFilters.add(options);
             updateRemoteBreakpoints();
         }
@@ -48,10 +46,9 @@ public class TLCExceptionBreakpointHandler extends XBreakpointHandler<XBreakpoin
     @Override
     public void unregisterBreakpoint(@NotNull XBreakpoint<TLCExceptionBreakpointProperties> breakpoint,
                                      boolean temporary) {
-        ExceptionFilter filter = breakpoint.getProperties().getFilter();
-        if (filter != null) {
+        if (breakpoint.getProperties().getExceptionFilterId() != null) {
             ExceptionFilterOptions options = new ExceptionFilterOptions();
-            options.setFilterId(filter.getFilterId());
+            options.setFilterId(breakpoint.getProperties().getExceptionFilterId());
             exceptionFilters.remove(options);
             updateRemoteBreakpoints();
         }
@@ -75,15 +72,13 @@ public class TLCExceptionBreakpointHandler extends XBreakpointHandler<XBreakpoin
             if (breakpoints.stream().anyMatch(
                     b ->
                             b.getProperties() != null &&
-                            b.getProperties().getFilter() != null &&
-                            dapFilter.getFilter().equals(b.getProperties().getFilter().getFilterId()))) {
+                            dapFilter.getFilter().equals(b.getProperties().getExceptionFilterId()))) {
                 continue;
             }
             TLCExceptionBreakpointProperties props = new TLCExceptionBreakpointProperties();
-            ExceptionFilter filter = new ExceptionFilter();
-            filter.setFilterId(dapFilter.getFilter());
-            filter.setLabel(dapFilter.getLabel());
-            props.setFilter(filter);
+            props.setExceptionFilterId(dapFilter.getFilter());
+            props.setExceptionFilterLabel(dapFilter.getLabel());
+            props.setByFilter(dapFilter);
             ApplicationManager.getApplication().invokeAndWait(() -> {
                 ApplicationManager.getApplication().runWriteAction(() -> {
                     manager.addBreakpoint(
@@ -96,11 +91,11 @@ public class TLCExceptionBreakpointHandler extends XBreakpointHandler<XBreakpoin
         // Remove unnecessary breakpoints
         for (XBreakpoint<TLCExceptionBreakpointProperties> breakpoint : breakpoints) {
             if (breakpoint.getProperties() == null ||
-                breakpoint.getProperties().getFilter() == null) {
+                breakpoint.getProperties().getExceptionFilterId() == null) {
                 continue;
             }
             if (Arrays.stream(capabilities.getExceptionBreakpointFilters()).noneMatch(
-                    f -> f.getFilter().equals(breakpoint.getProperties().getFilter().getFilterId()))) {
+                    f -> f.getFilter().equals(breakpoint.getProperties().getExceptionFilterId()))) {
                 ApplicationManager.getApplication().invokeAndWait(() -> {
                     ApplicationManager.getApplication().runWriteAction(() -> {
                         manager.removeBreakpoint(breakpoint);
@@ -118,8 +113,7 @@ public class TLCExceptionBreakpointHandler extends XBreakpointHandler<XBreakpoin
                     Collection<? extends XBreakpoint<TLCExceptionBreakpointProperties>> breakpoints = manager.getBreakpoints(breakpointType);
                     return breakpoints.stream()
                                       .filter(b -> b.getProperties() != null &&
-                                                   b.getProperties().getFilter() != null &&
-                                                   filterId.equals(b.getProperties().getFilter().getFilterId()))
+                                                   filterId.equals(b.getProperties().getExceptionFilterId()))
                                       .map(b -> (XBreakpoint<TLCExceptionBreakpointProperties>) b)
                                       .findFirst();
                 });

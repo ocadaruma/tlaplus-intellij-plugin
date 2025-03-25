@@ -66,7 +66,7 @@ public class TLCDebugRunner extends AsyncProgramRunner {
                                 return new TLCDebugProcess(session, messageQueue, serverConnection, executionResult);
                             }
                         }).getRunContentDescriptor();
-            } catch (ExecutionException e) {
+            } catch (Exception e) {
                 promise.setError(e);
                 return;
             }

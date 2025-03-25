@@ -4,6 +4,7 @@ import javax.swing.Icon;
 
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import com.intellij.icons.AllIcons;
 import com.intellij.xdebugger.breakpoints.XBreakpoint;
@@ -16,10 +17,18 @@ public class TLCExceptionBreakpointType extends XBreakpointType<XBreakpoint<TLCE
 
     @Override
     public @Nls String getDisplayText(XBreakpoint<TLCExceptionBreakpointProperties> breakpoint) {
-        if (breakpoint.getProperties() != null && breakpoint.getProperties().getFilter() != null) {
-            return breakpoint.getProperties().getFilter().getLabel();
+        if (breakpoint.getProperties() != null && breakpoint.getProperties().getExceptionFilterLabel() != null) {
+            return breakpoint.getProperties().getExceptionFilterLabel();
         }
         return "TLC Exception";
+    }
+
+    /**
+     * NOTE: Necessary to return non-null properties here to persist breakpoint state!!!
+     */
+    @Override
+    public @Nullable TLCExceptionBreakpointProperties createProperties() {
+        return new TLCExceptionBreakpointProperties();
     }
 
     @Override
@@ -41,4 +50,6 @@ public class TLCExceptionBreakpointType extends XBreakpointType<XBreakpoint<TLCE
     public @NotNull Icon getMutedDisabledIcon() {
         return AllIcons.Debugger.Db_exception_breakpoint;
     }
+
+
 }
