@@ -62,6 +62,23 @@ public class TLCDebugRunner extends AsyncProgramRunner {
                                     throws ExecutionException {
                                 BlockingQueue<DebuggerMessage> messageQueue = new LinkedBlockingQueue<>();
                                 DebugProtocolReceiver receiver = new DebugProtocolReceiver(messageQueue);
+
+                                // The resources we must ensure to release are below 2:
+                                // 1. TLC process
+                                //   - For this, once TLCDebugProcess is created and debug session is started,
+                                //     we can rely on user's explicit termination (by stop/restart button or IDE quit)
+                                //     So what we need to care is until TLCDebugProcess is created.
+                                //     As described below, there's no place which might fail until TLCDebugProcess instantiation
+                                //     so this case is ok.
+                                //     NOTE: If IDE quits forcibly, process might leak, but we can't do anything for this.
+                                // 2. DAP server connection
+                                //   - Similarly, there's no place which might fail after ServerConnection instantiation.
+                                //     TLCDebugProcess#close will close the connection, so we can rely on user's explicit termination
+                                //     which will call TLCDebugProcess#close.
+                                //
+                                // Connection establishment (which might fail) is done asynchronously,
+                                // which means below 2 lines are expected never to throw.
+                                // Hence, we don't need to try-catch for ensuring process destruction on failure.
                                 ServerConnection serverConnection = ServerConnection.create(port, receiver);
                                 return new TLCDebugProcess(session, messageQueue, serverConnection, executionResult);
                             }

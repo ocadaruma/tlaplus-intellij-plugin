@@ -72,9 +72,13 @@ public class TLCDebugProcess extends XDebugProcess {
             while (!terminated.get()) {
                 try {
                     handleMessage(session, messageQueue.take());
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
+                } catch (Exception e) {
+                    if (e instanceof InterruptedException) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                    log.error("Error while handling message. Debugger may no longer works", e);
+                    throw new RuntimeException(e);
                 }
             }
         });
@@ -94,6 +98,8 @@ public class TLCDebugProcess extends XDebugProcess {
     }
 
     private void handleMessage(XDebugSession session, DebuggerMessage message) {
+        log.debug("Received message: " + message);
+
         if (message instanceof DebuggerMessage.InitializedEvent) {
             ApplicationManager.getApplication().runReadAction(session::initBreakpoints);
             serverConnection.sendRequest(remoteProxy -> {
@@ -268,6 +274,7 @@ public class TLCDebugProcess extends XDebugProcess {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+        serverConnection.close();
     }
 
     @Override
