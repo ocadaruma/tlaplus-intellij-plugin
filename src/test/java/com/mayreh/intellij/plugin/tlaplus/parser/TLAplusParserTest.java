@@ -59,4 +59,8 @@ public class TLAplusParserTest extends ParserTestCaseBase {
     public void test_case() {
         doTest();
     }
+
+    public void test_theorem_assumption() {
+        doTest();
+    }
 }

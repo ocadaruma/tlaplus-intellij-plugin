@@ -546,9 +546,11 @@ meta unqualified_postfix_op ::= <<param>>
 
 module_definition ::= nonfix_lhs clear_indent '==' instance
 
-assumption ::= clear_indent ('ASSUME' | 'ASSUMPTION' | 'AXIOM') expr { pin = 2 }
+// ASSUME and THEOREM also allows in below form, in addition to `ASSUME expr`
+// as described in Specifying Systems (Version of 18 June 2002) 17.5.6
+assumption ::= clear_indent ('ASSUME' | 'ASSUMPTION' | 'AXIOM') (op_definition | expr) { pin = 2 }
 
-theorem ::= clear_indent 'THEOREM' expr { pin = 2 }
+theorem ::= clear_indent 'THEOREM' (op_definition | expr) { pin = 2 }
 
 identifier_expr ::= general_identifier
 
