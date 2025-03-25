@@ -71,7 +71,7 @@ public class TLCOutputConsoleView implements ConsoleView, HelpIdProvider {
 
         @Override
         public void processTerminated(@NotNull ProcessEvent event) {
-            if (buffer.length() > 0) {
+            if (!buffer.isEmpty()) {
                 ApplicationManager.getApplication().invokeLater(
                         () -> consoleView.resultPanel.printInConsole(buffer.toString()));
                 for (String line : buffer.toString().split("\n")) {

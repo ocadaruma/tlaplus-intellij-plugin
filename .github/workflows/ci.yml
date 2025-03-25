@@ -34,7 +34,7 @@ jobs:
       with:
         arguments: check
     - name: Setup Plugin Verifier IDEs Cache
-      uses: actions/cache@v2.1.7
+      uses: actions/cache@v4
       with:
         path: ~/.pluginVerifier/ides
         key: plugin-verifier-${{ hashFiles('build/listProductsReleases.txt') }}

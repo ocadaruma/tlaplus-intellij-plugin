@@ -19,9 +19,8 @@ import com.mayreh.intellij.plugin.tlaplus.TLAplusFile;
 import com.mayreh.intellij.plugin.tlaplus.run.TLCBeforeRunTaskProvider.TLCBeforeRunTask;
 
 public class TLCRunConfigurationProducer extends LazyRunConfigurationProducer<TLCRunConfiguration> {
-    @NotNull
     @Override
-    public ConfigurationFactory getConfigurationFactory() {
+    public @NotNull ConfigurationFactory getConfigurationFactory() {
         return TLCRunConfigurationType.instance().getConfigurationFactories()[0];
     }
 
