@@ -10,6 +10,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.TextRange;
@@ -17,7 +18,6 @@ import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.Navigatable;
 import com.intellij.xdebugger.XSourcePosition;
-import com.intellij.xdebugger.impl.XDebuggerUtilImpl;
 import com.intellij.xdebugger.impl.ui.ExecutionPointHighlighter.HighlighterProvider;
 
 import lombok.RequiredArgsConstructor;
@@ -47,7 +47,7 @@ public class TLCXSourcePosition implements XSourcePosition, HighlighterProvider 
 
     @Override
     public @NotNull Navigatable createNavigatable(@NotNull Project project) {
-        return XDebuggerUtilImpl.createNavigatable(project, this);
+        return new TLCXSourcePositionNavigatable(project, this);
     }
 
     @Override
@@ -72,5 +72,30 @@ public class TLCXSourcePosition implements XSourcePosition, HighlighterProvider 
         int endOffset = document.getLineStartOffset(dapStackFrame.getEndLine() - 1) + dapStackFrame.getEndColumn() - 1;
 
         return new TLCXSourcePosition(file, dapStackFrame.getLine() - 1, new TextRange(startOffset, endOffset));
+    }
+
+    // Taken from XDebuggerUtilImpl#createNavigatable, which is an internal API so we can't use it directly
+    @RequiredArgsConstructor
+    private static class TLCXSourcePositionNavigatable implements Navigatable {
+        private final Project project;
+        private final XSourcePosition position;
+
+        @Override
+        public void navigate(boolean requestFocus) {
+            OpenFileDescriptor fd = position.getOffset() != -1
+                                    ? new OpenFileDescriptor(project, position.getFile(), position.getOffset())
+                                    : new OpenFileDescriptor(project, position.getFile(), position.getLine(), 0);
+            fd.navigate(requestFocus);
+        }
+
+        @Override
+        public boolean canNavigate() {
+            return position.getFile().isValid();
+        }
+
+        @Override
+        public boolean canNavigateToSource() {
+            return canNavigate();
+        }
     }
 }
