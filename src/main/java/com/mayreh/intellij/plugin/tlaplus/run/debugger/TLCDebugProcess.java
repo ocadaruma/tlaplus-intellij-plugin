@@ -23,11 +23,15 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.concurrency.Promise;
 
+import com.intellij.debugger.ui.DebuggerContentInfo;
 import com.intellij.execution.ExecutionResult;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.ui.ExecutionConsole;
+import com.intellij.execution.ui.RunnerLayoutUi;
+import com.intellij.execution.ui.layout.impl.ViewImpl;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.ui.content.Content;
 import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugSession;
 import com.intellij.xdebugger.XSourcePosition;
@@ -36,7 +40,6 @@ import com.intellij.xdebugger.breakpoints.XBreakpointHandler;
 import com.intellij.xdebugger.evaluation.XDebuggerEditorsProvider;
 import com.intellij.xdebugger.frame.XDropFrameHandler;
 import com.intellij.xdebugger.frame.XSuspendContext;
-import com.intellij.xdebugger.impl.XDebugSessionImpl;
 import com.mayreh.intellij.plugin.tlaplus.run.debugger.DebuggerMessage.CapabilitiesEvent;
 import com.mayreh.intellij.plugin.tlaplus.run.debugger.DebuggerMessage.StoppedEvent;
 
@@ -48,6 +51,7 @@ public class TLCDebugProcess extends XDebugProcess {
     private final ServerConnection serverConnection;
     private final ExecutorService executorService;
     private final AtomicBoolean terminated = new AtomicBoolean(false);
+    private final AtomicBoolean attractedOnce = new AtomicBoolean(false);
     private final TLCDropFrameHandler dropFrameHandler;
     private final TLCBreakpointHandler breakpointHandler;
     private final TLCExceptionBreakpointHandler exceptionBreakpointHandler;
@@ -152,7 +156,9 @@ public class TLCDebugProcess extends XDebugProcess {
                                       if (breakpoint.isPresent()) {
                                           session.breakpointReached(breakpoint.get(), null, xContext);
                                       } else {
-                                          ((XDebugSessionImpl) session).positionReached(xContext, true);
+                                          // Just a defensive fallback. So we don't need to focus frames tab.
+                                          // See below for the case we want to focus frames tab.
+                                          session.positionReached(xContext);
                                       }
                                   } else {
                                       // NOTE: We give up looking-up hit breakpoint (except exception breakpoints above) on stopped event so
@@ -163,12 +169,18 @@ public class TLCDebugProcess extends XDebugProcess {
                                       //
                                       // Ideally, TLCDebugger should fill StoppedEventArguments#hitBreakpointIds so
                                       // we can look up hit breakpoint easily.
+                                      session.positionReached(xContext);
+
+                                      // NOTE: We want to focus frames tab to get user attention for let them know the debugger session is started.
+                                      // However, TLC may send stopped event without breakpoint on first encounter of evaluation after launch,
+                                      // and auto-focus is performed only in breakpointReached, not in positionReached.
                                       //
-                                      // NOTE: TLC may send stopped event without breakpoint (e.g. first encounter of evaluation after launch).
-                                      // In such case, we want to focus debug tab so passing true to attract arg.
-                                      // TODO: Intuitively, this may cause the debugger-tab to be focused even on user-initiated stepping undesirably,
-                                      // but seems this just works (i.e. doesn't cause undesirable focus). Wanna investigate why.
-                                      ((XDebugSessionImpl) session).positionReached(xContext, true);
+                                      // Though auto-focus can be done by calling XDebugSessionImpl#positionReached(..., boolean attract),
+                                      // it's an internal API and not able to use directly.
+                                      // So we use a workaround to focus frames tab only once when the first stopped event is received.
+                                      if (!attractedOnce.getAndSet(true)) {
+                                          focusFramesTab(session);
+                                      }
                                   }
                               });
                           });
@@ -290,6 +302,25 @@ public class TLCDebugProcess extends XDebugProcess {
             args.setThreadId(thread.getId());
             serverConnection.sendRequest(remoteProxy -> remoteProxy.continue_(args));
         }
+    }
+
+    private static void focusFramesTab(XDebugSession session) {
+        ApplicationManager.getApplication().invokeLater(() -> {
+            RunnerLayoutUi ui = session.getRunContentDescriptor().getRunnerLayoutUi();
+            if (ui == null) {
+                return;
+            }
+            Content framesTab = null;
+            for (Content content : ui.getContents()) {
+                if (DebuggerContentInfo.FRAME_CONTENT.equals(content.getUserData(ViewImpl.ID))) {
+                    framesTab = content;
+                    break;
+                }
+            }
+            if (framesTab != null) {
+                ui.selectAndFocus(framesTab, true, false);
+            }
+        });
     }
 
     private static @Nullable org.eclipse.lsp4j.debug.Thread activeThread(XSuspendContext context) {

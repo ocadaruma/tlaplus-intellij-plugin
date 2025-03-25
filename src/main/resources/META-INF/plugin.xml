@@ -12,6 +12,8 @@
     <li>Code completion</li>
     <li>PlusCal syntax support (Translate into TLA+)</li>
     <li>Run TLC</li>
+    <li>Expression evaluation</li>
+    <li>TLC Debugger integration</li>
     </ul>
     ]]></description>
 
