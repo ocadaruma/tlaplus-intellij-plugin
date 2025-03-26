@@ -18,6 +18,7 @@ import com.intellij.execution.runners.AsyncProgramRunner;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.ui.RunContentDescriptor;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.util.net.NetUtils;
 import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugProcessStarter;
@@ -52,6 +53,11 @@ public class TLCDebugRunner extends AsyncProgramRunner {
         executionEnvironment.putUserData(TLCRunConfiguration.DEBUGGER_PORT, port);
         ExecutionResult executionResult = runProfileState.execute(executionEnvironment.getExecutor(), this);
         ApplicationManager.getApplication().invokeLater(() -> {
+            // Save right before starting debug process.
+            // Otherwise, stackframe source location might be calculated based on last saved content,
+            // not the current content and causes wrong position highlighting.
+            FileDocumentManager.getInstance().saveAllDocuments();
+
             RunContentDescriptor descriptor;
             try {
                 descriptor = XDebuggerManager
