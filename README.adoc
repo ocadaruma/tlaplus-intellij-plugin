@@ -35,3 +35,7 @@ image::images/pluscal.gif["PlusCal translation",480]
 === Evaluate expression
 
 image::images/evaluate_expression.gif["Evaluate expression",480]
+
+=== Debug with TLC Debugger
+
+image::images/debugger.gif["Debugger",480]
