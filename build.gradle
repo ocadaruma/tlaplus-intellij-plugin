@@ -51,7 +51,7 @@ intellij {
 patchPluginXml {
     version = project.version
     sinceBuild = findProperty("sinceBuild")
-    untilBuild = findProperty("untilBuild")
+    untilBuild = ""
 }
 
 sourceSets {
