@@ -10,7 +10,15 @@ public class StringUtil {
     public static @NotNull String joinLines(@NotNull List<String> lines) {
         StringWriter sw = new StringWriter();
         try (PrintWriter writer = new PrintWriter(sw, true)) {
-            lines.forEach(writer::println);
+            for (var line : lines) {
+                writer.print(line);
+
+                // The returned text will be passed to `com.intellij.openapi.editor.Document::setText()`.
+                // `setText()` throws if '\r' is found on `StringUtil.asertValidateSeparators`
+                // unless `((DocumentImpl) document.document()).setAcceptSlashR(true)` is set.
+                // PrintWriter puts '\r\n' by default on Windows, so just insert '\n' manually.
+                writer.print('\n');
+            }
         }
         return sw.toString();
     }
