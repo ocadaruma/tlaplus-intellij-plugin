@@ -6,7 +6,7 @@ import com.intellij.lexer.FlexAdapter;
 import com.intellij.lexer.LayeredLexer;
 import com.intellij.lexer.Lexer;
 import com.mayreh.intellij.plugin.tlaplus.TLAplusSyntaxHighlighter;
-import com.mayreh.intellij.plugin.tlaplus.lexer._PlusCalAlgorithmBeginLexer;
+import com.mayreh.intellij.plugin.pluscal.lexer._PlusCalAlgorithmBeginLexer;
 import com.mayreh.intellij.plugin.tlaplus.psi.TLAplusElementTypes;
 
 public class PlusCalSyntaxHighlighter extends TLAplusSyntaxHighlighter {

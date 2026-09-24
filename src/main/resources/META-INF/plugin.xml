@@ -68,7 +68,9 @@
           language="TLA+"
           implementationClass="com.mayreh.intellij.plugin.tlaplus.TLAplusQuoteHandler"/>
         <psi.referenceContributor
-          implementation="com.mayreh.intellij.plugin.tlaplus.TLAplusReferenceContributor"/>
+          language="TLA+"
+          implementation="com.mayreh.intellij.plugin.tlaplus.TLAplusReferenceContributor"
+        />
         <notificationGroup id="TLA+ plugin" displayType="BALLOON"/>
 
         <!-- TLC config -->
@@ -180,9 +182,9 @@
                icon="/icons/tlaplus.svg"
                text="TLA+"
                popup="true">
-            <reference id="com.mayreh.TranslatePlusCal"/>
-            <reference id="com.mayreh.EvaluateExpressionOnModule"/>
-            <reference id="com.mayreh.EvaluateExpression"/>
+            <reference ref="com.mayreh.TranslatePlusCal"/>
+            <reference ref="com.mayreh.EvaluateExpressionOnModule"/>
+            <reference ref="com.mayreh.EvaluateExpression"/>
 
             <add-to-group group-id="ToolsMenu" anchor="last"/>
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
