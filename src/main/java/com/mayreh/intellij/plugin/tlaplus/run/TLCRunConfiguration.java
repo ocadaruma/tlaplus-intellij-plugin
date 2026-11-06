@@ -30,9 +30,10 @@ import com.intellij.execution.ui.ConsoleView;
 import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.projectRoots.JavaSdkType;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.projectRoots.SimpleJavaSdkType;
-import com.intellij.openapi.projectRoots.ex.PathUtilEx;
+import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.Key;
 import com.intellij.util.SystemProperties;
 import com.mayreh.intellij.plugin.tlaplus.run.ui.TLCOutputConsoleView;
@@ -102,8 +103,11 @@ public class TLCRunConfiguration extends LocatableConfigurationBase<TLCRunConfig
             protected @NotNull ProcessHandler startProcess() throws ExecutionException {
                 SimpleJavaParameters params = new SimpleJavaParameters();
 
-                Sdk jdk = PathUtilEx.getAnyJdk(getProject());
-                if (jdk == null) {
+                // PathUtilEx is not available in non-Java IDEs (Rider, GoLand, PyCharm),
+                // so use the project SDK if it is a Java SDK and fall back to the
+                // IDE's bundled JBR otherwise.
+                Sdk jdk = ProjectRootManager.getInstance(getProject()).getProjectSdk();
+                if (jdk == null || !(jdk.getSdkType() instanceof JavaSdkType)) {
                     jdk = SimpleJavaSdkType.getInstance().createJdk(
                             "tmp",
                             SystemProperties.getJavaHome());
