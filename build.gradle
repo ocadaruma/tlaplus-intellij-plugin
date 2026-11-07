@@ -1,148 +1,127 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
-import org.jetbrains.grammarkit.tasks.*
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import org.jetbrains.intellij.platform.gradle.tasks.*
 
-buildscript {
-    repositories {
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
-    }
-
-    dependencies {
-        classpath "org.jetbrains.intellij.plugins:gradle-intellij-plugin:1.13.3"
-        classpath "org.jetbrains.intellij.plugins:gradle-grammarkit-plugin:2022.3.2.2"
-    }
+plugins {
+    id("java")
+    id("org.jetbrains.intellij.platform") version "2.18.1"
+    id("org.jetbrains.intellij.platform.grammarkit") version "2.18.1"
+    id("de.undercouch.download") version "5.7.0"
 }
-
-apply plugin: "java"
-apply plugin: "org.jetbrains.grammarkit"
-apply plugin: "org.jetbrains.intellij"
 
 group = "com.mayreh.intellij.plugins"
 version = "${version}" + (snapshot.toBoolean() ? "-SNAPSHOT" : "")
 
 repositories {
     mavenCentral()
+    intellijPlatform {
+        defaultRepositories()
+    }
 }
 
-ext {
-    lombokVersion = '1.18.24'
+def tla2tools = layout.buildDirectory.file("libs/tla2tools.jar")
+def prepareLib = tasks.register("prepareLib", Download) {
+    src "https://github.com/tlaplus/tlaplus/releases/download/v1.8.0/tla2tools.jar"
+    dest tla2tools
+    overwrite false
 }
 
 dependencies {
-    implementation files('libs/tla2tools.jar')
+    intellijPlatform {
+        intellijIdea providers.gradleProperty("platformVersion")
+        bundledPlugin "org.intellij.intelliLang"
+        testFramework TestFrameworkType.Platform.INSTANCE
+        pluginVerifier()
+    }
+
+    implementation(files(tla2tools).builtBy(prepareLib))
     // We need to use same version of lsp4j as tla2tools to avoid incompatibility
     implementation "org.eclipse.lsp4j:org.eclipse.lsp4j.debug:0.21.1"
+
+    def lombokVersion = '1.18.48'
     compileOnly "org.projectlombok:lombok:$lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$lombokVersion"
     testCompileOnly "org.projectlombok:lombok:$lombokVersion"
     testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
     testImplementation "junit:junit:4.13.2"
-    testImplementation "org.assertj:assertj-core:3.21.0"
+    testImplementation "org.assertj:assertj-core:3.27.7"
 }
 
-intellij {
-    version = findProperty("sinceBuild")
-    plugins = ["org.intellij.intelliLang"]
-    updateSinceUntilBuild = false
+intellijPlatform {
+    pluginConfiguration {
+        version = project.version
+        ideaVersion {
+            sinceBuild = providers.gradleProperty("sinceBuild")
+            untilBuild = provider { null }
+        }
+    }
+    publishing {
+        token = providers.gradleProperty("intellijPublishToken")
+    }
+    pluginVerification {
+        ides {
+            recommended()
+        }
+    }
 }
 
-patchPluginXml {
-    version = project.version
-    sinceBuild = findProperty("sinceBuild")
-    untilBuild = ""
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+def generatedRoot = layout.buildDirectory.dir("generated/sources/grammar")
+
+def lexers = [
+    [component: "tlaplus", flex: "tlaplus.flex", class: "_TLAplusLexer"],
+    [component: "tlaplus", flex: "tlaplus_modulebegin.flex", class: "_TLAplusModuleBeginLexer"],
+    [component: "tlaplus", flex: "tlaplus_plus_cal_comment.flex", class: "_TLAplusPlusCalCommentLexer"],
+    [component: "tlc", flex: "tlc_error_trace.flex", class: "_TLCErrorTraceLexer"],
+    [component: "tlc", flex: "tlc_config.flex", class: "_TLCConfigLexer"],
+    [component: "pluscal", flex: "plus_cal_algorithmbegin.flex", class: "_PlusCalAlgorithmBeginLexer"],
+]
+
+def parsers = [
+    [component: "tlaplus", bnf: "tlaplus.bnf", class: "TLAplusParser"],
+    [component: "tlc", bnf: "tlc_config.bnf", class: "TLCConfigParser"]
+]
+
+def lexerTasks = lexers.collect { spec ->
+    tasks.register("generate" + spec.class, GenerateLexerTask) {
+        sourceFile.set(layout.projectDirectory.file("src/main/grammar/${spec.flex}"))
+        targetRootOutputDir.set(generatedRoot)
+        pathToClass.set("com/mayreh/intellij/plugin/${spec.component}/lexer/${spec.class}.java")
+    }
+}
+
+def parserTasks = parsers.collect { spec ->
+    tasks.register("generate" + spec.class, GenerateParserTask) {
+        sourceFile.set(layout.projectDirectory.file("src/main/grammar/${spec.bnf}"))
+        targetRootOutputDir.set(generatedRoot)
+        pathToParser.set("com/mayreh/intellij/plugin/${spec.component}/parser/${spec.class}.java")
+        pathToPsiRoot.set("com/mayreh/intellij/plugin/${spec.component}/psi")
+    }
 }
 
 sourceSets {
     main {
-        java.srcDirs("src/gen")
+        java.srcDir(files(generatedRoot)
+                .builtBy(lexerTasks, parserTasks))
     }
 }
 
-task prepareLib(type: Exec) {
-    workingDir project.rootDir
-    commandLine './setup.sh'
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
-
-task generateTLAplusLexer(type: GenerateLexerTask) {
-    sourceFile.set(file("src/main/grammar/tlaplus.flex"))
-    targetOutputDir.set(layout.projectDirectory.dir("src/gen/com/mayreh/intellij/plugin/tlaplus/lexer"))
-    purgeOldFiles.set(true)
-}
-
-task generateTLAplusModuleBeginLexer(type: GenerateLexerTask) {
-    sourceFile.set(file("src/main/grammar/tlaplus_modulebegin.flex"))
-    targetOutputDir.set(layout.projectDirectory.dir("src/gen/com/mayreh/intellij/plugin/tlaplus/lexer"))
-}
-
-task generateTLAplusPlusCalCommentLexer(type: GenerateLexerTask) {
-    sourceFile.set(file("src/main/grammar/tlaplus_plus_cal_comment.flex"))
-    targetOutputDir.set(layout.projectDirectory.dir("src/gen/com/mayreh/intellij/plugin/tlaplus/lexer"))
-}
-
-task generateTLCErrorTraceLexer(type: GenerateLexerTask) {
-    sourceFile.set(file("src/main/grammar/tlc_error_trace.flex"))
-    targetOutputDir.set(layout.projectDirectory.dir("src/gen/com/mayreh/intellij/plugin/tlaplus/tlc/lexer"))
-    purgeOldFiles.set(true)
-}
-
-task generateTLAplusParser(type: GenerateParserTask) {
-    sourceFile.set(file("src/main/grammar/tlaplus.bnf"))
-    targetRootOutputDir.set(layout.projectDirectory.dir("src/gen"))
-    pathToParser.set("/com/mayreh/intellij/plugin/tlaplus/parser/TLAplusParser.java")
-    pathToPsiRoot.set("/com/mayreh/intellij/plugin/tlaplus/psi")
-    purgeOldFiles.set(true)
-}
-
-task generateTLCConfigParser(type: GenerateParserTask) {
-    sourceFile.set(file("src/main/grammar/tlc_config.bnf"))
-    targetRootOutputDir.set(layout.projectDirectory.dir("src/gen"))
-    pathToParser.set("/com/mayreh/intellij/plugin/tlc/parser/TLCConfigParser.java")
-    pathToPsiRoot.set("/com/mayreh/intellij/plugin/tlc/psi")
-}
-
-task generateTLCConfigLexer(type: GenerateLexerTask) {
-    sourceFile.set(file("src/main/grammar/tlc_config.flex"))
-    targetOutputDir.set(layout.projectDirectory.dir("src/gen/com/mayreh/intellij/plugin/tlc/lexer"))
-}
-
-task generatePlusCalAlgorithmBeginLexer(type: GenerateLexerTask) {
-    sourceFile.set(file("src/main/grammar/plus_cal_algorithmbegin.flex"))
-    targetOutputDir.set(layout.projectDirectory.dir("src/gen/com/mayreh/intellij/plugin/pluscal/lexer"))
-    purgeOldFiles.set(true)
-}
-
-compileJava.dependsOn(
-        prepareLib,
-        generateTLAplusLexer,
-        generateTLAplusModuleBeginLexer,
-        generateTLAplusPlusCalCommentLexer,
-        generateTLCErrorTraceLexer,
-        generateTLAplusParser,
-        generateTLCConfigParser,
-        generateTLCConfigLexer,
-        generatePlusCalAlgorithmBeginLexer)
-
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
     testLogging {
-        events TestLogEvent.FAILED,
-                TestLogEvent.PASSED,
-                TestLogEvent.SKIPPED,
-                TestLogEvent.STANDARD_OUT
-        exceptionFormat TestExceptionFormat.FULL
-        showExceptions true
-        showCauses true
-        showStackTraces true
-        showStandardStreams false
+        events = [TestLogEvent.FAILED,
+                  TestLogEvent.PASSED,
+                  TestLogEvent.SKIPPED,
+                  TestLogEvent.STANDARD_OUT]
+        exceptionFormat = TestExceptionFormat.FULL
+        showExceptions = true
+        showCauses = true
+        showStackTraces = true
+        showStandardStreams = false
     }
-}
-
-publishPlugin {
-    token = findProperty("intellijPublishToken")
 }

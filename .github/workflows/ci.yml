@@ -13,32 +13,22 @@ jobs:
       fail-fast: false
     steps:
     # Free GitHub Actions Environment Disk Space
-    # Since runPluginVerifier task requires a lot of disk space for downloading IDEs,
+    # Since verifyPlugin task requires a lot of disk space for downloading IDEs,
     # without this, the build will fail due to disk full.
     - name: Maximize Build Space
       uses: jlumbroso/free-disk-space@main
       with:
         tool-cache: false
         large-packages: false
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v6
     - name: Setup java
-      uses: actions/setup-java@v1
+      uses: actions/setup-java@v6
       with:
-         java-version: 17
-    - name: Prepare for test
-      uses: gradle/gradle-build-action@v2
-      with:
-        arguments: listProductsReleases
+        distribution: jetbrains
+        java-version: 17
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v6
     - name: Execute test
-      uses: gradle/gradle-build-action@v2
-      with:
-        arguments: check
-    - name: Setup Plugin Verifier IDEs Cache
-      uses: actions/cache@v4
-      with:
-        path: ~/.pluginVerifier/ides
-        key: plugin-verifier-${{ hashFiles('build/listProductsReleases.txt') }}
+      run: ./gradlew check
     - name: Run Plugin Verification tasks
-      uses: gradle/gradle-build-action@v2
-      with:
-        arguments: runPluginVerifier -Pplugin.verifier.home.dir=~/.pluginVerifier/ides
+      run: ./gradlew verifyPlugin

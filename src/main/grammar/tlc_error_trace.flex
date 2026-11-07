@@ -1,4 +1,4 @@
-package com.mayreh.intellij.plugin.tlaplus.lexer;
+package com.mayreh.intellij.plugin.tlc.lexer;
 
 import com.intellij.lexer.FlexLexer;
 import com.intellij.openapi.util.text.LineColumn;
